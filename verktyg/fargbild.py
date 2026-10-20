@@ -1,5 +1,5 @@
 """Gör om en färgbild (tecknad bild med mörka konturer, t.ex. från Gemini)
-till en bild i Färga: konturerna som vektorer och färgbilden som penseln
+till en bild i Pensla: konturerna som vektorer och färgbilden som penseln
 trollar fram.
 
 Användning:  python verktyg/fargbild.py forlagor/traktor.jpg [fler ...]

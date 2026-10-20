@@ -1,4 +1,4 @@
-# Färga (blir Pensla) — magisk målarbok för barn
+# Pensla — magisk målarbok för barn
 
 En enkel färgläggningsapp (PWA) för en gammal Android-platta. Syskon till
 Kludda (fri ritning, https://github.com/isak-wallo/Kludda) och bygger på samma
@@ -28,8 +28,10 @@ färger, inga ljud, inga poäng, inga val att göra.
   `KEIWS_TRAFF` pixlar där han är poppar han upp
   med en liten studs, vinkar, blinkar och blir kvar. BÖRJA OM gömmer honom
   igen.
-- **Namnbyte:** appen ska heta **Pensla** (inte gjort än: repo, Pages-adress
-  och texter heter Färga tills vidare).
+- **Namn:** appen hette Färga fram till v49; repot döptes om till Pensla i
+  v50 (den gamla Pages-adressen /Farga/ slutade då fungera). Den lokala
+  mappen heter fortfarande `Farga`. Ingen pensla.keiws.com förrän ägaren
+  säger till.
 - Bilder (oktober 2026, ny uppsättning): traktor, grävare, sopbil från sidan,
   sopbil snett, traktor 2, två flygplan och två helikoptrar. De gamla svartvita bilderna (kodritade, spårade
   och rena sidor med färgpunkter) och all kod för dem togs bort i v47 —
@@ -39,7 +41,7 @@ färger, inga ljud, inga poäng, inga val att göra.
 - Ikonen (`icon-192.png`, `icon-512.png`, maskable) är dumpern ur en av de
   gamla bilderna, på himmelsblått. I `ikoner/` finns fler gamla ikoner
   (inte i `ASSETS`). Byts gärna mot något ur de nya bilderna.
-- Hostas via GitHub Pages: `https://isak-wallo.github.io/Farga/`.
+- Hostas via GitHub Pages: `https://isak-wallo.github.io/Pensla/`.
   **Inget byggsteg** — commit + push är driftsättning.
 
 ### Arbetsflöde: bara `main`

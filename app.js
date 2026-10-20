@@ -587,7 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (keiws && keiws.hittad) ritaKeiwsMaskad(ctx, 1, KEIWS.stilla);
         ctx.drawImage(lineCanvas, 0, 0);
         const d = new Date(), tv = n => String(n).padStart(2, '0');
-        const namn = 'farga-' + PICTURES[currentPicture].namn.toLowerCase()
+        const namn = 'pensla-' + PICTURES[currentPicture].namn.toLowerCase()
             .replace(/[åä]/g, 'a').replace(/ö/g, 'o').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') +
             '-' + d.getFullYear() + tv(d.getMonth() + 1) + tv(d.getDate()) + '-' +
             tv(d.getHours()) + tv(d.getMinutes()) + tv(d.getSeconds()) + '.png';
@@ -743,12 +743,12 @@ document.addEventListener('DOMContentLoaded', () => {
     //    system-bakåt undantas dock av Chrome (den ska alltid "fungera"),
     //    så i praktiken skyddar detta mest vid test i desktop-Chrome.
     // 2) Gest-armerad pushState-buffert: vid touch fylls historiken på med
-    //    poster (samma URL, märkta med fargaDepth) upp till MAX_TRAP_DEPTH.
+    //    poster (samma URL, märkta med penslaDepth) upp till MAX_TRAP_DEPTH.
     //    Poster skapade MED gest respekteras av Chromes "history
     //    manipulation intervention", så varje bakåt-tryck kliver bara ner
     //    ett steg i bufferten — osynligt för användaren, ritytan lämnas
     //    inte. Nästa touch fyller på bufferten igen. Först på botten
-    //    (poster utan fargaDepth) visas startskärmen och en sista
+    //    (poster utan penslaDepth) visas startskärmen och en sista
     //    fångstpost pushas. OBS: pushState inne i popstate (= utan gest)
     //    flaggas av interventionen så att NÄSTA bakåt lämnar sidan — därför
     //    görs det enbart som sista utväg på botten, aldrig i bufferten.
@@ -767,7 +767,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('popstate', (e) => {
         backTrapNeedsArm = true;
-        if (e.state && typeof e.state.fargaDepth === 'number') {
+        if (e.state && typeof e.state.penslaDepth === 'number') {
             return; // landade i bufferten — tyst, barnet ritar vidare
         }
         history.pushState(null, '', location.href);
@@ -777,10 +777,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('pointerdown', () => {
         if (!backTrapNeedsArm) return;
         backTrapNeedsArm = false;
-        let depth = (history.state && typeof history.state.fargaDepth === 'number')
-            ? history.state.fargaDepth + 1 : 0;
+        let depth = (history.state && typeof history.state.penslaDepth === 'number')
+            ? history.state.penslaDepth + 1 : 0;
         while (depth < MAX_TRAP_DEPTH) {
-            history.pushState({ fargaDepth: depth }, '', location.href);
+            history.pushState({ penslaDepth: depth }, '', location.href);
             depth++;
         }
     }, { capture: true, passive: true });
