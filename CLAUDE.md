@@ -33,7 +33,8 @@ färger, inga ljud, inga poäng, inga val att göra.
   mappen heter fortfarande `Farga`. Ingen pensla.keiws.com förrän ägaren
   säger till.
 - Bilder (oktober 2026, ny uppsättning): traktor, grävare, sopbil från sidan,
-  sopbil snett, traktor 2, två flygplan och två helikoptrar. De gamla svartvita bilderna (kodritade, spårade
+  sopbil snett, traktor 2, två flygplan och två helikoptrar; i v52 kom två
+  tåg, två båtar och två stora flygplan (lite mer 3D, se promptmallen). De gamla svartvita bilderna (kodritade, spårade
   och rena sidor med färgpunkter) och all kod för dem togs bort i v47 —
   finns i git-historiken.
 - Landskapslås, fullscreen, layoutlås/dö-yta, back-fälla och offline-SW är
@@ -125,6 +126,11 @@ Style rules (important):
 - Soft, friendly, slightly muted colors (pastel-like). Gentle soft shading
   inside shapes is fine, but colors never cross an outline, and no dark
   shadows along the outlines.
+  (Från v52, lite mer 3D, ersätter raden ovan: "A soft, rounded 3D toy
+  look: gentle light gradients and soft highlights give the shapes volume,
+  but colors stay light, never cross an outline, and there are no dark
+  shadows or dark bands along the outlines." Bilden ses då "from the side
+  at a slight three-quarter angle".)
 - Cute rounded shapes, cartoon proportions, a bit of detail (windows,
   doors, lights) but no tiny enclosed areas.
 - Background: <BAKGRUND>.

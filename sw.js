@@ -1,6 +1,6 @@
 // Höj VERSION (v1 -> v2 osv.) varje gång du laddar upp nya filer,
 // så hämtas och cachas den nya versionen säkert.
-const VERSION = 'v51';
+const VERSION = 'v52';
 const CACHE = 'pensla-' + VERSION;
 
 const ASSETS = [
@@ -27,6 +27,18 @@ const ASSETS = [
   './bilder/farg/helikopter.jpg',
   './bilder/farg/helikopter2.svg',
   './bilder/farg/helikopter2.jpg',
+  './bilder/farg/tag.svg',
+  './bilder/farg/tag.jpg',
+  './bilder/farg/tag2.svg',
+  './bilder/farg/tag2.jpg',
+  './bilder/farg/bat.svg',
+  './bilder/farg/bat.jpg',
+  './bilder/farg/bat2.svg',
+  './bilder/farg/bat2.jpg',
+  './bilder/farg/flygplan-stort.svg',
+  './bilder/farg/flygplan-stort.jpg',
+  './bilder/farg/flygplan-stort2.svg',
+  './bilder/farg/flygplan-stort2.jpg',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'

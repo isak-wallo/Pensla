@@ -10,7 +10,7 @@ Syskon-app till [Kludda](https://github.com/isak-wallo/Kludda) (fri ritning) och
 Öppna **https://isak-wallo.github.io/Pensla/** i Chrome på plattan och välj
 "Lägg till på hemskärm" för att installera den (fungerar sedan offline).
 
-Bilder: traktorer, grävare, sopbilar, flygplan och helikoptrar (bläddra med ◀ ▶, håll BÖRJA OM två
+Bilder: traktorer, grävare, sopbilar, flygplan, helikoptrar, tåg och båtar (bläddra med ◀ ▶, håll BÖRJA OM två
 gånger för att sudda bilden). Nya bilder görs med `verktyg/fargbild.py` och
 läggs till i `PICTURES` i `app.js`.
 
