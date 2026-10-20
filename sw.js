@@ -1,6 +1,6 @@
 // Höj VERSION (v1 -> v2 osv.) varje gång du laddar upp nya filer,
 // så hämtas och cachas den nya versionen säkert.
-const VERSION = 'v45';
+const VERSION = 'v46';
 const CACHE = 'farga-' + VERSION;
 
 const ASSETS = [
@@ -11,6 +11,14 @@ const ASSETS = [
   './keiws.js',
   './bilder/farg/traktor.svg',
   './bilder/farg/traktor.jpg',
+  './bilder/farg/gravare.svg',
+  './bilder/farg/gravare.jpg',
+  './bilder/farg/sopbil.svg',
+  './bilder/farg/sopbil.jpg',
+  './bilder/farg/sopbil-snett.svg',
+  './bilder/farg/sopbil-snett.jpg',
+  './bilder/farg/traktor2.svg',
+  './bilder/farg/traktor2.jpg',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',

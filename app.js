@@ -608,6 +608,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const PICTURES = [
         { namn: 'Traktor', fargbild: 'bilder/farg/traktor.jpg', rita: ritaFil, bild: 'bilder/farg/traktor.svg',
           keiws: { x: 420, y: 455, s: 0.32, ytor: [[420, 380]] } },        // i bakre rutan
+        { namn: 'Grävare', fargbild: 'bilder/farg/gravare.jpg', rita: ritaFil, bild: 'bilder/farg/gravare.svg',
+          keiws: { x: 720, y: 462, s: 0.4, ytor: [[720, 400]] } },        // i hyttens fönster
+        { namn: 'Sopbil', fargbild: 'bilder/farg/sopbil.jpg', rita: ritaFil, bild: 'bilder/farg/sopbil.svg',
+          keiws: { x: 855, y: 512, s: 0.32, ytor: [[855, 420]] } },        // i hytten mellan stolen och ratten
+        { namn: 'Sopbil snett', fargbild: 'bilder/farg/sopbil-snett.jpg', rita: ritaFil, bild: 'bilder/farg/sopbil-snett.svg',
+          keiws: { x: 765, y: 505, s: 0.32, ytor: [[765, 440]] } },        // i vindrutan
+        { namn: 'Traktor 2', fargbild: 'bilder/farg/traktor2.jpg', rita: ritaFil, bild: 'bilder/farg/traktor2.svg',
+          keiws: { x: 781, y: 410, s: 0.32, ytor: [[781, 340]] } },        // i bakre rutan
         { namn: 'Traktor (gammal)', rita: ritaFil, bild: 'bilder/traktor.svg',
           farger: {
             [F.himmel]: [[0, 0]],
