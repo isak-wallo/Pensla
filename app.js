@@ -601,12 +601,14 @@ document.addEventListener('DOMContentLoaded', () => {
         moln(ctx, 920, 230, 0.7);
     }
 
-    // Bilderna. `clawd` = var den lilla kompisen Clawd gömmer sig:
+    // Bilderna. `keiws` = var den lilla kompisen keIWs gömmer sig:
     // (x, y) = mitt under fötterna, s = skala, `ytor` = punkter i de ytor han
     // syns i (han ritas bara där, så det som ligger framför skymmer honom).
     // `vilar: true` = bilden ligger i malpåse: den finns kvar men visas inte.
     const PICTURES = [
-        { namn: 'Traktor', rita: ritaFil, bild: 'bilder/traktor.svg',
+        { namn: 'Traktor', fargbild: 'bilder/farg/traktor.jpg', rita: ritaFil, bild: 'bilder/farg/traktor.svg',
+          keiws: { x: 420, y: 455, s: 0.32, ytor: [[420, 380]] } },        // i bakre rutan
+        { namn: 'Traktor (gammal)', rita: ritaFil, bild: 'bilder/traktor.svg',
           farger: {
             [F.himmel]: [[0, 0]],
             [F.sol]: [[209, 123], [912, 472], [932, 463]],
@@ -626,7 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.dack]: [[217, 621], [786, 636]],
             [F.stal]: [[688, 287], [582, 614], [594, 678]],
             [F.morkstal]: [[554, 593], [553, 168], [689, 218], [484, 397], [225, 410], [991, 481], [1003, 467], [978, 473], [1011, 600], [804, 557], [592, 592], [589, 635], [586, 661], [680, 685], [355, 621], [355, 588], [322, 621], [388, 621], [355, 654], [877, 673]] },
-          clawd: { x: 386, y: 392, s: 0.34, ytor: [[386, 300]] } },       // i bakre rutan
+          keiws: { x: 386, y: 392, s: 0.34, ytor: [[386, 300]] } },       // i bakre rutan
         { namn: 'Grävmaskin', rita: ritaFil, bild: 'bilder/gravmaskin.svg',
           farger: {
             [F.himmel]: [[505, 0], [890, 261]],
@@ -646,7 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.stal]: [[264, 370], [834, 258], [1008, 402], [214, 635], [266, 635], [321, 635], [376, 635], [428, 635], [481, 635], [537, 635], [589, 635], [644, 635], [151, 667], [704, 653], [133, 711], [736, 710], [150, 771], [713, 779], [213, 804], [265, 804], [319, 804], [373, 804], [427, 804], [480, 804], [534, 804], [587, 804], [641, 804]],
             [F.ljusstal]: [[904, 233], [1032, 480], [896, 653], [878, 666], [861, 680]],
             [F.dack]: [[147, 706]] },
-          clawd: { x: 535, y: 462, s: 0.3, ytor: [[535, 380]] } },        // i dörrens ruta
+          keiws: { x: 535, y: 462, s: 0.3, ytor: [[535, 380]] } },        // i dörrens ruta
         { namn: 'Flygplan', rita: ritaFil, bild: 'bilder/flygplan.svg',
           farger: {
             [F.himmel]: [[533, 0]],
@@ -669,7 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.morkstal]: [[793, 634], [614, 621], [614, 632], [606, 649]],
             [F.dack]: [[979, 699], [561, 680], [612, 680]],
             [F.ruta]: [[385, 506], [425, 507], [465, 506], [526, 506], [566, 506], [606, 506], [646, 505], [726, 506], [766, 506], [806, 507], [846, 505], [886, 505], [927, 504], [1057, 499], [1095, 499]] },
-          clawd: { x: 1005, y: 128, s: 0.3, ytor: [[1005, 60]] } },       // bakom molnet
+          keiws: { x: 1005, y: 128, s: 0.3, ytor: [[1005, 60]] } },       // bakom molnet
         { namn: 'Helikopter', rita: ritaFil, bild: 'bilder/helikopter.svg',
           farger: {
             [F.himmel]: [[575, 0]],
@@ -688,7 +690,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.stam]: [[1138, 379], [88, 460], [207, 440]],
             [F.vit]: [[1040, 746], [567, 731], [733, 770], [646, 716]],
             [F.asfalt]: [[905, 745], [638, 684], [434, 686], [724, 647], [579, 698], [594, 757]] },
-          clawd: { x: 680, y: 522, s: 0.3, ytor: [[685, 453]] } },        // i dörrens ruta
+          keiws: { x: 680, y: 522, s: 0.3, ytor: [[685, 453]] } },        // i dörrens ruta
         { namn: 'Brandbil', rita: ritaFil, bild: 'bilder/brandbil.svg',
           tillagg: [[462, 891, 436, 903], [1188, 766, 1204, 763]],
           farger: {
@@ -711,7 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.gul]: [[732, 633], [186, 596], [364, 617]],
             [F.vit]: [[371, 665], [183, 640]],
             [F.dack]: [[564, 661], [475, 752], [255, 742], [317, 756], [753, 718], [702, 719], [866, 708], [937, 740]] },
-          clawd: { x: 981, y: 528, s: 0.28, ytor: [[981, 424]] } },        // i bakersta rutan
+          keiws: { x: 981, y: 528, s: 0.28, ytor: [[981, 424]] } },        // i bakersta rutan
         { namn: 'Dumper', rita: ritaFil, bild: 'bilder/dumper.svg',
           farger: {
             [F.himmel]: [[491, 0]],
@@ -732,7 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.akerkulle]: [[0, 597], [1142, 558]],
             [F.grus]: [[0, 899], [734, 832]],
             [F.dack]: [[889, 590], [605, 624], [812, 573], [803, 590], [782, 611], [776, 638], [778, 666], [787, 695], [792, 721], [823, 742], [826, 756], [864, 764], [581, 597], [552, 606], [538, 624], [526, 641], [518, 672], [505, 703], [508, 732], [512, 759], [528, 780], [546, 795], [579, 802], [266, 699], [288, 723], [318, 741], [323, 755], [356, 762], [350, 734], [370, 713]] },
-          clawd: { x: 553, y: 494, s: 0.26, ytor: [[552, 429]] } },        // i sidorutan
+          keiws: { x: 553, y: 494, s: 0.26, ytor: [[552, 429]] } },        // i sidorutan
         { namn: 'Sopbil', rita: ritaFil, bild: 'bilder/sopbil.svg',
           tillagg: [[495, 892, 472, 904]],
           farger: {
@@ -757,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.akerkulle]: [[0, 597], [1133, 558], [700, 880]],
             [F.asfalt]: [[160, 899], [1199, 625]],
             [F.mark]: [[734, 832]] },
-          clawd: { x: 1105, y: 646, s: 0.24, ytor: [[1150, 620], [1105, 590]] } },      // bakom soptunnan
+          keiws: { x: 1105, y: 646, s: 0.24, ytor: [[1150, 620], [1105, 590]] } },      // bakom soptunnan
         { namn: 'Tåg', rita: ritaFil, bild: 'bilder/tag.svg',
           farger: {
             [F.himmel]: [[845, 0]],
@@ -782,7 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.grus]: [[1199, 585], [1199, 608], [1199, 552], [689, 720], [187, 880], [400, 820], [873, 670], [450, 736], [1015, 644], [1084, 602]],
             [F.jord]: [[300, 834], [600, 828], [763, 773], [898, 726], [1050, 683], [1155, 659], [1028, 610], [246, 852], [566, 843], [721, 784], [873, 731], [1010, 690], [1129, 661], [3, 899], [381, 786], [691, 738], [849, 692], [885, 642], [439, 773], [451, 899], [1018, 626]] },
           delningar: [[100, 898, 620, 898], [1198, 600, 1198, 740]],
-          clawd: { x: 726, y: 462, s: 0.28, ytor: [[726, 377]] } },        // i förarhyttens ruta
+          keiws: { x: 726, y: 462, s: 0.28, ytor: [[726, 377]] } },        // i förarhyttens ruta
         { namn: 'Båt', rita: ritaFil, bild: 'bilder/bat.svg',
           farger: {
             [F.himmel]: [[450, 0]],
@@ -803,7 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.ljusstal]: [[465, 384], [558, 397], [707, 425], [939, 648], [961, 646]],
             [F.gul]: [[549, 523], [444, 514]],
             [F.morkgul]: [[644, 388], [690, 522]] },
-          clawd: { x: 800, y: 548, s: 0.22, ytor: [[768, 527]] } },        // på däcket bakom relingen
+          keiws: { x: 800, y: 548, s: 0.22, ytor: [[768, 527]] } },        // på däcket bakom relingen
         { namn: 'Traktor snett', rita: ritaFil, bild: 'bilder/traktor-snett.svg',
           tillagg: [[1188, 313, 1201, 316]],
           farger: {
@@ -825,7 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.falg]: [[907, 667], [539, 720], [295, 698]],
             [F.dack]: [[672, 701], [629, 742], [921, 736], [825, 504], [805, 534], [805, 565], [794, 602], [802, 633], [802, 672], [818, 698], [827, 733], [849, 750], [896, 769], [865, 769], [952, 757], [554, 571], [484, 536], [457, 653], [451, 558], [426, 597], [410, 635], [406, 680], [458, 703], [417, 727], [470, 750], [478, 775], [495, 788], [531, 801], [509, 801], [306, 748], [217, 680], [214, 554], [189, 585], [216, 587], [215, 617], [176, 625], [172, 667], [182, 709], [228, 723], [235, 747], [251, 758], [285, 773], [263, 773]],
             [F.himmel]: [[410, 0]] },
-          clawd: { x: 600, y: 386, s: 0.32, ytor: [[587, 285]] } },       // i framrutan
+          keiws: { x: 600, y: 386, s: 0.32, ytor: [[587, 285]] } },       // i framrutan
         { namn: 'Grävmaskin snett', rita: ritaFil, bild: 'bilder/gravmaskin-snett.svg',
           farger: {
             [F.himmel]: [[1199, 0], [742, 160], [734, 313]],
@@ -845,7 +847,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.ljusstal]: [[763, 112], [699, 156], [541, 319], [592, 370], [581, 381], [901, 426], [896, 408], [746, 763], [758, 767], [765, 730], [245, 677], [487, 722], [689, 683]],
             [F.morkstal]: [[540, 294], [554, 294], [528, 414], [585, 417], [871, 234], [340, 393], [468, 583], [510, 562], [554, 562], [566, 559], [590, 576], [586, 593], [546, 598], [528, 620], [412, 713], [358, 667], [617, 654], [612, 682], [455, 762], [844, 579], [885, 601], [853, 605], [893, 536], [893, 543], [933, 674], [933, 612]],
             [F.dack]: [[492, 783], [704, 737], [338, 613], [382, 614], [278, 616], [414, 619], [449, 624], [478, 632], [497, 642], [538, 649], [540, 669], [557, 696], [557, 729], [565, 756], [529, 780], [733, 632], [761, 653], [749, 685], [748, 713], [734, 734], [616, 597], [647, 603], [683, 610], [578, 615], [720, 617], [620, 623], [577, 629], [670, 639]] },
-          clawd: { x: 652, y: 508, s: 0.26, ytor: [[656, 460]] } },       // i hyttens ruta
+          keiws: { x: 652, y: 508, s: 0.26, ytor: [[656, 460]] } },       // i hyttens ruta
         { namn: 'Helikopter snett', vilar: true, rita: ritaFil, bild: 'bilder/helikopter-snett.svg',
           farger: {
             [F.himmel]: [[672, 0]],
@@ -863,7 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.fonster]: [[377, 448], [356, 554], [496, 457], [582, 401], [664, 401], [310, 402], [270, 539]],
             [F.stal]: [[589, 148], [989, 384], [408, 699], [546, 737], [372, 663], [700, 635], [360, 637], [401, 634], [502, 630], [676, 622]],
             [F.morkstal]: [[615, 177], [570, 176], [540, 186], [819, 241], [563, 158], [617, 160], [593, 173], [589, 193], [603, 193], [563, 200], [570, 195], [616, 196], [574, 207], [601, 205], [600, 215], [579, 218], [537, 277], [556, 307], [628, 326], [782, 333], [792, 354], [999, 344], [988, 342], [979, 350], [1003, 359], [994, 358], [975, 364], [970, 376], [969, 387], [971, 399], [986, 424], [970, 427], [976, 431], [987, 440], [995, 445], [979, 450], [998, 459]] },
-          clawd: { x: 492, y: 506, s: 0.28, ytor: [[496, 457]] } },       // i dörrens ruta
+          keiws: { x: 492, y: 506, s: 0.28, ytor: [[496, 457]] } },       // i dörrens ruta
         { namn: 'Flygplan snett', rita: ritaFil, bild: 'bilder/flygplan-snett.svg',
           tillagg: [[432, 892, 412, 902], [488, 892, 468, 902], [1188, 312, 1203, 315]],
           farger: {
@@ -886,7 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.morkstal]: [[605, 639], [641, 633]],
             [F.dack]: [[728, 657], [482, 611], [461, 614], [262, 723], [282, 731]],
             [F.ruta]: [[165, 551], [255, 551], [226, 552], [197, 551], [770, 431], [752, 435], [734, 439], [715, 441], [696, 449], [676, 453], [656, 458], [636, 465], [615, 467], [540, 485], [520, 493], [499, 496], [478, 501], [457, 507], [436, 513], [414, 517], [392, 521], [370, 526]] },
-          clawd: { x: 1000, y: 112, s: 0.28, ytor: [[550, 0]] } },        // bakom molnet
+          keiws: { x: 1000, y: 112, s: 0.28, ytor: [[550, 0]] } },        // bakom molnet
         { namn: 'Propellerplan', vilar: true, rita: ritaFil, bild: 'bilder/propellerplan.svg',
           farger: {
             [F.himmel]: [[533, 0]],
@@ -906,7 +908,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.stal]: [[366, 641], [383, 650], [366, 657], [377, 659], [361, 669], [492, 645], [509, 643], [502, 656], [644, 643]],
             [F.morkstal]: [[223, 484], [308, 579], [306, 525], [283, 619], [531, 511], [610, 515], [523, 579], [478, 615], [455, 487]],
             [F.dack]: [[351, 734], [338, 733], [360, 729], [364, 714], [462, 686], [471, 677], [445, 682], [685, 722], [666, 717], [694, 712], [694, 695]] },
-          clawd: { x: 588, y: 513, s: 0.26, ytor: [[589, 472]] } },       // i sidorutan
+          keiws: { x: 588, y: 513, s: 0.26, ytor: [[589, 472]] } },       // i sidorutan
         { namn: 'Litet flygplan', rita: ritaFlygplanLitet, bild: 'bilder/flygplan-litet.svg', helaYtor: true,
           farger: {
             [F.fjarrkulle]: [[162, 213], [45, 249]],
@@ -917,7 +919,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.buk]: [[203, 515]] },
           tillagg: [[63, 240, 93, 244], [89, 211, 109, 211],
                     [1092, 167, 1111, 167]],
-          clawd: { x: 455, y: 508, s: 0.4, ytor: [[455, 440]] } },         // i cockpitrutan
+          keiws: { x: 455, y: 508, s: 0.4, ytor: [[455, 440]] } },         // i cockpitrutan
         { namn: 'Helikopter på stigen', rita: ritaHelikopterStig, bild: 'bilder/helikopter-stig.svg', helaYtor: true,
           farger: {
             [F.rod]: [[976, 581], [980, 463], [352, 530]],
@@ -926,7 +928,7 @@ document.addEventListener('DOMContentLoaded', () => {
           tillagg: [[352, 106, 360, 118, 363, 131, 358, 143, 350, 150],
                     [524, 222, 553, 228], [614, 230, 650, 231, 700, 235, 745, 239],
                     [113, 774, 60, 800, 0, 829], [301, 721, 327, 714], [1132, 386, 1155, 386], [1201, 270, 1201, 370]],
-          clawd: { x: 590, y: 585, s: 0.32, ytor: [[590, 500]] } },        // i dörrens ruta
+          keiws: { x: 590, y: 585, s: 0.32, ytor: [[590, 500]] } },        // i dörrens ruta
         { namn: 'Helikopter i luften', vilar: true, rita: ritaHelikopterLuft, bild: 'bilder/helikopter-luft.svg', helaYtor: true,
           farger: {
             [F.akerkulle]: [[220, 830], [800, 845]],
@@ -935,7 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.morkstal]: [[1015, 310]] },
           delningar: [[248, 811, 268, 818], [293, 837, 310, 862, 332, 896], [772, 818, 756, 832], [735, 846, 738, 870]],
           tillagg: [[1128, 862, 1143, 862], [1128, 898, 1143, 898]],
-          clawd: { x: 597, y: 664, s: 0.28, ytor: [[597, 600]] } },        // i sidorutan
+          keiws: { x: 597, y: 664, s: 0.28, ytor: [[597, 600]] } },        // i sidorutan
         { namn: 'Flygplan vid fältet', vilar: true, rita: ritaFlygplanFalt, bild: 'bilder/flygplan-falt.svg', helaYtor: true,
           farger: {
             [F.fonster]: [[462, 502]],
@@ -944,12 +946,16 @@ document.addEventListener('DOMContentLoaded', () => {
             [F.stam]: [[84, 535], [148, 545], [788, 550]],
             [F.akerkulle]: [[760, 576]] },
           tillagg: [[1184, 553, 1200, 558], [1186, 563, 1200, 563], [77, 523, 91, 521], [143, 537, 154, 537], [783, 535, 795, 535]],
-          clawd: { x: 590, y: 585, s: 0.24, ytor: [[590, 540]] } }         // i sidorutan
+          keiws: { x: 590, y: 585, s: 0.24, ytor: [[590, 540]] } }         // i sidorutan
     ];
     for (let k = PICTURES.length - 1; k >= 0; k--) if (PICTURES[k].vilar) PICTURES.splice(k, 1);
 
     // Bildfilerna laddas i förväg så att bläddring går direkt.
     PICTURES.forEach(pic => {
+        if (pic.fargbild) {
+            pic.fimg = new Image();
+            pic.fimg.src = pic.fargbild;
+        }
         if (!pic.bild) return;
         pic.img = new Image();
         pic.img.src = pic.bild;
@@ -1291,6 +1297,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Färgbild (`fargbild` i PICTURES, se verktyg/fargbild.py): penseln
+    // trollar fram själva bilden pixel för pixel, så alla ytor är "blandade"
+    // och tar färgen ur facitPx. Helt vita pixlar flyttas ett snäpp från
+    // PAPER, som betyder omålad.
+    function franFargbild() {
+        const n = regionSize.length;
+        facitPx = new Uint32Array(cCtx.getImageData(0, 0, PAPER_W, PAPER_H).data.buffer);
+        for (let i = 0, len = facitPx.length; i < len; i++) {
+            if (facitPx[i] === PAPER) facitPx[i] = 0xFFFEFEFE;
+        }
+        regionColor = new Uint32Array(n);
+        regionBlandad = new Uint8Array(n).fill(1);
+    }
+
     // Blandade ytor (flera färger i kartan, t.ex. himmel + kullar + träd som
     // hänger ihop genom glapp i linjerna) färgas så att färggränserna följer
     // linjerna, inte kartans grova kanter (stadaBlandade):
@@ -1494,49 +1514,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Clawd ---
-    // Den busiga lilla kompisen (från repot isak-wallo/clawd) gömmer sig i
-    // varje bild, som krypet i Richard Scarrys böcker. Han syns inte från
-    // början; när man målar där han är poppar han upp, vinkar och blir kvar.
-    // Han ritas av sina pixelklossar (originalets mått 280 x 178 px, origo
-    // nere till vänster), så han blir skarp i alla storlekar.
-    const CLAWD_ORANGE = '#d77656';
-    const CLAWD_TRAFF = 40;     // så många målade pixlar på honom innan han poppar
-    const CLAWD_MS = 3200;      // hela animationen: upp, vinka, blinka
-    let clawd = null;           // { x, y, s, box, mask, tmp, hittad, start, traff }
-    let clawdYta = new Uint8Array(1);   // 1 för ytor han syns i
+    // --- keIWs ---
+    // Den lilla blå kompisen gömmer sig i varje bild, som krypet i Richard
+    // Scarrys böcker. Han syns inte från början; när man målar där han är
+    // poppar han upp, vinkar och blir kvar. Han ritas av sina klossar
+    // (KEIWS i keiws.js, origo i kroppens övre vänstra hörn), så han blir
+    // skarp i alla storlekar.
+    const KEIWS_TRAFF = 40;     // så många målade pixlar på honom innan han poppar
+    const KEIWS_UPP_MS = 600;   // upp bakom kanten med en liten studs …
+    const KEIWS_VINKA = 700;    // … vinkar sedan (KEIWS.vinka) …
+    const KEIWS_VINKA_MS = KEIWS.vinka.reduce((t, b) => t + b.tid, 0);
+    const KEIWS_BLINK = KEIWS_VINKA + KEIWS_VINKA_MS + 300;   // … och blinkar en gång
+    const KEIWS_MS = KEIWS_BLINK + 400;
+    let keiws = null;           // { x, y, s, box, mask, tmp, hittad, start, traff }
+    let keiwsYta = new Uint8Array(1);   // 1 för ytor han syns i
 
-    function ritaClawd(ctx, x, y, s, arm, blink) {
-        const X = v => Math.round(x + (v - 140) * s), Y = v => Math.round(y + v * s);
-        const kloss = (x0, y0, x1, y1) => ctx.fillRect(X(x0), Y(y0), X(x1) - X(x0), Y(y1) - Y(y0));
-        ctx.fillStyle = CLAWD_ORANGE;
-        kloss(48, -178, 232, -42);                 // kropp
-        kloss(0, -130, 48, -86);                   // vänster arm
-        const ay = -130 - Math.round(arm * 4) * 12;  // höger arm, flyttas i steg om 12 px
-        kloss(232, ay, 280, ay + 44);
-        [[48, 72], [96, 116], [164, 188], [212, 232]].forEach(([a, b]) => kloss(a, -42, b, 0));
-        ctx.fillStyle = '#000';
-        if (blink) {
-            kloss(72, -142, 96, -136);
-            kloss(188, -142, 212, -136);
-        } else {
-            kloss(72, -154, 96, -124);
-            kloss(188, -154, 212, -124);
-        }
+    // (x, y) = mitt under fötterna, s = skala.
+    function ritaKeiws(ctx, x, y, s, rekt) {
+        const X = v => Math.round(x + (v - 80) * s), Y = v => Math.round(y + (v - 204) * s);
+        rekt.forEach(([x0, y0, x1, y1, f]) => {
+            ctx.fillStyle = KEIWS.farger[f];
+            ctx.fillRect(X(x0), Y(y0), X(x1) - X(x0), Y(y1) - Y(y0));
+        });
     }
 
-    // Förbereder Clawd för bilden: ruta, mask (de ytor han syns i) och
+    // Förbereder keIWs för bilden: ruta, mask (de ytor han syns i) och
     // en arbetscanvas. Anropas efter labelRegions.
-    function prepClawd(c, hittad) {
-        clawdYta = new Uint8Array(regionSize.length);
+    function prepKeiws(c, hittad) {
+        keiwsYta = new Uint8Array(regionSize.length);
         c.ytor.forEach(([px, py]) => {
             const l = labels[Math.round(py) * PAPER_W + Math.round(px)];
-            if (l > 0) clawdYta[l] = 1;
+            if (l > 0) keiwsYta[l] = 1;
         });
-        // Rutan rymmer honom plus lite luft ovanför (han studsar lite förbi)
-        const x0 = Math.max(0, Math.floor(c.x - 142 * c.s));
-        const x1 = Math.min(PAPER_W - 1, Math.ceil(c.x + 142 * c.s));
-        const y0 = Math.max(0, Math.floor(c.y - 178 * c.s * 1.2));
+        // Rutan rymmer honom med armarna ute och lite luft ovanför (han
+        // studsar lite förbi och vinkar med armen över huvudet)
+        const x0 = Math.max(0, Math.floor(c.x - 126 * c.s));
+        const x1 = Math.min(PAPER_W - 1, Math.ceil(c.x + 138 * c.s));
+        const y0 = Math.max(0, Math.floor(c.y - 252 * c.s * 1.2));
         const y1 = Math.min(PAPER_H - 1, Math.ceil(c.y));
         const w = x1 - x0 + 1, h = y1 - y0 + 1;
         const mask = document.createElement('canvas');
@@ -1547,52 +1561,61 @@ document.addEventListener('DOMContentLoaded', () => {
         const px = new Uint32Array(img.data.buffer);
         for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
-                if (clawdYta[labels[(y0 + y) * PAPER_W + x0 + x]]) px[y * w + x] = 0xFF000000;
+                if (keiwsYta[labels[(y0 + y) * PAPER_W + x0 + x]]) px[y * w + x] = 0xFF000000;
             }
         }
         mctx.putImageData(img, 0, 0);
         const tmp = document.createElement('canvas');
         tmp.width = w;
         tmp.height = h;
-        clawd = { x: c.x, y: c.y, s: c.s, box: { x0, y0, x1, y1, w, h },
+        keiws = { x: c.x, y: c.y, s: c.s, box: { x0, y0, x1, y1, w, h },
                   mask, tmp, hittad, start: -Infinity, traff: 0 };
     }
 
-    function poppaClawd() {
-        if (!clawd || clawd.hittad) return;
-        clawd.hittad = true;
-        clawd.start = performance.now();
+    function poppaKeiws() {
+        if (!keiws || keiws.hittad) return;
+        keiws.hittad = true;
+        keiws.start = performance.now();
         requestRender();
     }
 
-    // Ritar Clawd (om han är hittad) på vCtx, som redan har bildens transform.
-    // Returnerar true medan animationen pågår.
-    function renderClawd(now) {
-        if (!clawd || !clawd.hittad) return false;
-        const t = now - clawd.start;
-        const b = clawd.box, hojd = 178 * clawd.s;
-        // Upp bakom kanten med en liten studs (0–600 ms)
-        let upp = 1;
-        if (t < 600) {
-            const p = t / 600, k = 1.5;
-            upp = 1 + (k + 1) * Math.pow(p - 1, 3) + k * Math.pow(p - 1, 2);
+    // Vilka klossar som visas vid tiden t (ms sedan han hittades).
+    function keiwsLage(t) {
+        if (t >= KEIWS_VINKA && t < KEIWS_VINKA + KEIWS_VINKA_MS) {
+            let v = t - KEIWS_VINKA;
+            for (const b of KEIWS.vinka) {
+                if (v < b.tid) return b.rekt;
+                v -= b.tid;
+            }
         }
-        // Vinkar två gånger (700–2300 ms), blinkar en gång efteråt
-        let arm = 0;
-        if (t > 700 && t < 2300) {
-            const v = ((t - 700) / 800) % 1;
-            arm = v < 0.5 ? Math.min(1, v * 4) : Math.max(0, (1 - v) * 4);
-        }
-        const blink = t > 2600 && t < 2760;
-        const tctx = clawd.tmp.getContext('2d');
+        if (t >= KEIWS_BLINK && t < KEIWS_BLINK + 160) return KEIWS.blink;
+        return KEIWS.stilla;
+    }
+
+    // Ritar keIWs maskad till sina ytor på ctx (i bildkoordinater).
+    function ritaKeiwsMaskad(ctx, upp, rekt) {
+        const b = keiws.box, tctx = keiws.tmp.getContext('2d');
         tctx.globalCompositeOperation = 'source-over';
         tctx.clearRect(0, 0, b.w, b.h);
-        ritaClawd(tctx, clawd.x - b.x0, clawd.y - b.y0 + (1 - upp) * hojd, clawd.s, arm, blink);
+        ritaKeiws(tctx, keiws.x - b.x0, keiws.y - b.y0 + (1 - upp) * 204 * keiws.s, keiws.s, rekt);
         tctx.globalCompositeOperation = 'destination-in';
-        tctx.drawImage(clawd.mask, 0, 0);
+        tctx.drawImage(keiws.mask, 0, 0);
         tctx.globalCompositeOperation = 'source-over';
-        vCtx.drawImage(clawd.tmp, b.x0, b.y0);
-        return t < CLAWD_MS;
+        ctx.drawImage(keiws.tmp, b.x0, b.y0);
+    }
+
+    // Ritar keIWs (om han är hittad) på vCtx, som redan har bildens transform.
+    // Returnerar true medan animationen pågår.
+    function renderKeiws(now) {
+        if (!keiws || !keiws.hittad) return false;
+        const t = now - keiws.start;
+        let upp = 1;
+        if (t < KEIWS_UPP_MS) {
+            const p = t / KEIWS_UPP_MS, k = 1.5;
+            upp = 1 + (k + 1) * Math.pow(p - 1, 3) + k * Math.pow(p - 1, 2);
+        }
+        ritaKeiwsMaskad(vCtx, upp, keiwsLage(t));
+        return t < KEIWS_MS;
     }
 
     // Varje bild minns det man målat medan appen är öppen, så man kan
@@ -1602,16 +1625,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadPicture(index) {
         const pic = PICTURES[index];
-        if (pic.img && !(pic.img.complete && pic.img.naturalWidth)) {
+        const ejKlar = [pic.img, pic.fimg].find(im => im && !(im.complete && im.naturalWidth));
+        if (ejKlar) {
             // Bildfilen är inte laddad än: byt när den är klar
             vantarPaBild = index;
-            pic.img.onload = () => { if (vantarPaBild === index) loadPicture(index); };
+            ejKlar.onload = () => { if (vantarPaBild === index) loadPicture(index); };
             return;
         }
         vantarPaBild = -1;
         if (pictureLoaded) {
             finishFades();
-            pictureState[currentPicture] = { fill: fillPx.slice(), clawd: !!(clawd && clawd.hittad) };
+            pictureState[currentPicture] = { fill: fillPx.slice(), keiws: !!(keiws && keiws.hittad) };
         }
         pictureLoaded = true;
         currentPicture = index;
@@ -1646,18 +1670,20 @@ document.addEventListener('DOMContentLoaded', () => {
         cCtx.clearRect(0, 0, PAPER_W, PAPER_H);
         fargLage = true;
         kant = LW;
-        rita(cCtx, pic);
+        if (pic.fimg) cCtx.drawImage(pic.fimg, 0, 0, PAPER_W, PAPER_H);
+        else rita(cCtx, pic);
         fargLage = false;
         labelRegions();
         if (utanDelningar) {
             lCtx.putImageData(utanDelningar, 0, 0);
             fyllDelningar(utanDelningar.data);
         }
-        if (pic.farger && !pic.helaYtor) fargaFranPunkter(pic.farger);
+        if (pic.fimg) franFargbild();
+        else if (pic.farger && !pic.helaYtor) fargaFranPunkter(pic.farger);
         else pickRegionColors(pic);
         fades.length = 0;
         const saved = pictureState[index];
-        prepClawd(PICTURES[index].clawd, !!(saved && saved.clawd));
+        prepKeiws(PICTURES[index].keiws, !!(saved && saved.keiws));
         if (saved) {
             fillPx.set(saved.fill);
             for (let i = 0, n = labels.length; i < n; i++) {
@@ -1755,10 +1781,10 @@ document.addEventListener('DOMContentLoaded', () => {
             dirty = null;
             vCtx.drawImage(fillCanvas, 0, 0);
         }
-        const clawdRor = renderClawd(now);
+        const keiwsRor = renderKeiws(now);
         vCtx.drawImage(lineCanvas, 0, 0);
         vCtx.setTransform(1, 0, 0, 1, 0, 0);
-        if (fades.length || clawdRor) requestRender();
+        if (fades.length || keiwsRor) requestRender();
     }
 
     // Skärmkoordinat -> bildkoordinat (inversen av xf)
@@ -1798,12 +1824,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (xa > xb) continue;
             if (xa < minX) minX = xa;
             if (xb > maxX) maxX = xb;
-            const kollaClawd = clawd && !clawd.hittad && y >= clawd.box.y0 && y <= clawd.box.y1;
+            const kollaKeiws = keiws && !keiws.hittad && y >= keiws.box.y0 && y <= keiws.box.y1;
             for (let i = y * W + xa, end = y * W + xb; i <= end; i++) {
                 const l = labels[i];
-                if (kollaClawd && clawdYta[l]) {
+                if (kollaKeiws && keiwsYta[l]) {
                     const x = i - y * W;
-                    if (x >= clawd.box.x0 && x <= clawd.box.x1) clawd.traff++;
+                    if (x >= keiws.box.x0 && x <= keiws.box.x1) keiws.traff++;
                 }
                 if (l <= 0 || regionDone[l] || fillPx[i] !== PAPER) continue;
                 fillPx[i] = regionBlandad[l] ? facitPx[i] : regionColor[l];
@@ -1835,7 +1861,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         touched.clear();
-        if (clawd && !clawd.hittad && clawd.traff >= CLAWD_TRAFF) poppaClawd();
+        if (keiws && !keiws.hittad && keiws.traff >= KEIWS_TRAFF) poppaKeiws();
         if (clearState) resetClearButton();
         requestRender();
     }
@@ -1844,7 +1870,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ovanpå; när toningen är klar skrivs den in i fillPx (commitRegion).
     function startFade(id) {
         regionDone[id] = 1;
-        if (clawdYta[id]) poppaClawd();
+        if (keiwsYta[id]) poppaKeiws();
         const W = PAPER_W;
         const x0 = regionLeft[id], y0 = regionTop[id];
         const w = regionRight[id] - x0 + 1, h = regionBottom[id] - y0 + 1;
@@ -2003,7 +2029,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- SPARA ---
-    // Sparar bilden som den ser ut nu (det målade, Clawd om han är hittad,
+    // Sparar bilden som den ser ut nu (det målade, keIWs om han är hittad,
     // och konturerna) som en PNG i 1200x900. Laddas ner till plattans
     // Hämtade filer (Downloads), där den syns i Galleri/Filer.
     let sparaTimer = null;
@@ -2017,16 +2043,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, PAPER_W, PAPER_H);
         ctx.drawImage(fillCanvas, 0, 0);
-        if (clawd && clawd.hittad) {
-            const b = clawd.box, tctx = clawd.tmp.getContext('2d');
-            tctx.globalCompositeOperation = 'source-over';
-            tctx.clearRect(0, 0, b.w, b.h);
-            ritaClawd(tctx, clawd.x - b.x0, clawd.y - b.y0, clawd.s, 0, false);
-            tctx.globalCompositeOperation = 'destination-in';
-            tctx.drawImage(clawd.mask, 0, 0);
-            tctx.globalCompositeOperation = 'source-over';
-            ctx.drawImage(clawd.tmp, b.x0, b.y0);
-        }
+        if (keiws && keiws.hittad) ritaKeiwsMaskad(ctx, 1, KEIWS.stilla);
         ctx.drawImage(lineCanvas, 0, 0);
         const d = new Date(), tv = n => String(n).padStart(2, '0');
         const namn = 'farga-' + PICTURES[currentPicture].namn.toLowerCase()
@@ -2065,7 +2082,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearTimer = setTimeout(resetClearButton, 5000);
         } else {
             fades.length = 0;
-            if (clawd) { clawd.hittad = false; clawd.traff = 0; }
+            if (keiws) { keiws.hittad = false; keiws.traff = 0; }
             fillPx.fill(PAPER);
             regionPainted.fill(0);
             regionDone.fill(0);

@@ -14,6 +14,8 @@ Bilder: traktor, grävmaskin, stort flygplan och helikopter både från sidan oc
 gånger för att sudda bilden). Fler läggs till i
 `PICTURES` i `app.js`.
 
-I varje bild gömmer sig den lilla kompisen
-[Clawd](https://github.com/isak-wallo/clawd) — måla där han är så poppar han
-fram och vinkar.
+I varje bild gömmer sig den lilla blå kompisen keIWs — måla där han är så
+poppar han fram och vinkar.
+
+De nya bilderna är färgbilder: man ser bara konturerna, och penseln trollar
+fram färgbilden (`verktyg/fargbild.py`).

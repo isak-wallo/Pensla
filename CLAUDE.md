@@ -26,11 +26,16 @@ pastellfärger, inga ljud, inga poäng, inga val att göra.
   (`startHold`/`holdEnd`) delas av SPARA och BÖRJA OM.
 - Varje bild minns det man målat så länge appen är öppen
   (`pictureState`/`loadPicture`).
-- **Clawd** (den lilla orange kompisen från https://github.com/isak-wallo/clawd)
-  gömmer sig i varje bild, som krypet i Richard Scarrys böcker. Han syns
-  inte från början; när man målat `CLAWD_TRAFF` pixlar där han är (eller hans
-  yta fylls i) poppar han upp med en liten studs, vinkar två gånger,
-  blinkar och blir kvar. BÖRJA OM gömmer honom igen.
+- **keIWs** (den lilla blå klossfiguren) gömmer sig i varje bild, som krypet
+  i Richard Scarrys böcker. Han syns inte från början; när man målat
+  `KEIWS_TRAFF` pixlar där han är (eller hans yta fylls i) poppar han upp
+  med en liten studs, vinkar, blinkar och blir kvar. BÖRJA OM gömmer honom
+  igen.
+- **Ny riktning (oktober 2026): färgbilder.** Appen ska byta namn till
+  **Pensla** (inte gjort än: repo, Pages-adress och texter heter Färga
+  tills vidare). Nya bilder görs som färgbilder i Gemini; penseln trollar
+  fram själva färgbilden (se "Färgbilder" nedan). Den första är traktorn
+  (`bilder/farg/`), först i listan; de äldre bilderna ligger kvar efter.
 - Bilder (i ordning): fyra från sidan (traktor, grävmaskin, flygplan på
   banan, helikopter på plattan), fem i perspektiv (traktor, grävmaskin,
   helikopter, stort flygplan, propellerplan) — alla nio rena AI-sidor i
@@ -99,11 +104,12 @@ pushas, annars fastnar plattan på gammal cache.
   `MIN_REGION` (små celler mellan detaljstreck) fylls direkt när penseln
   nuddar dem. Ritning sker en gång per frame (`requestRender`, `dirty`).
 
-## Clawd (`ritaClawd`, `prepClawd`, `renderClawd`)
-- Ritas av sina pixelklossar i originalets mått (280 × 178 px, kropp, armar,
-  fyra ben, ögon 24 × 30) i färgen `#d77656`, skalad med `s`. Höger arm
-  flyttas i steg om 12 px när han vinkar (som i repots `clawd-vinka.gif`).
-- Varje bild i `PICTURES` har `clawd: { x, y, s, ytor }`: (x, y) = mitt under
+## keIWs (`ritaKeiws`, `prepKeiws`, `renderKeiws`)
+- Ritas av sina klossar från `keiws.js` (`KEIWS`: stilla, blink och
+  vinka-animationen, rektanglar relativt kroppens hörn; kroppen 160 × 160,
+  fötterna på y = 204), skalad med `s`. Måtten är kopierade från figurens
+  export, ändra dem inte för hand.
+- Varje bild i `PICTURES` har `keiws: { x, y, s, ytor }`: (x, y) = mitt under
   fötterna, `ytor` = punkter i de ytor han syns i. Han ritas bara på de
   ytornas pixlar (mask), ovanpå färgen men under linjerna — så det som
   ligger framför (molnet, trädkronan, fönsterkarmen, stänkskärmen) skymmer
@@ -206,6 +212,26 @@ zoomar den in för mycket.
   bakgrundens färg (kullen/himlen bakom), smala remsor på maskinen
   maskinens färg.
 
+## Färgbilder (`fargbild`, `franFargbild`, `verktyg/fargbild.py`)
+Det nya sättet att göra bilder. Be Gemini om en tecknad, lekfull färgbild
+(4:3) med mörka konturer runt varje form, där bara konturerna är svarta
+(däck och mörka delar mellangrå), mjuka färger, ingen text eller ram.
+Lägg den i `forlagor/` och kör `python verktyg/fargbild.py forlagor/NAMN.jpg`:
+- Konturerna = pixlar som är tydligt mörkare än sin omgivning (`MORKARE`
+  inom `OMGIVNING` px), så även de ljusare linjerna runt moln och sol kommer
+  med men inte skuggor och glans inne i ytorna. En linjepixel ska också
+  vara nästan det mörkaste inom `NARA` px, annars blir skuggor som ligger
+  an mot en linje svarta klumpar (så såg traktorn ut i v44). Spåras med potrace till
+  `bilder/farg/NAMN.svg`. Färgbilden sparas som `bilder/farg/NAMN.jpg`
+  (1200 × 900, beskärs till 4:3).
+- PICTURES-posten: `fargbild: 'bilder/farg/NAMN.jpg'`, `rita: ritaFil`,
+  `bild: 'bilder/farg/NAMN.svg'` och `keiws`. Inga `farger` behövs: färgbilden
+  ritas på `colorCanvas` och `franFargbild` gör alla ytor "blandade", så att
+  penseln och ifyllnaden tar färgen pixel för pixel ur bilden (`facitPx`).
+- Glapp i konturerna gör bara att två ytor blir en (färgen blir ändå rätt).
+- Lägg båda filerna i `ASSETS` i `sw.js`. Förlagorna i `forlagor/` är med
+  i repot.
+
 ## Bildstil
 **Önskemål för nya bilder:** mer tecknat och barnsligt, lite mindre
 verklighetstroget — som det blå flygplanet på gräset, inte som de mer
@@ -223,10 +249,10 @@ skymmer vad.
    lägg till den i `BILDER` i `verktyg/linjer.py` (typ `'skarp'`), kör
    `linjer.py` och `vektor.py`. Jämför SVG:n med förlagan.
 2. Lägg en post i `PICTURES` (`rita: ritaFil`, `bild: '...'`, `farger`)
-   med ett gömställe för Clawd. Ta fram en punkt per yta ur appens `labels`
+   med ett gömställe för keIWs. Ta fram en punkt per yta ur appens `labels`
    och ge varje yta sin färg (nya färger i `F`, lugna toner).
 3. Fyll alla ytor och titta på förstorade utsnitt: varje yta ska ha rätt
-   färg och Clawd ska kika fram. Lägg SVG:n i `ASSETS` och bumpa `VERSION`
+   färg och keIWs ska kika fram. Lägg SVG:n i `ASSETS` och bumpa `VERSION`
    i `sw.js`.
 
 ## Fallgropar när man ritar (gäller främst kodritade bilder; inga finns kvar
