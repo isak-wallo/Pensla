@@ -32,7 +32,7 @@ färger, inga ljud, inga poäng, inga val att göra.
 - **Namnbyte:** appen ska heta **Pensla** (inte gjort än: repo, Pages-adress
   och texter heter Färga tills vidare).
 - Bilder (oktober 2026, ny uppsättning): traktor, grävare, sopbil från sidan,
-  sopbil snett, traktor 2. De gamla svartvita bilderna (kodritade, spårade
+  sopbil snett, traktor 2, två flygplan och två helikoptrar. De gamla svartvita bilderna (kodritade, spårade
   och rena sidor med färgpunkter) och all kod för dem togs bort i v47 —
   finns i git-historiken.
 - Landskapslås, fullscreen, layoutlås/dö-yta, back-fälla och offline-SW är
@@ -106,7 +106,9 @@ pushas, annars fastnar plattan på gammal cache.
 3. Titta på SVG:n (t.ex. öppna den i Playwright och ta en skärmbild).
 4. Lägg en post i `PICTURES`: `{ namn, fil: 'NAMN', keiws: {...} }`, och
    båda filerna i `ASSETS` i `sw.js`. Bumpa `VERSION`.
-5. Testa: måla över bilden i sicksack med Playwright (▶ med `click`, inte
+5. Granska: `granskning/` (inte i git) har ett par per bild, konturer och
+   färgbild bredvid varandra, så ägaren kan markera det som ska justeras.
+6. Testa: måla över bilden i sicksack med Playwright (▶ med `click`, inte
    både touchstart och click — då hoppar den två bilder) och titta på
    skärmbilden: färgen ska komma fram och keIWs kika fram.
 
