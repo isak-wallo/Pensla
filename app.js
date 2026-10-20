@@ -666,7 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Startskärmen fungerar som återhämtningsläge: den visas vid bakåt-tryck
-    // och när fullscreen tappats, och BÖRJA MÅLA-knappen (en äkta gest) tar
+    // och när fullscreen tappats, och BÖRJA PENSLA-knappen (en äkta gest) tar
     // tillbaka in i fullscreen. Det målade påverkas inte.
     function showStartOverlay() {
         startOverlay.style.display = 'flex';
