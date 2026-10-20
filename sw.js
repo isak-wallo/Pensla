@@ -1,6 +1,6 @@
 // Höj VERSION (v1 -> v2 osv.) varje gång du laddar upp nya filer,
 // så hämtas och cachas den nya versionen säkert.
-const VERSION = 'v46';
+const VERSION = 'v47';
 const CACHE = 'farga-' + VERSION;
 
 const ASSETS = [
@@ -21,25 +21,7 @@ const ASSETS = [
   './bilder/farg/traktor2.jpg',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png',
-  './bilder/traktor.svg',
-  './bilder/gravmaskin.svg',
-  './bilder/flygplan.svg',
-  './bilder/helikopter.svg',
-  './bilder/traktor-snett.svg',
-  './bilder/brandbil.svg',
-  './bilder/dumper.svg',
-  './bilder/sopbil.svg',
-  './bilder/tag.svg',
-  './bilder/bat.svg',
-  './bilder/gravmaskin-snett.svg',
-  './bilder/helikopter-snett.svg',
-  './bilder/flygplan-snett.svg',
-  './bilder/propellerplan.svg',
-  './bilder/flygplan-litet.svg',
-  './bilder/helikopter-stig.svg',
-  './bilder/helikopter-luft.svg',
-  './bilder/flygplan-falt.svg'
+  './icon-512.png'
 ];
 
 // Installera: cacha allt och ta över direkt
