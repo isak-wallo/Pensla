@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     //  - fillCanvas: det barnet målat fram (vitt där inget är målat)
     //  - viewCanvas: det som syns — fillCanvas med lineCanvas ovanpå
     // Områdena (ytor omringade av linjer) numreras en gång när bilden
-    // laddas (`labels`), så att en yta kan fyllas i av sig själv.
+    // laddas (`labels`), så att keIWs bara syns i sina ytor.
     const PAPER_W = 1200;
     const PAPER_H = 900;
     const lineCanvas = document.createElement('canvas');
@@ -205,20 +205,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // labels[i]: 0 = linje (går inte att måla), >0 = områdets nummer.
     // Pixlar med alpha >= LINE_ALPHA räknas som linje; kantpixlarna under
     // den gränsen hör till ytan så att färgen går hela vägen in under
-    // linjens anti-aliasade kant (ingen vit hinna).
+    // linjens anti-aliasade kant (ingen vit hinna). Ytorna behövs bara för
+    // keIWs (han syns bara i sina ytor).
     const LINE_ALPHA = 200;
-    // Områden mindre än så här (pixlar) är bara små celler mellan
-    // detaljstreck. De fylls i direkt när penseln nuddar dem.
-    const MIN_REGION = 150;
     let labels = new Int32Array(PAPER_W * PAPER_H);
-    let regionSize = [0];
-    let regionTop = [0];      // omslutande rektangel för varje område, så att
-    let regionBottom = [0];   // ifyllnad bara behöver gå igenom den
-    let regionLeft = [0];
-    let regionRight = [0];
+    let antalYtor = 1;
     let facitPx = new Uint32Array(PAPER_W * PAPER_H);   // färgbilden pixel för pixel
-    let regionPainted = new Int32Array(1);  // antal målade pixlar
-    let regionDone = new Uint8Array(1);     // 1 = helt ifyllt (eller på väg)
 
     function labelRegions() {
         const W = PAPER_W, H = PAPER_H;
@@ -227,26 +219,19 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0, n = W * H; i < n; i++) {
             if (alpha[i * 4 + 3] < LINE_ALPHA) labels[i] = -1;   // yta, ej besökt
         }
-        regionSize = [0];
-        regionTop = [0];
-        regionBottom = [0];
-        regionLeft = [0];
-        regionRight = [0];
         let id = 0;
         for (let seed = 0, n = W * H; seed < n; seed++) {
             if (labels[seed] !== -1) continue;
             id++;
             floodLabel(seed, id);
         }
-        regionPainted = new Int32Array(id + 1);
-        regionDone = new Uint8Array(id + 1);
+        antalYtor = id + 1;
     }
 
     // Scanline-fyllning som numrerar ett sammanhängande område (4-grannar).
     function floodLabel(seed, id) {
         const W = PAPER_W, H = PAPER_H;
         const stack = [seed];
-        let count = 0, top = H, bottom = 0, left = W, right = 0;
         while (stack.length) {
             const p = stack.pop();
             if (labels[p] !== -1) continue;
@@ -256,11 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
             while (l > rowStart && labels[l - 1] === -1) l--;
             while (r < rowStart + W - 1 && labels[r + 1] === -1) r++;
             for (let i = l; i <= r; i++) labels[i] = id;
-            count += r - l + 1;
-            if (y < top) top = y;
-            if (y > bottom) bottom = y;
-            if (l - rowStart < left) left = l - rowStart;
-            if (r - rowStart > right) right = r - rowStart;
             for (let dy = -1; dy <= 1; dy += 2) {
                 const yy = y + dy;
                 if (yy < 0 || yy >= H) continue;
@@ -275,11 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        regionSize[id] = count;
-        regionTop[id] = top;
-        regionBottom[id] = bottom;
-        regionLeft[id] = left;
-        regionRight[id] = right;
     }
 
     // Penseln trollar fram själva färgbilden pixel för pixel (facitPx).
@@ -318,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Förbereder keIWs för bilden: ruta, mask (de ytor han syns i) och
     // en arbetscanvas. Anropas efter labelRegions.
     function prepKeiws(c, hittad) {
-        keiwsYta = new Uint8Array(regionSize.length);
+        keiwsYta = new Uint8Array(antalYtor);
         c.ytor.forEach(([px, py]) => {
             const l = labels[Math.round(py) * PAPER_W + Math.round(px)];
             if (l > 0) keiwsYta[l] = 1;
@@ -411,7 +386,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         vantarPaBild = -1;
         if (pictureLoaded) {
-            finishFades();
             pictureState[currentPicture] = { fill: fillPx.slice(), keiws: !!(keiws && keiws.hittad) };
         }
         pictureLoaded = true;
@@ -424,18 +398,10 @@ document.addEventListener('DOMContentLoaded', () => {
         cCtx.drawImage(pic.fimg, 0, 0, PAPER_W, PAPER_H);
         labelRegions();
         franFargbild();
-        fades.length = 0;
         const saved = pictureState[index];
         prepKeiws(PICTURES[index].keiws, !!(saved && saved.keiws));
         if (saved) {
             fillPx.set(saved.fill);
-            for (let i = 0, n = labels.length; i < n; i++) {
-                const l = labels[i];
-                if (l > 0 && fillPx[i] !== PAPER) regionPainted[l]++;
-            }
-            for (let l = 1; l < regionSize.length; l++) {
-                if (regionPainted[l] === regionSize[l]) regionDone[l] = 1;
-            }
         } else {
             fillPx.fill(PAPER);
         }
@@ -507,27 +473,11 @@ document.addEventListener('DOMContentLoaded', () => {
         vCtx.fillRect(0, 0, W, H);
         vCtx.setTransform(xf.a, xf.b, xf.c, xf.d, xf.e, xf.f);
         vCtx.drawImage(fillCanvas, 0, 0);
-        // Ytor som håller på att fyllas i tonas fram ovanpå
         const now = performance.now();
-        for (let k = fades.length - 1; k >= 0; k--) {
-            const f = fades[k];
-            if (ritaFade(f, now)) {
-                commitRegion(f.id);
-                fades.splice(k, 1);
-                continue;
-            }
-            vCtx.drawImage(f.canvas, f.x, f.y);
-        }
-        if (dirty) {    // commitRegion ovan kan ha målat klart en yta
-            fCtx.putImageData(fillImage, 0, 0, dirty.x0, dirty.y0,
-                dirty.x1 - dirty.x0 + 1, dirty.y1 - dirty.y0 + 1);
-            dirty = null;
-            vCtx.drawImage(fillCanvas, 0, 0);
-        }
         const keiwsRor = renderKeiws(now);
         vCtx.drawImage(lineCanvas, 0, 0);
         vCtx.setTransform(1, 0, 0, 1, 0, 0);
-        if (fades.length || keiwsRor) requestRender();
+        if (keiwsRor) requestRender();
     }
 
     // Skärmkoordinat -> bildkoordinat (inversen av xf)
@@ -542,17 +492,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Måla ---
-    // Fingret är en pensel som målar fram ytornas givna färger (den kan inte
-    // välja färg). När FYLL_ANDEL av en yta är målad fylls resten i av sig
-    // själv: färgen rinner mjukt ut från det målade (startFade/ritaFade).
+    // Fingret är en pensel som trollar fram färgbilden där den målar (den
+    // kan inte välja färg). Bara det som målas blir målat, inget fylls i av
+    // sig självt.
     const PENSEL = 28;         // penselns radie i bildpixlar
-    const FYLL_ANDEL = 0.95;
-    const FADE_MS = 600;        // kortaste ifyllnadstid …
-    const FADE_MAX_MS = 1600;   // … och längsta
-    const FADE_PER_PX = 12;     // ms per pixel som färgen ska rinna
-    const FADE_BAND = 14;       // bredd på den mjuka kanten (px)
-    const fades = [];          // { id, canvas, x, y, start }
-    const touched = new Set(); // ytor som penseln nuddat i den här rörelsen
 
     // Målar en rund klick med penseln kring (cx, cy) i bildkoordinater.
     function stamp(cx, cy) {
@@ -574,10 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const x = i - y * W;
                     if (x >= keiws.box.x0 && x <= keiws.box.x1) keiws.traff++;
                 }
-                if (l <= 0 || regionDone[l] || fillPx[i] !== PAPER) continue;
-                fillPx[i] = facitPx[i];
-                regionPainted[l]++;
-                touched.add(l);
+                if (l > 0) fillPx[i] = facitPx[i];
             }
         }
         if (maxX >= minX) markDirty(minX, y0, maxX, y1);
@@ -592,150 +532,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Kollar om någon av de nyss målade ytorna nått gränsen.
+    // Efter varje penseldrag: har han målats fram?
     function checkTouched() {
-        touched.forEach(l => {
-            if (regionDone[l]) return;
-            if (regionSize[l] < MIN_REGION) {
-                regionDone[l] = 1;
-                commitRegion(l);
-            } else if (regionPainted[l] >= regionSize[l] * FYLL_ANDEL) {
-                startFade(l);
-            }
-        });
-        touched.clear();
         if (keiws && !keiws.hittad && keiws.traff >= KEIWS_TRAFF) poppaKeiws();
         if (clearState) resetClearButton();
         requestRender();
-    }
-
-    // Lägger det som är kvar av ytan på en egen liten canvas som tonas fram
-    // ovanpå; när toningen är klar skrivs den in i fillPx (commitRegion).
-    function startFade(id) {
-        regionDone[id] = 1;
-        if (keiwsYta[id]) poppaKeiws();
-        const W = PAPER_W;
-        const x0 = regionLeft[id], y0 = regionTop[id];
-        const w = regionRight[id] - x0 + 1, h = regionBottom[id] - y0 + 1;
-        const c = document.createElement('canvas');
-        c.width = w;
-        c.height = h;
-        const ctx = c.getContext('2d');
-        const img = ctx.createImageData(w, h);
-        const px = new Uint32Array(img.data.buffer);
-        // Färgen rinner ut från det som redan är målat: bredden-först genom
-        // de omålade pixlarna, i avståndsordning (ordning + avstånd sparas).
-        const dist = new Int32Array(w * h).fill(-1);
-        const ordning = [];
-        for (let y = 0; y < h; y++) {
-            const row = (y0 + y) * W + x0;
-            for (let x = 0; x < w; x++) {
-                const i = row + x;
-                if (labels[i] === id && fillPx[i] !== PAPER) dist[y * w + x] = 0;
-            }
-        }
-        for (let k = 0; k < w * h; k++) {
-            if (dist[k] !== 0) continue;
-            const x = k % w;
-            if ((x > 0 && dist[k - 1] < 0) || (x < w - 1 && dist[k + 1] < 0) ||
-                (k >= w && dist[k - w] < 0) || (k < w * h - w && dist[k + w] < 0)) ordning.push(k);
-        }
-        const fargAv = (k) => {
-            const i = (y0 + ((k / w) | 0)) * W + x0 + (k % w);
-            return facitPx[i];
-        };
-        // Avstånd med 8 grannar (5 rakt, 7 snett) i en hink-kö, så att
-        // kanten blir rund i stället för spetsig. Avståndet räknas i femtedels px.
-        const hinkar = [ordning.slice()];
-        ordning.length = 0;
-        for (let d = 0; d < hinkar.length; d++) {
-            const hink = hinkar[d];
-            if (!hink) continue;
-            for (let n = 0; n < hink.length; n++) {
-                const k = hink[n];
-                if (dist[k] !== d) continue;           // redan nådd kortare väg
-                ordning.push(k);
-                const x = k % w;
-                for (let dy = -1; dy <= 1; dy++) {
-                    for (let dx = -1; dx <= 1; dx++) {
-                        if (!dx && !dy) continue;
-                        const xx = x + dx;
-                        if (xx < 0 || xx >= w) continue;
-                        const q = k + dy * w + dx;
-                        if (q < 0 || q >= w * h) continue;
-                        const nd = d + (dx && dy ? 7 : 5);
-                        if (dist[q] !== -1 && dist[q] <= nd) continue;
-                        const i = (y0 + ((q / w) | 0)) * W + x0 + xx;
-                        if (labels[i] !== id || (dist[q] === 0)) continue;
-                        dist[q] = nd;
-                        (hinkar[nd] || (hinkar[nd] = [])).push(q);
-                    }
-                }
-            }
-            hinkar[d] = null;
-        }
-        for (let k = 0; k < w * h; k++) if (dist[k] > 0) dist[k] = (dist[k] / 5) | 0;
-        // Bara de omålade pixlarna ska tonas fram (ordning börjar med kanten av det målade)
-        const kvar = ordning.filter(k => dist[k] > 0);
-        // Omålade pixlar som inte nås (ingen målad granne) läggs sist
-        for (let y = 0; y < h; y++) {
-            const row = (y0 + y) * W + x0;
-            for (let x = 0; x < w; x++) {
-                const k = y * w + x;
-                if (dist[k] === -1 && labels[row + x] === id && fillPx[row + x] === PAPER) kvar.push(k);
-            }
-        }
-        const maxD = kvar.length ? Math.max(1, dist[kvar[kvar.length - 1]]) : 1;
-        const tid = Math.min(FADE_MAX_MS, Math.max(FADE_MS, 300 + maxD * FADE_PER_PX));
-        fades.push({ id, canvas: c, ctx, img, px, x: x0, y: y0, w, kvar, dist, maxD, fargAv,
-            klara: 0, start: performance.now(), tid });
-    }
-
-    // Flyttar fram färgens kant: pixlar bakom kanten blir helt täckta, de i
-    // kantbandet (FADE_BAND px) halvgenomskinliga, så kanten blir mjuk.
-    function ritaFade(f, now) {
-        const t = Math.min(1, (now - f.start) / f.tid);
-        const p = 1 - (1 - t) * (1 - t);                // snabb start, mjukt slut
-        const front = p * (f.maxD + FADE_BAND);
-        let x0 = f.w, y0 = 1e9, x1 = -1, y1 = -1;
-        let k = f.klara;
-        for (; k < f.kvar.length; k++) {
-            const q = f.kvar[k], d = f.dist[q] < 0 ? f.maxD : f.dist[q];
-            if (d > front) break;
-            const a = Math.min(1, (front - d) / FADE_BAND);
-            const c = f.fargAv(q);
-            f.px[q] = ((Math.round(a * 255) << 24) | (c & 0xFFFFFF)) >>> 0;
-            const x = q % f.w, y = (q / f.w) | 0;
-            if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
-        }
-        // pixlarna längst bak i bandet är nu helt täckta och behöver inte röras igen
-        while (f.klara < k) {
-            const q = f.kvar[f.klara], d = f.dist[q] < 0 ? f.maxD : f.dist[q];
-            if (front - d < FADE_BAND) break;
-            f.klara++;
-        }
-        if (x1 >= 0) f.ctx.putImageData(f.img, 0, 0, x0, y0, x1 - x0 + 1, y1 - y0 + 1);
-        return t >= 1;
-    }
-
-    // Fyller hela ytan i fillPx (direkt, utan toning).
-    function commitRegion(id) {
-        const W = PAPER_W;
-        const x0 = regionLeft[id], x1 = regionRight[id];
-        const y0 = regionTop[id], y1 = regionBottom[id];
-        for (let y = y0; y <= y1; y++) {
-            for (let i = y * W + x0, end = y * W + x1; i <= end; i++) {
-                if (labels[i] === id) fillPx[i] = facitPx[i];
-            }
-        }
-        regionPainted[id] = regionSize[id];
-        markDirty(x0, y0, x1, y1);
-    }
-
-    // Gör klart alla pågående toningar direkt (inför bildbyte).
-    function finishFades() {
-        fades.forEach(f => commitRegion(f.id));
-        fades.length = 0;
     }
 
     // Alla fingrar målar. Varje finger minns sin senaste punkt.
@@ -775,7 +576,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Hämtade filer (Downloads), där den syns i Galleri/Filer.
     let sparaTimer = null;
     function sparaBild() {
-        finishFades();
         if (dirty) { fCtx.putImageData(fillImage, 0, 0); dirty = null; }
         const c = document.createElement('canvas');
         c.width = PAPER_W;
@@ -822,11 +622,8 @@ document.addEventListener('DOMContentLoaded', () => {
             restartBtn.classList.add('confirm');
             clearTimer = setTimeout(resetClearButton, 5000);
         } else {
-            fades.length = 0;
             if (keiws) { keiws.hittad = false; keiws.traff = 0; }
             fillPx.fill(PAPER);
-            regionPainted.fill(0);
-            regionDone.fill(0);
             fCtx.putImageData(fillImage, 0, 0);
             dirty = null;
             requestRender();

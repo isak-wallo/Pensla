@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <g id="farg">
+    <path d="M 0 0 L 1200 0 L 1200 900 L 0 900 Z" fill="#cfe6f7"/> <!-- Himmel -->
+    <path d="M 102 115 A 48 48 0 1 0 198 115 A 48 48 0 1 0 102 115 Z" fill="#f8d66d"/> <!-- Sol -->
+    <path d="M 450 110 C 430 110 415 95 415 75 C 415 55 435 40 460 40 C 475 20 505 10 535 15 C 565 20 580 35 590 50 C 610 45 640 55 650 75 C 660 95 645 115 625 120 C 620 135 595 145 565 140 C 535 140 515 130 505 120 C 490 130 465 125 450 110 Z" fill="#f4f8fc"/> <!-- Moln 1 -->
+    <path d="M 0 460 Q 300 420 600 450 Q 900 420 1200 450 L 1200 900 L 0 900 Z" fill="#91c47c"/> <!-- Bortre kulle -->
+    <path d="M 0 560 Q 400 540 800 560 Q 1000 550 1200 560 L 1200 900 L 0 900 Z" fill="#a9d494"/> <!-- Flygfält gräs -->
+    <path d="M 50 430 L 58 430 Q 63 430 63 435 L 63 565 Q 63 570 58 570 L 50 570 Q 45 570 45 565 L 45 435 Q 45 430 50 430 Z" fill="#a3a9b0"/> <!-- Vindstrutstolpe -->
+    <path d="M 63 435 L 125 448 L 125 470 L 63 480 Z" fill="#e2655a"/> <!-- Vindstrut -->
+    <path d="M 140 560 L 140 470 C 140 435 180 420 240 420 C 300 420 340 435 340 470 L 340 560 Z" fill="#ccd1d6"/> <!-- Hangarbyggnad -->
+    <path d="M 178 470 L 302 470 Q 310 470 310 478 L 310 552 Q 310 560 302 560 L 178 560 Q 170 560 170 552 L 170 478 Q 170 470 178 470 Z" fill="#6f747c"/> <!-- Hangardörr -->
+    <path d="M 980 560 L 1000 340 L 1100 340 L 1120 560 Z" fill="#f8fafc"/> <!-- Flygledartorn bas -->
+    <path d="M 980 260 L 1120 260 Q 1130 260 1130 270 L 1130 330 Q 1130 340 1120 340 L 980 340 Q 970 340 970 330 L 970 270 Q 970 260 980 260 Z" fill="#cfe8f6"/> <!-- Flygledartorn glasruta (Gömställe) -->
+    <path d="M 966 235 L 1134 235 Q 1140 235 1140 241 L 1140 254 Q 1140 260 1134 260 L 966 260 Q 960 260 960 254 L 960 241 Q 960 235 966 235 Z" fill="#e2655a"/> <!-- Torn-tak -->
+    <path d="M 1026 212 A 24 24 0 1 0 1074 212 A 24 24 0 1 0 1026 212 Z" fill="#f8fafc"/> <!-- Radardome -->
+    <path d="M 0 650 Q 300 630 600 645 Q 900 630 1200 650 L 1200 900 L 0 900 Z" fill="#cfd5dc"/> <!-- Asfalterad platta -->
+    <path d="M 490 515 L 630 435 C 645 430 660 440 655 450 L 580 520 Z" fill="#ccd1d6"/> <!-- Bortre vinge -->
+    <path d="M 260 520 L 300 370 C 310 360 330 365 335 385 L 330 520 Z" fill="#e2655a"/> <!-- Stjärtfena -->
+    <path d="M 210 525 L 290 490 C 300 485 310 495 305 505 L 250 540 Z" fill="#ccd1d6"/> <!-- Höjdroder -->
+    <path d="M 260 530 L 370 510 C 520 490 700 500 810 525 C 860 540 890 560 890 585 L 820 590 C 700 580 500 570 320 575 L 260 530 Z" fill="#f3c34f"/> <!-- Flygkropp övre -->
+    <path d="M 800 525 C 840 535 870 550 870 570 L 815 570 C 805 550 805 535 800 525 Z" fill="#cfe8f6"/> <!-- Cockpit framruta -->
+    <path d="M 488 525 L 752 525 Q 760 525 760 533 L 760 549 Q 760 557 752 557 L 488 557 Q 480 557 480 549 L 480 533 Q 480 525 488 525 Z" fill="#cfe8f6"/> <!-- Kabinrutor -->
+    <path d="M 280 570 L 820 585 L 820 605 C 700 595 500 585 280 585 Z" fill="#e2655a"/> <!-- Dekorrand -->
+    <path d="M 280 585 L 820 605 C 860 610 880 605 890 585 C 870 635 810 655 740 655 C 580 655 410 635 280 585 Z" fill="#6f747c"/> <!-- Flygkropp nedre buk -->
+    <path d="M 480 580 L 750 605 L 680 720 C 665 735 645 730 635 720 L 460 620 Z" fill="#ccd1d6"/> <!-- Närmre vinge -->
+    <path d="M 570 630 L 680 630 Q 700 630 700 650 L 700 680 Q 700 700 680 700 L 570 700 Q 550 700 550 680 L 550 650 Q 550 630 570 630 Z" fill="#f8fafc"/> <!-- Jetmotor -->
+    <path d="M 670 630 C 695 630 705 645 705 665 C 705 685 695 700 670 700 Z" fill="#6f747c"/> <!-- Motorintag -->
+    <path d="M 850 560 C 885 570 895 580 895 588 C 895 600 880 610 850 615 Z" fill="#6f747c"/> <!-- Noskon -->
+    <path d="M 538 755 A 42 42 0 1 0 622 755 A 42 42 0 1 0 538 755 Z M 556 755 A 24 24 0 1 1 604 755 A 24 24 0 1 1 556 755 Z" fill="#5c5f68"/> <!-- Huvudhjul däck -->
+    <path d="M 556 755 A 24 24 0 1 0 604 755 A 24 24 0 1 0 556 755 Z" fill="#f2d06b"/> <!-- Huvudhjul fälg -->
+    <path d="M 774 675 A 36 36 0 1 0 846 675 A 36 36 0 1 0 774 675 Z M 787 675 A 23 23 0 1 1 833 675 A 23 23 0 1 1 787 675 Z" fill="#5c5f68"/> <!-- Noshjul däck -->
+    <path d="M 787 675 A 23 23 0 1 0 833 675 A 23 23 0 1 0 787 675 Z" fill="#f2d06b"/> <!-- Noshjul fälg -->
+  </g>
+  <g id="linjer" fill="none" stroke="#3a3a44" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 102 115 A 48 48 0 1 0 198 115 A 48 48 0 1 0 102 115 Z" stroke-width="6"/>
+    <path d="M 450 110 C 430 110 415 95 415 75 C 415 55 435 40 460 40 C 475 20 505 10 535 15 C 565 20 580 35 590 50 C 610 45 640 55 650 75 C 660 95 645 115 625 120 C 620 135 595 145 565 140 C 535 140 515 130 505 120 C 490 130 465 125 450 110 Z" stroke-width="6"/>
+    <path d="M 0 460 Q 150 440 240 445" stroke-width="6"/>
+    <path d="M 700 440 Q 820 435 940 430" stroke-width="6"/>
+    <path d="M 0 560 Q 120 550 240 550" stroke-width="6"/>
+    <path d="M 700 555 Q 820 555 940 558" stroke-width="6"/>
+    <path d="M 50 430 L 58 430 Q 63 430 63 435 L 63 565 Q 63 570 58 570 L 50 570 Q 45 570 45 565 L 45 435 Q 45 430 50 430 Z" stroke-width="5"/>
+    <path d="M 63 435 L 125 448 L 125 470 L 63 480 Z" stroke-width="6"/>
+    <path d="M 140 560 L 140 470 C 140 435 180 420 240 420 C 300 420 340 435 340 470 L 340 560 Z" stroke-width="7"/>
+    <path d="M 178 470 L 302 470 Q 310 470 310 478 L 310 552 Q 310 560 302 560 L 178 560 Q 170 560 170 552 L 170 478 Q 170 470 178 470 Z" stroke-width="6"/>
+    <path d="M 980 560 L 1000 340 L 1100 340 L 1120 560 Z" stroke-width="7"/>
+    <path d="M 980 260 L 1120 260 Q 1130 260 1130 270 L 1130 330 Q 1130 340 1120 340 L 980 340 Q 970 340 970 330 L 970 270 Q 970 260 980 260 Z" stroke-width="6"/>
+    <path d="M 966 235 L 1134 235 Q 1140 235 1140 241 L 1140 254 Q 1140 260 1134 260 L 966 260 Q 960 260 960 254 L 960 241 Q 960 235 966 235 Z" stroke-width="6"/>
+    <path d="M 1026 212 A 24 24 0 1 0 1074 212 A 24 24 0 1 0 1026 212 Z" stroke-width="5"/>
+    <path d="M 0 650 Q 120 635 240 635" stroke-width="7"/>
+    <path d="M 900 635 Q 1050 640 1200 650" stroke-width="7"/>
+    <path d="M 490 515 L 630 435 C 645 430 660 440 655 450 L 580 520 Z" stroke-width="6"/>
+    <path d="M 260 520 L 300 370 C 310 360 330 365 335 385 L 330 520 Z" stroke-width="7"/>
+    <path d="M 210 525 L 290 490 C 300 485 310 495 305 505 L 250 540 Z" stroke-width="6"/>
+    <path d="M 260 530 L 370 510 C 520 490 700 500 810 525 C 860 540 890 560 890 585" stroke-width="7"/>
+    <path d="M 800 525 C 840 535 870 550 870 570 L 815 570 C 805 550 805 535 800 525 Z" stroke-width="6"/>
+    <path d="M 488 525 L 752 525 Q 760 525 760 533 L 760 549 Q 760 557 752 557 L 488 557 Q 480 557 480 549 L 480 533 Q 480 525 488 525 Z" stroke-width="5"/>
+    <path d="M 280 570 L 820 585" stroke-width="6"/>
+    <path d="M 280 585 C 500 585 700 595 820 605" stroke-width="6"/>
+    <path d="M 280 585 C 410 635 580 655 740 655 C 810 655 870 635 890 585" stroke-width="7"/>
+    <path d="M 480 580 L 460 620 L 635 720 C 645 730 665 735 680 720 L 750 605" stroke-width="7"/>
+    <path d="M 570 630 L 680 630 Q 700 630 700 650 L 700 680 Q 700 700 680 700 L 570 700 Q 550 700 550 680 L 550 650 Q 550 630 570 630 Z" stroke-width="7"/>
+    <path d="M 670 630 C 695 630 705 645 705 665 C 705 685 695 700 670 700 Z" stroke-width="6"/>
+    <path d="M 850 560 C 885 570 895 580 895 588 C 895 600 880 610 850 615 Z" stroke-width="5"/>
+    <path d="M 538 755 A 42 42 0 1 0 622 755 A 42 42 0 1 0 538 755 Z" stroke-width="7"/>
+    <path d="M 556 755 A 24 24 0 1 0 604 755 A 24 24 0 1 0 556 755 Z" stroke-width="5"/>
+    <path d="M 774 675 A 36 36 0 1 0 846 675 A 36 36 0 1 0 774 675 Z" stroke-width="6"/>
+    <path d="M 787 675 A 23 23 0 1 0 833 675 A 23 23 0 1 0 787 675 Z" stroke-width="5"/>
+    <path d="M 210.0 115.0 L 230.0 115.0" stroke-width="3.5"/>
+    <path d="M 198.5 150.3 L 214.7 162.0" stroke-width="3.5"/>
+    <path d="M 168.5 172.1 L 174.7 191.1" stroke-width="3.5"/>
+    <path d="M 131.5 172.1 L 125.3 191.1" stroke-width="3.5"/>
+    <path d="M 101.5 150.3 L 85.3 162.0" stroke-width="3.5"/>
+    <path d="M 90.0 115.0 L 70.0 115.0" stroke-width="3.5"/>
+    <path d="M 101.5 79.7 L 85.3 68.0" stroke-width="3.5"/>
+    <path d="M 131.5 57.9 L 125.3 38.9" stroke-width="3.5"/>
+    <path d="M 168.5 57.9 L 174.7 38.9" stroke-width="3.5"/>
+    <path d="M 198.5 79.7 L 214.7 68.0" stroke-width="3.5"/>
+    <path d="M 85 440 L 85 475 M 105 444 L 105 472" stroke-width="3.5"/>
+    <path d="M 240 470 L 240 560" stroke-width="3.5"/>
+    <path d="M 1050 350 L 1050 550" stroke-width="3.5"/>
+    <path d="M 1020 260 L 1020 340 M 1080 260 L 1080 340" stroke-width="3.5"/>
+    <path d="M 50 820 L 140 820" stroke-width="5"/>
+    <path d="M 210 820 L 300 820" stroke-width="5"/>
+    <path d="M 370 820 L 460 820" stroke-width="5"/>
+    <path d="M 530 820 L 620 820" stroke-width="5"/>
+    <path d="M 690 820 L 780 820" stroke-width="5"/>
+    <path d="M 850 820 L 940 820" stroke-width="5"/>
+    <path d="M 1010 820 L 1100 820" stroke-width="5"/>
+    <path d="M 835 535 L 835 570" stroke-width="3.5"/>
+    <path d="M 510 525 L 510 557" stroke-width="3"/>
+    <path d="M 540 525 L 540 557" stroke-width="3"/>
+    <path d="M 570 525 L 570 557" stroke-width="3"/>
+    <path d="M 600 525 L 600 557" stroke-width="3"/>
+    <path d="M 630 525 L 630 557" stroke-width="3"/>
+    <path d="M 660 525 L 660 557" stroke-width="3"/>
+    <path d="M 690 525 L 690 557" stroke-width="3"/>
+    <path d="M 720 525 L 720 557" stroke-width="3"/>
+    <path d="M 510 630 L 650 710" stroke-width="4"/>
+    <path d="M 580 700 L 580 735" stroke-width="4"/>
+    <path d="M 810 645 L 810 660" stroke-width="4"/>
+  </g>
+</svg>

@@ -1,8 +1,8 @@
 # Färga
 
 En lugn, magisk målarbok för barn (PWA). Man ser bara konturerna av en
-tecknad bild — måla fritt med fingret så trollar penseln fram färgbilden,
-och när det mesta av en yta är målad fylls resten i av sig själv.
+tecknad bild — måla fritt med fingret så trollar penseln fram färgbilden
+där man målar.
 
 Syskon-app till [Kludda](https://github.com/isak-wallo/Kludda) (fri ritning) och
 [Poppa](https://github.com/isak-wallo/Poppa).
@@ -10,7 +10,7 @@ Syskon-app till [Kludda](https://github.com/isak-wallo/Kludda) (fri ritning) och
 Öppna **https://isak-wallo.github.io/Farga/** i Chrome på plattan och välj
 "Lägg till på hemskärm" för att installera den (fungerar sedan offline).
 
-Bilder: traktor, grävare, sopbil, flygplan och helikopter (bläddra med ◀ ▶, håll BÖRJA OM två
+Bilder: traktorer, grävare, sopbilar, flygplan och helikoptrar (bläddra med ◀ ▶, håll BÖRJA OM två
 gånger för att sudda bilden). Nya bilder görs med `verktyg/fargbild.py` och
 läggs till i `PICTURES` i `app.js`.
 

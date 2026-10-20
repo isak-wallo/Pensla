@@ -26,6 +26,19 @@ DJUP_ANDEL = 0.5    # ... (högst så här stor del av sin mörkhet ljusare), s�
                     # att skuggor intill en linje inte gör den tjock och svart
 MIN_BIT = 200       # lösa linjebitar mindre än så (px i förlagan) tas bort
 LINJEFARG = '#3a3a44'
+# Små linjebitar som är glans eller skugga i färgbilden och inte ska bli
+# konturer: punkter (x, y i 1200x900) per bild. Den lilla bit (under
+# BORT_MAX px i förlagan) som ligger närmast punkten tas bort.
+BORT_MAX = 4000
+BORT = {
+    'traktor': [(740, 320), (190, 395), (315, 530), (825, 600), (710, 715)],
+    'traktor2': [(630, 495)],
+    'sopbil': [(420, 430), (270, 400), (770, 270), (1160, 320)],
+    'sopbil-snett': [(255, 365), (615, 720)],
+    'flygplan2': [(280, 533), (1072, 300)],
+    'helikopter': [(455, 335), (400, 395), (480, 325), (1070, 455)],
+    'helikopter2': [(520, 585), (118, 735), (1088, 735), (862, 740)],
+}
 
 
 def till_4_3(im):
@@ -35,6 +48,22 @@ def till_4_3(im):
         return im.crop(((w - b) // 2, 0, (w - b) // 2 + b, h))
     hh = round(w * 3 / 4)
     return im.crop((0, (h - hh) // 2, w, (h - hh) // 2 + hh))
+
+
+def ta_bort(m, punkter):
+    bit, n = nd.label(m)
+    storlek = np.bincount(bit.ravel())
+    k = m.shape[1] / 1200
+    for x, y in punkter:
+        x, y, r = round(x * k), round(y * k), round(15 * k)
+        ruta = bit[max(y - r, 0):y + r, max(x - r, 0):x + r]
+        yy, xx = np.nonzero((ruta > 0) & (storlek[ruta] < BORT_MAX))
+        if not len(yy):
+            print('  ingen liten bit vid', (x, y))
+            continue
+        nara = np.argmin((yy - r) ** 2 + (xx - r) ** 2)
+        m[bit == ruta[yy[nara], xx[nara]]] = False
+    return m
 
 
 def linjer(im):
@@ -70,7 +99,8 @@ def main():
     for fil in sys.argv[1:]:
         namn = os.path.splitext(os.path.basename(fil))[0]
         im = till_4_3(Image.open(fil).convert('RGB'))
-        open(os.path.join(UT, namn + '.svg'), 'w').write(svg(linjer(im)))
+        m = ta_bort(linjer(im), BORT.get(namn, []))
+        open(os.path.join(UT, namn + '.svg'), 'w').write(svg(m))
         im.resize((1200, 900), Image.LANCZOS).save(os.path.join(UT, namn + '.jpg'), quality=88)
         print(namn, im.size, '->', os.path.join(UT, namn) + '.svg/.jpg')
 

@@ -11,10 +11,9 @@ färger, inga ljud, inga poäng, inga val att göra.
 
 - Man ser bara konturerna av en tecknad bild. Penseln **trollar fram själva
   färgbilden** där man målar (alla fingrar, `PENSEL` (28) = radie i
-  bildpixlar). När `FYLL_ANDEL` (95 %) av en yta är målad fylls resten i av
-  sig själv: färgen rinner ut från det målade med en mjuk kant
-  (`startFade`/`ritaFade`, `FADE_BAND`, 0,6–1,6 s beroende på hur långt den
-  ska rinna).
+  bildpixlar). Bara det som målas blir målat: inget fylls i av sig självt
+  (ägarens val i v49; ifyllnaden med `FYLL_ANDEL`/`startFade` finns i
+  git-historiken). Det enda som händer av sig självt är keIWs.
 - Panelen har fyra knappar, till höger i liggande läge (en rad nederst
   i stående): **◀** föregående bild, **▶** nästa bild (agerar direkt på
   `touchstart` med `stopPropagation`), **SPARA** (håll 1 s → bilden laddas
@@ -26,7 +25,7 @@ färger, inga ljud, inga poäng, inga val att göra.
   (`pictureState`/`loadPicture`).
 - **keIWs** (den lilla blå klossfiguren) gömmer sig i varje bild, som krypet
   i Richard Scarrys böcker. Han syns inte från början; när man målat
-  `KEIWS_TRAFF` pixlar där han är (eller hans yta fylls i) poppar han upp
+  `KEIWS_TRAFF` pixlar där han är poppar han upp
   med en liten studs, vinkar, blinkar och blir kvar. BÖRJA OM gömmer honom
   igen.
 - **Namnbyte:** appen ska heta **Pensla** (inte gjort än: repo, Pages-adress
@@ -62,18 +61,12 @@ pushas, annars fastnar plattan på gammal cache.
 - **Områden** numreras en gång vid laddning (`labelRegions`, scanline-flood,
   4-grannar). `labels[i]` = områdesnummer (0 = linje). Pixlar med alpha <
   `LINE_ALPHA` räknas som yta så färgen går in under linjens anti-aliasade
-  kant. Ytorna behövs bara för att veta vad som ska fyllas i av sig självt;
-  färgen tas alltid pixel för pixel ur färgbilden (`facitPx`,
-  `franFargbild`).
-- **Måla**: `stamp`/`stroke` skriver färgbildens pixlar i `fillPx` för
-  omålade pixlar och räknar `regionPainted`. `checkTouched` startar
-  `startFade` när andelen nått `FYLL_ANDEL`. `startFade` räknar avståndet
-  från det målade till varje omålad pixel (8 grannar, 5/7-vikter i en
-  hink-kö, så kanten blir rund) och `ritaFade` flyttar fram färgens kant
-  varje frame, med en halvgenomskinlig rand; `commitRegion` skriver in
-  resten när den är klar. Ytor under `MIN_REGION` (små celler mellan
-  detaljstreck) fylls direkt när penseln nuddar dem. Ritning sker en gång
-  per frame (`requestRender`, `dirty`).
+  kant. Ytorna behövs bara för keIWs-masken; färgen tas alltid pixel för
+  pixel ur färgbilden (`facitPx`, `franFargbild`).
+- **Måla**: `stamp`/`stroke` skriver färgbildens pixlar i `fillPx` där
+  penseln går, och räknar träffar på keIWs. `checkTouched` poppar honom
+  när `KEIWS_TRAFF` nåtts. Ritning sker en gång per frame (`requestRender`,
+  `dirty`).
 
 ## keIWs (`ritaKeiws`, `prepKeiws`, `renderKeiws`)
 - Ritas av sina klossar från `keiws.js` (`KEIWS`: stilla, blink och
@@ -102,7 +95,11 @@ pushas, annars fastnar plattan på gammal cache.
      ligger an mot en linje svarta klumpar. Spåras med potrace till
      `bilder/farg/NAMN.svg`. Färgbilden sparas som `bilder/farg/NAMN.jpg`
      (1200 × 900, beskärs mitt på till 4:3).
-   - Glapp i konturerna gör bara att två ytor blir en (färgen blir ändå rätt).
+   - Glapp i konturerna gör inget (färgen tas ändå ur färgbilden).
+   - Glans- och skuggstreck som ändå blir kvar tas bort för hand med `BORT`
+     i skriptet: `'NAMN': [(x, y), ...]` i 1200-skala; den lilla biten
+     (under `BORT_MAX` px) närmast varje punkt tas bort. Skriptet säger till
+     om det inte hittar någon bit vid en punkt.
 3. Titta på SVG:n (t.ex. öppna den i Playwright och ta en skärmbild).
 4. Lägg en post i `PICTURES`: `{ namn, fil: 'NAMN', keiws: {...} }`, och
    båda filerna i `ASSETS` i `sw.js`. Bumpa `VERSION`.
