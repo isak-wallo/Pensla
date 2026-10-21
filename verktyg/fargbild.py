@@ -11,12 +11,14 @@ Konturerna är de pixlar som är tydligt mörkare än sin omgivning (även de
 ljusare linjerna runt moln och sol), så skuggor och glans inne i ytorna
 inte blir linjer, och som är det mörkaste i sin närhet, så skuggor som
 ligger an mot en linje inte gör den tjock. Förlagan beskärs mitt på till 4:3.
-Kräver Pillow, numpy, scipy och potrace (pip install potracer).
+Kräver Pillow, numpy, scipy, potrace och OpenCV
+(pip install potracer opencv-python-headless).
 """
 import os, sys
 import numpy as np, potrace
 from PIL import Image
 from scipy import ndimage as nd
+import cv2
 
 UT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'bilder', 'farg')
 MORKARE = 18        # så mycket mörkare än omgivningen (0–255) en linjepixel är
@@ -30,16 +32,21 @@ LINJEFARG = '#3a3a44'
 # konturer: punkter (x, y i 1200x900) per bild. Den lilla bit (under
 # BORT_MAX px i förlagan) som ligger närmast punkten tas bort.
 BORT_MAX = 4000
-# Bilder med mycket skräp (skuggkilar, vattenkrusningar): här tas alla lösa
-# bitar mindre än så här många px (i förlagan) bort i stället för MIN_BIT.
-STADA = {  # Copilot-bilderna (nr 48–74)
-    'gravare5': 700, 'traktor5': 700, 'flygplan6': 700, 'sopbil5': 700, 'flygplan-stort5': 700,
-    'kranbil3': 700, 'traktor6': 700, 'betongbil3': 700, 'brandbil3': 700, 'ambulans3': 700,
-    'polisbil4': 700, 'brandbil4': 700, 'raddningsbat': 1500, 'sopbil6': 700, 'helikopter3': 700,
-    'dumper3': 700, 'skordetroska': 700, 'dumper4': 700, 'plogbil': 700, 'bargningsbil': 700,
-    'postbil': 700, 'traktor7': 700, 'lastfartyg': 1500, 'sopbil7': 700, 'buss3': 700,
-    'brandbil5': 700, 'polisbil5': 700,
+# Bilder där konturerna också tas från färgkanterna (Canny i Lab-färg).
+# Copilot-bilderna (nr 48–74) har inga konturer runt moln, sol, ränder och
+# kors, och mörka linjer mot mörka ytor syns dåligt. Förlagan skalas först
+# upp till 2400 px bred så att linjerna blir lika tjocka som i Gemini-bilderna.
+# Värdet = minsta bitstorlek (px i den uppskalade förlagan), i stället för MIN_BIT.
+FARGKANTER = {
+    'gravare5': 600, 'traktor5': 600, 'flygplan6': 600, 'sopbil5': 600, 'flygplan-stort5': 600,
+    'kranbil3': 600, 'traktor6': 600, 'betongbil3': 600, 'brandbil3': 600, 'ambulans3': 600,
+    'polisbil4': 600, 'brandbil4': 600, 'raddningsbat': 600, 'sopbil6': 600, 'helikopter3': 600,
+    'dumper3': 600, 'skordetroska': 600, 'dumper4': 600, 'plogbil': 600, 'bargningsbil': 600,
+    'postbil': 600, 'traktor7': 600, 'lastfartyg': 600, 'sopbil7': 600, 'buss3': 600,
+    'brandbil5': 600, 'polisbil5': 600,
+    'bat': 600,  # skrovets underkant mot vattnet har ingen mörk kontur
 }
+KANT_LAG, KANT_HOG = 20, 50   # Canny-trösklarna
 BORT = {
     'traktor': [(740, 320), (190, 395), (315, 530), (825, 600), (710, 715)],
     'traktor2': [(630, 495)],
@@ -72,8 +79,6 @@ BORT = {
     'traktor3': [(559, 163)],
     'raket2': [(693, 116), (513, 452), (488, 480), (827, 534), (838, 575)],
     'raket3': [(659, 170)],
-    'lastfartyg': [(700, 766), (1136, 790)],
-    'raddningsbat': [(1090, 800), (40, 680)],
 }
 
 
@@ -102,13 +107,29 @@ def ta_bort(m, punkter):
     return m
 
 
-def linjer(im, min_bit=MIN_BIT):
+def linjer(im):
     L = np.asarray(im, dtype=float) @ [0.299, 0.587, 0.114]
     L = nd.median_filter(L, 5)
     morkare = nd.grey_closing(L, size=(OMGIVNING, OMGIVNING)) - L
     djup = L - nd.grey_erosion(L, size=(NARA, NARA))
     m = nd.binary_opening((morkare > MORKARE) & (djup < morkare * DJUP_ANDEL), np.ones((3, 3)))
     bit, n = nd.label(m)
+    storlek = np.bincount(bit.ravel())
+    storlek[0] = 0
+    return storlek[bit] >= MIN_BIT
+
+
+def fargkanter(im, min_bit):
+    """Mörka linjer (utan skuggspärren) plus färgkanter, för FARGKANTER-bilder."""
+    L = nd.median_filter(np.asarray(im, dtype=float) @ [0.299, 0.587, 0.114], 5)
+    mork = nd.binary_opening(nd.grey_closing(L, size=(OMGIVNING, OMGIVNING)) - L > MORKARE, np.ones((3, 3)))
+    lab = cv2.cvtColor(cv2.bilateralFilter(np.asarray(im), 9, 40, 9), cv2.COLOR_RGB2LAB)
+    kant = np.zeros(mork.shape, bool)
+    for c in range(3):
+        kant |= cv2.Canny(lab[:, :, c], KANT_LAG, KANT_HOG, L2gradient=True) > 0
+    # Kanterna på var sida om en mörk linje behövs inte, de gör den bara tjock.
+    kant = nd.binary_dilation(kant, np.ones((5, 5))) & ~nd.binary_dilation(mork, np.ones((9, 9)))
+    bit, n = nd.label(mork | kant)
     storlek = np.bincount(bit.ravel())
     storlek[0] = 0
     return storlek[bit] >= min_bit
@@ -135,7 +156,11 @@ def main():
     for fil in sys.argv[1:]:
         namn = os.path.splitext(os.path.basename(fil))[0]
         im = till_4_3(Image.open(fil).convert('RGB'))
-        m = ta_bort(linjer(im, STADA.get(namn, MIN_BIT)), BORT.get(namn, []))
+        if namn in FARGKANTER:
+            stor = im.resize((2400, 1800), Image.LANCZOS) if im.width < 2400 else im
+            m = ta_bort(fargkanter(stor, FARGKANTER[namn]), BORT.get(namn, []))
+        else:
+            m = ta_bort(linjer(im), BORT.get(namn, []))
         open(os.path.join(UT, namn + '.svg'), 'w').write(svg(m))
         im.resize((1200, 900), Image.LANCZOS).save(os.path.join(UT, namn + '.jpg'), quality=88)
         print(namn, im.size, '->', os.path.join(UT, namn) + '.svg/.jpg')

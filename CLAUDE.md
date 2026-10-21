@@ -31,6 +31,8 @@ färger, inga ljud, inga poäng, inga val att göra.
   skriv en kommentar vid bilder som behöver kontrolleras; ägaren skickar
   listan (AKTIVA + KONTROLLERA). För in den i `AKTIVA` och kör
   `python verktyg/aktiva.py`.
+  Om ytor-punkten hamnar på en linje (t.ex. efter omspårning) syns inte
+  keIWs: ge då flera punkter inne i rutan.
 - Varje bild minns det man målat så länge appen är öppen
   (`pictureState`/`loadPicture`).
 - **keIWs** (den lilla blå klossfiguren) gömmer sig i varje bild, som krypet
@@ -50,9 +52,10 @@ färger, inga ljud, inga poäng, inga val att göra.
   (nya 3D-versioner av traktor, grävare, litet flygplan och sopbil, två
   stora flygplan och två raketer), inaktiva tills ägaren valt i galleriet.
   v58: nr 48–74, 27 bilder från Copilot (Designer, 1536×1024, mer
-  detaljerade och mättade färger; beskärs till 4:3). De har mycket skräp i
-  konturerna, så de städas med `STADA` i `fargbild.py` (större minsta
-  bitstorlek) i stället för att plocka bitar för hand med `BORT`. De gamla svartvita bilderna (kodritade, spårade
+  detaljerade och mättade färger; beskärs till 4:3). De saknar konturer
+  runt moln, sol, ränder och kors, så i v61 tas deras konturer även från
+  färgkanterna (`FARGKANTER` i `fargbild.py`, se nedan). v61: ägaren valde
+  47 aktiva bilder i galleriet. De gamla svartvita bilderna (kodritade, spårade
   och rena sidor med färgpunkter) och all kod för dem togs bort i v47 —
   finns i git-historiken, och som PNG i `arkiv/` (se `arkiv/README.md`).
   När en bild byts ut flyttas den gamla till `arkiv/` (inte i `ASSETS`).
@@ -118,6 +121,10 @@ pushas, annars fastnar plattan på gammal cache.
      `bilder/farg/NAMN.svg`. Färgbilden sparas som `bilder/farg/NAMN.jpg`
      (1200 × 900, beskärs mitt på till 4:3).
    - Glapp i konturerna gör inget (färgen tas ändå ur färgbilden).
+   - Bilder där viktiga former saknar mörk kontur (Copilot-bilderna, båten)
+     står i `FARGKANTER`: där läggs färgkanter (Canny i Lab, `KANT_LAG`/
+     `KANT_HOG`) till de mörka linjerna, och förlagan skalas först upp till
+     2400 px bred. Kräver `pip install opencv-python-headless`.
    - Glans- och skuggstreck som ändå blir kvar tas bort för hand med `BORT`
      i skriptet: `'NAMN': [(x, y), ...]` i 1200-skala; den lilla biten
      (under `BORT_MAX` px) närmast varje punkt tas bort. Skriptet säger till
