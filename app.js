@@ -11,7 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const fillBtn = document.getElementById('fill-btn');
     const app = document.getElementById('app');
 
-    // Bilden är 1200x900 (landskap). Lager:
+    // Bilden är 900 px hög och oftast 1200 bred (4:3), men andra format går
+    // också: bredden tas från färgbilden när bilden laddas (setPaperSize).
+    // Lager:
     //  - lineCanvas: bara konturerna (genomskinlig bakgrund)
     //  - colorCanvas: facit — själva färgbilden (syns aldrig, penseln
     //    hämtar färgen ur den pixel för pixel)
@@ -19,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     //  - viewCanvas: det som syns — fillCanvas med lineCanvas ovanpå
     // Områdena (ytor omringade av linjer) numreras en gång när bilden
     // laddas (`labels`), så att keIWs bara syns i sina ytor.
-    const PAPER_W = 1200;
+    let PAPER_W = 1200;
     const PAPER_H = 900;
     const lineCanvas = document.createElement('canvas');
     lineCanvas.width = PAPER_W;
@@ -33,8 +35,18 @@ document.addEventListener('DOMContentLoaded', () => {
     fillCanvas.width = PAPER_W;
     fillCanvas.height = PAPER_H;
     const fCtx = fillCanvas.getContext('2d');
-    const fillImage = fCtx.createImageData(PAPER_W, PAPER_H);
-    const fillPx = new Uint32Array(fillImage.data.buffer);
+    let fillImage = fCtx.createImageData(PAPER_W, PAPER_H);
+    let fillPx = new Uint32Array(fillImage.data.buffer);
+
+    // Byter bildbredd: alla lager och buffertar får den nya storleken.
+    function setPaperSize(w) {
+        if (w === PAPER_W) return;
+        PAPER_W = w;
+        lineCanvas.width = colorCanvas.width = fillCanvas.width = w;
+        fillImage = fCtx.createImageData(w, PAPER_H);
+        fillPx = new Uint32Array(fillImage.data.buffer);
+        labels = new Int32Array(w * PAPER_H);
+    }
 
     // Omålat papper. Canvas-pixlar lagras som ABGR (little-endian) i en
     // Uint32Array; vitt är samma åt båda hållen.
@@ -210,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Bilder ---
     // Varje bild är en tecknad färgbild (från Gemini) och dess konturer,
     // framtagna med verktyg/fargbild.py: bilder/farg/NAMN.svg (konturerna,
-    // 1200x900) och bilder/farg/NAMN.jpg (färgbilden som penseln trollar
+    // 900 px höga) och bilder/farg/NAMN.jpg (färgbilden som penseln trollar
     // fram). Konturerna ritas på lineCanvas och färgbilden på colorCanvas.
 
     // Bilderna står i bilder.js; bara de aktiva visas.
@@ -416,9 +428,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         pictureLoaded = true;
         currentPicture = index;
+        setPaperSize(Math.round(PAPER_H * pic.fimg.naturalWidth / pic.fimg.naturalHeight));
         lCtx.setTransform(1, 0, 0, 1, 0, 0);
         lCtx.clearRect(0, 0, PAPER_W, PAPER_H);
-        lCtx.drawImage(pic.img, 0, 0);
+        lCtx.drawImage(pic.img, 0, 0, PAPER_W, PAPER_H);
         cCtx.setTransform(1, 0, 0, 1, 0, 0);
         cCtx.clearRect(0, 0, PAPER_W, PAPER_H);
         cCtx.drawImage(pic.fimg, 0, 0, PAPER_W, PAPER_H);
@@ -630,7 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- SPARA ---
     // Sparar bilden som den ser ut nu (det målade, keIWs om han är hittad,
-    // och konturerna) som en PNG i 1200x900. Laddas ner till plattans
+    // och konturerna) som en PNG i bildens storlek (oftast 1200x900). Laddas ner till plattans
     // Hämtade filer (Downloads), där den syns i Galleri/Filer.
     let sparaTimer = null;
     function sparaBild() {

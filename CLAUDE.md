@@ -19,7 +19,7 @@ färger, inga ljud, inga poäng, inga val att göra.
   `touchstart` med `stopPropagation`), **FÄRGLÄGG** (håll 1 s → hela
   färgbilden sveps fram från vänster och keIWs poppar upp, `fargaHela`;
   BÖRJA OM ångrar), de lite mindre **SPARA** (håll 1 s → bilden laddas
-  ner som PNG 1200×900 till plattans Hämtade filer, `sparaBild`; knappen
+  ner som PNG i bildens storlek till plattans Hämtade filer, `sparaBild`; knappen
   visar SPARAD ✓ en stund) och **BÖRJA OM** (håll 1 s → SÄKER?, håll 1 s
   igen → bilden töms; samma spärr som Kluddas RENSA). Håll-logiken
   (`startHold`/`holdEnd`) delas av de tre. Ett för kort tryck visar
@@ -93,7 +93,8 @@ pushas, annars fastnar plattan på gammal cache.
 
 ## Arkitektur (`app.js`)
 
-- **Lager** i 1200×900: `lineCanvas` (konturerna, SVG:n), `colorCanvas`
+- **Lager** i bildens storlek (900 px hög, oftast 1200 bred; `setPaperSize`
+  byter bredd när en bild i annat format laddas): `lineCanvas` (konturerna, SVG:n), `colorCanvas`
   (facit: färgbilden, syns aldrig), `fillCanvas` (det barnet målat fram,
   vitt annars) och synliga `viewCanvas` som ritar fill + pågående toningar
   + linjer. Bilden passas in utan beskärning; i stående vy roteras den 90°
@@ -134,7 +135,10 @@ pushas, annars fastnar plattan på gammal cache.
      också vara nästan det mörkaste inom `NARA` px, annars blir skuggor som
      ligger an mot en linje svarta klumpar. Spåras med potrace till
      `bilder/farg/NAMN.svg`. Färgbilden sparas som `bilder/farg/NAMN.jpg`
-     (1200 × 900, beskärs mitt på till 4:3).
+     (900 px hög). Från v69 behåller bilden sitt format, t.ex. 16:10 ->
+     1440 × 900, och appen tar bredden ur färgbilden. Nästan 4:3 (Geminis
+     2400 × 1792) och de äldre 3:2-bilderna i `BESKAR_4_3` beskärs mitt på
+     till 4:3 = 1200 × 900, så att deras keIWs-mått stämmer.
    - Glapp i konturerna gör inget (färgen tas ändå ur färgbilden).
    - Bilder där viktiga former saknar mörk kontur (Copilot-bilderna, båten)
      står i `FARGKANTER`: där läggs färgkanter (Canny i Lab, `KANT_LAG`/

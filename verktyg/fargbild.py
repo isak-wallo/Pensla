@@ -5,12 +5,14 @@ trollar fram.
 Användning:  python verktyg/fargbild.py forlagor/traktor.jpg [fler ...]
 
 Skriver för varje förlaga (namnet = filnamnet utan ändelse):
-  bilder/farg/NAMN.svg  konturerna (1200x900, mörkgrå linjer, en SVG-bana)
-  bilder/farg/NAMN.jpg  färgbilden i 1200x900
+  bilder/farg/NAMN.svg  konturerna (900 px höga, mörkgrå linjer, en SVG-bana)
+  bilder/farg/NAMN.jpg  färgbilden i samma storlek
 Konturerna är de pixlar som är tydligt mörkare än sin omgivning (även de
 ljusare linjerna runt moln och sol), så skuggor och glans inne i ytorna
 inte blir linjer, och som är det mörkaste i sin närhet, så skuggor som
-ligger an mot en linje inte gör den tjock. Förlagan beskärs mitt på till 4:3.
+ligger an mot en linje inte gör den tjock. Bilden blir 900 px hög och
+behåller sitt format (t.ex. 16:10 -> 1440x900); nästan 4:3 (Geminis
+2400x1792) och bilderna i BESKAR_4_3 beskärs mitt på till 4:3 = 1200x900.
 Kräver Pillow, numpy, scipy, potrace och OpenCV
 (pip install potracer opencv-python-headless).
 """
@@ -29,7 +31,7 @@ DJUP_ANDEL = 0.5    # ... (högst så här stor del av sin mörkhet ljusare), s�
 MIN_BIT = 200       # lösa linjebitar mindre än så (px i förlagan) tas bort
 LINJEFARG = '#3a3a44'
 # Små linjebitar som är glans eller skugga i färgbilden och inte ska bli
-# konturer: punkter (x, y i 1200x900) per bild. Den lilla bit (under
+# konturer: punkter (x, y i bilden, 900 px hög) per bild. Den lilla bit (under
 # BORT_MAX px i förlagan) som ligger närmast punkten tas bort.
 BORT_MAX = 4000
 # Bilder där konturerna också tas från färgkanterna (Canny i Lab-färg).
@@ -84,6 +86,31 @@ BORT = {
 }
 
 
+# Bilder i 3:2 som spårades innan andra format än 4:3 tilläts (v69). De
+# beskärs som förut, så att keIWs-måtten i bilder.js stämmer.
+BESKAR_4_3 = {
+    'ambulans3', 'bargningsbil', 'betongbil3', 'brandbil3', 'brandbil4',
+    'brandbil5', 'buss3', 'dumper3', 'dumper4', 'flygplan-stort5',
+    'flygplan6', 'gravare4', 'gravare5', 'helikopter3', 'kranbil3',
+    'lastfartyg', 'plogbil', 'polisbil4', 'polisbil5', 'postbil',
+    'raddningsbat', 'skordetroska', 'sopbil5', 'sopbil6', 'sopbil7',
+    'traktor5', 'traktor6', 'traktor7',
+}
+HOJD = 900
+
+
+def till_format(im, namn):
+    w, h = im.size
+    if namn in BESKAR_4_3 or 1.30 <= w / h <= 1.37:
+        return till_4_3(im)
+    return im
+
+
+def storlek(im):
+    """Bildens storlek i appen: 900 px hög, bredden efter formatet."""
+    return round(HOJD * im.width / im.height), HOJD
+
+
 def till_4_3(im):
     w, h = im.size
     if w * 3 > h * 4:
@@ -96,7 +123,7 @@ def till_4_3(im):
 def ta_bort(m, punkter):
     bit, n = nd.label(m)
     storlek = np.bincount(bit.ravel())
-    k = m.shape[1] / 1200
+    k = m.shape[0] / HOJD
     for x, y in punkter:
         x, y, r = round(x * k), round(y * k), round(15 * k)
         ruta = bit[max(y - r, 0):y + r, max(x - r, 0):x + r]
@@ -138,7 +165,8 @@ def fargkanter(im, min_bit):
 
 
 def svg(m):
-    k = 1200 / m.shape[1]
+    k = HOJD / m.shape[0]
+    b = round(m.shape[1] * k)
     p = lambda q: f"{q.x * k:.1f} {q.y * k:.1f}"
     d = []
     for kurva in potrace.Bitmap(~m).trace(turdsize=4, alphamax=1.0, opticurve=True, opttolerance=0.4):
@@ -149,7 +177,7 @@ def svg(m):
             else:
                 d.append(f"C{p(s.c1)} {p(s.c2)} {p(s.end_point)}")
         d.append("Z")
-    return ('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">'
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{b}" height="{HOJD}" viewBox="0 0 {b} {HOJD}">'
             f'<path fill="{LINJEFARG}" fill-rule="evenodd" d="{"".join(d)}"/></svg>')
 
 
@@ -157,14 +185,14 @@ def main():
     os.makedirs(UT, exist_ok=True)
     for fil in sys.argv[1:]:
         namn = os.path.splitext(os.path.basename(fil))[0]
-        im = till_4_3(Image.open(fil).convert('RGB'))
+        im = till_format(Image.open(fil).convert('RGB'), namn)
         if namn in FARGKANTER:
-            stor = im.resize((2400, 1800), Image.LANCZOS) if im.width < 2400 else im
+            stor = im.resize((round(1800 * im.width / im.height), 1800), Image.LANCZOS) if im.height < 1800 else im
             m = ta_bort(fargkanter(stor, FARGKANTER[namn]), BORT.get(namn, []))
         else:
             m = ta_bort(linjer(im), BORT.get(namn, []))
         open(os.path.join(UT, namn + '.svg'), 'w').write(svg(m))
-        im.resize((1200, 900), Image.LANCZOS).save(os.path.join(UT, namn + '.jpg'), quality=88)
+        im.resize(storlek(im), Image.LANCZOS).save(os.path.join(UT, namn + '.jpg'), quality=88)
         print(namn, im.size, '->', os.path.join(UT, namn) + '.svg/.jpg')
 
 
