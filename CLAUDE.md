@@ -14,13 +14,16 @@ färger, inga ljud, inga poäng, inga val att göra.
   bildpixlar). Bara det som målas blir målat: inget fylls i av sig självt
   (ägarens val i v49; ifyllnaden med `FYLL_ANDEL`/`startFade` finns i
   git-historiken). Det enda som händer av sig självt är keIWs.
-- Panelen har fyra knappar, till höger i liggande läge (en rad nederst
+- Panelen har fem knappar, till höger i liggande läge (en rad nederst
   i stående): **◀** föregående bild, **▶** nästa bild (agerar direkt på
-  `touchstart` med `stopPropagation`), **SPARA** (håll 1 s → bilden laddas
+  `touchstart` med `stopPropagation`), **FÄRGLÄGG** (håll 1 s → hela
+  färgbilden sveps fram från vänster och keIWs poppar upp, `fargaHela`;
+  BÖRJA OM ångrar), de lite mindre **SPARA** (håll 1 s → bilden laddas
   ner som PNG 1200×900 till plattans Hämtade filer, `sparaBild`; knappen
   visar SPARAD ✓ en stund) och **BÖRJA OM** (håll 1 s → SÄKER?, håll 1 s
   igen → bilden töms; samma spärr som Kluddas RENSA). Håll-logiken
-  (`startHold`/`holdEnd`) delas av SPARA och BÖRJA OM.
+  (`startHold`/`holdEnd`) delas av de tre. Ett för kort tryck visar
+  "HÅLL INNE FÖR ATT …" i 5 s, som i Kludda.
 - **Bildbanken:** alla bilder står med fast löpnummer i `bilder.js`
   (`ALLA_BILDER`), men bara de vars nummer står i `AKTIVA` visas och cachas
   (ägaren vill ha runt 20 aktiva åt gången). Alla bilder, även inaktiva,

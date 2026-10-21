@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startOverlay = document.getElementById('start-overlay');
     const restartBtn = document.getElementById('restart-btn');
     const saveBtn = document.getElementById('save-btn');
+    const fillBtn = document.getElementById('fill-btn');
     const app = document.getElementById('app');
 
     // Bilden är 1200x900 (landskap). Lager:
@@ -43,10 +44,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let clearState = 0;
     let clearTimer = null;
     let viewRect = { left: 0, top: 0 };
-    // --- Håll-in-logik för BÖRJA OM och SPARA ---
+    // --- Håll-in-logik för BÖRJA OM, SPARA och FÄRGLÄGG ---
     // Man måste hålla fingret intryckt i HOLD_MS (ca 1 s). BÖRJA OM: första
     // hållningen visar SÄKER?, andra hållningen tömmer bilden. SPARA: en
-    // hållning sparar bilden. En kort tryckning gör inget — så att ett barn
+    // hållning sparar bilden. FÄRGLÄGG: en hållning trollar fram hela
+    // färgbilden (BÖRJA OM ångrar). En kort tryckning gör inget — så att ett barn
     // inte råkar sudda allt (eller fylla plattan med bilder) av misstag —
     // utom att knappen en stund (TIPS_MS) visar att man ska hålla inne.
     const HOLD_MS = 1000;
@@ -65,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
             holdTimer = null;
             btn.classList.remove('holding');
             if (btn === saveBtn) sparaBild();
+            else if (btn === fillBtn) fargaHela();
             else handleClear();
         }, HOLD_MS);
     }
@@ -81,19 +84,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function knappText(btn) {
         if (btn === saveBtn) return 'SPARA';
+        if (btn === fillBtn) return 'FÄRGLÄGG';
         return clearState ? 'SÄKER?' : 'BÖRJA OM';
     }
 
     function visaHallTips(btn) {
         slackTips();
-        btn.textContent = btn === saveBtn ? 'HÅLL INNE FÖR ATT SPARA' : 'HÅLL INNE FÖR ATT BÖRJA OM';
+        btn.textContent = 'HÅLL INNE FÖR ATT ' +
+            (btn === saveBtn ? 'SPARA' : btn === fillBtn ? 'FÄRGLÄGGA' : 'BÖRJA OM');
         btn.classList.add('tips');
         tipsTimer = setTimeout(slackTips, TIPS_MS);
     }
 
     function slackTips() {
         if (tipsTimer) { clearTimeout(tipsTimer); tipsTimer = null; }
-        [restartBtn, saveBtn].forEach(btn => {
+        [restartBtn, saveBtn, fillBtn].forEach(btn => {
             if (btn.classList.contains('tips')) {
                 btn.classList.remove('tips');
                 btn.textContent = knappText(btn);
@@ -405,6 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         vantarPaBild = -1;
+        stoppaFarga();
         if (pictureLoaded) {
             pictureState[currentPicture] = { fill: fillPx.slice(), keiws: !!(keiws && keiws.hittad) };
         }
@@ -543,6 +549,38 @@ document.addEventListener('DOMContentLoaded', () => {
         if (maxX >= minX) markDirty(minX, y0, maxX, y1);
     }
 
+    // FÄRGLÄGG — hela färgbilden trollas fram, svepande från vänster till
+    // höger under FARGA_MS, och sedan poppar keIWs fram.
+    const FARGA_MS = 1200;
+    let fargaAnim = null;
+
+    function fargaHela() {
+        stoppaFarga();
+        if (clearState) resetClearButton();
+        const start = performance.now();
+        let x = 0;
+        const steg = now => {
+            const nx = Math.min(PAPER_W, Math.round((now - start) / FARGA_MS * PAPER_W));
+            if (nx > x) {
+                for (let y = 0; y < PAPER_H; y++) {
+                    for (let i = y * PAPER_W + x, end = y * PAPER_W + nx; i < end; i++) {
+                        if (labels[i] > 0) fillPx[i] = facitPx[i];
+                    }
+                }
+                markDirty(x, 0, nx - 1, PAPER_H - 1);
+                x = nx;
+                requestRender();
+            }
+            if (x < PAPER_W) fargaAnim = requestAnimationFrame(steg);
+            else { fargaAnim = null; poppaKeiws(); }
+        };
+        fargaAnim = requestAnimationFrame(steg);
+    }
+
+    function stoppaFarga() {
+        if (fargaAnim) { cancelAnimationFrame(fargaAnim); fargaAnim = null; }
+    }
+
     // Penseldrag från a till b: klickar tätt längs sträckan.
     function stroke(ax, ay, bx, by) {
         const d = Math.hypot(bx - ax, by - ay);
@@ -642,6 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
             restartBtn.classList.add('confirm');
             clearTimer = setTimeout(resetClearButton, 5000);
         } else {
+            stoppaFarga();
             if (keiws) { keiws.hittad = false; keiws.traff = 0; }
             fillPx.fill(PAPER);
             fCtx.putImageData(fillImage, 0, 0);
@@ -708,16 +747,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { passive: false });
     });
 
-    // BÖRJA OM (två hållningar, SÄKER?) och SPARA (en hållning) — håll in
+    // BÖRJA OM (två hållningar, SÄKER?), SPARA och FÄRGLÄGG (en hållning) — håll in
     // HOLD_MS (1 s). Touchstart stopPropagates så den inte målar; mousedown
     // för test på dator.
     function holdEnd(slappt) {
         endHold(slappt);
         restartBtn.classList.remove('holding');
         saveBtn.classList.remove('holding');
+        fillBtn.classList.remove('holding');
     }
 
-    [restartBtn, saveBtn].forEach(btn => {
+    [restartBtn, saveBtn, fillBtn].forEach(btn => {
         const holdStart = () => {
             slackTips();
             startHold(btn);
