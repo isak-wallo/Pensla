@@ -1,6 +1,6 @@
 // Höj VERSION (v1 -> v2 osv.) varje gång du laddar upp nya filer,
 // så hämtas och cachas den nya versionen säkert.
-const VERSION = 'v65';
+const VERSION = 'v66';
 const CACHE = 'pensla-' + VERSION;
 
 const ASSETS = [
@@ -110,6 +110,14 @@ const ASSETS = [
   './bilder/farg/traktor9.jpg',
   './bilder/farg/traktor10.svg',
   './bilder/farg/traktor10.jpg',
+  './bilder/farg/betongbil4.svg',
+  './bilder/farg/betongbil4.jpg',
+  './bilder/farg/betongbil5.svg',
+  './bilder/farg/betongbil5.jpg',
+  './bilder/farg/ambulans4.svg',
+  './bilder/farg/ambulans4.jpg',
+  './bilder/farg/ambulans5.svg',
+  './bilder/farg/ambulans5.jpg',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
