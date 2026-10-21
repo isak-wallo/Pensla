@@ -11,34 +11,37 @@
         box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
     h1 { font-size: 20px; margin: 0; }
     #antal { font-weight: 600; }
-    button, label.knapp { font: inherit; border: 1px solid #c8d4e2; background: #f6f9fc; border-radius: 8px;
+    button { font: inherit; border: 1px solid #c8d4e2; background: #f6f9fc; border-radius: 8px;
         padding: 6px 12px; cursor: pointer; }
     button:hover { background: #e6eef7; }
     #lista { flex-basis: 100%; font-family: Consolas, monospace; font-size: 13px; background: #f3f6f9;
-        border-radius: 6px; padding: 6px 8px; word-break: break-word; }
-    main { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; padding: 16px; }
+        border-radius: 6px; padding: 6px 8px; word-break: break-word; white-space: pre-wrap;
+        max-height: 30vh; overflow: auto; }
+    main { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 14px; padding: 16px; }
     .kort { background: #fff; border-radius: 10px; overflow: hidden; border: 3px solid transparent;
-        box-shadow: 0 1px 4px rgba(0,0,0,.08); cursor: pointer; user-select: none; }
+        box-shadow: 0 1px 4px rgba(0,0,0,.08); }
     .kort.vald { border-color: #3a8ee6; }
+    .kort.kommenterad { box-shadow: 0 0 0 2px #f0a030; }
     .kort.dold { display: none; }
-    .bild { position: relative; aspect-ratio: 4 / 3; background: #fff; }
-    .bild img { position: absolute; inset: 0; width: 100%; height: 100%; }
-    .bild .linjer { opacity: 0; background: #fff; }
-    body.konturer .bild .linjer { opacity: 1; }
-    .rad { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }
+    .par { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: #dde5ee; }
+    .par img { display: block; width: 100%; aspect-ratio: 4 / 3; background: #fff; }
+    .rad { display: flex; align-items: center; gap: 8px; padding: 8px 10px 4px; }
     .nr { font-weight: 700; font-size: 18px; min-width: 2.2em; }
-    .rad input { width: 20px; height: 20px; margin-left: auto; pointer-events: none; }
+    .rad label { margin-left: auto; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+    .rad input { width: 20px; height: 20px; cursor: pointer; }
+    textarea { display: block; width: calc(100% - 20px); margin: 4px 10px 10px; font: inherit; font-size: 14px;
+        border: 1px solid #c8d4e2; border-radius: 6px; padding: 6px 8px; resize: vertical; min-height: 2.4em; }
 </style>
 </head>
 <body>
 <header>
     <h1>Pensla – alla bilder</h1>
     <span id="antal"></span>
-    <label class="knapp"><input type="checkbox" id="visaKonturer"> visa konturer</label>
     <select id="filter">
         <option value="alla">Visa alla</option>
-        <option value="valda">Bara valda</option>
-        <option value="ovalda">Bara ej valda</option>
+        <option value="valda">Bara aktiva</option>
+        <option value="ovalda">Bara ej aktiva</option>
+        <option value="kommenterade">Bara med kommentar</option>
     </select>
     <button id="kopiera">Kopiera listan</button>
     <button id="aterstall">Återställ till appens nuvarande</button>
@@ -48,51 +51,73 @@
 <script src="bilder.js"></script>
 <script>
     // Galleri för att välja vilka bilder som ska vara aktiva i appen.
-    // Klicka på en bild för att välja den. Valet sparas i webbläsaren;
-    // kopiera listan och skicka den, så förs den in i AKTIVA i bilder.js.
+    // Varje bild visas med konturer och färgbild bredvid varandra. Kryssa i
+    // de aktiva och skriv en kommentar om något behöver kontrolleras. Valen
+    // sparas i webbläsaren; kopiera listan och skicka den, så förs den in i
+    // AKTIVA i bilder.js och kommentarerna åtgärdas.
     const NYCKEL = 'pensla-galleri-val';
+    const KOMMENTARER = 'pensla-galleri-kommentarer';
     let valda;
     try { valda = JSON.parse(localStorage.getItem(NYCKEL)); } catch (e) { valda = null; }
     if (!Array.isArray(valda)) valda = AKTIVA.slice();
     valda = new Set(valda);
+    let kommentarer;
+    try { kommentarer = JSON.parse(localStorage.getItem(KOMMENTARER)); } catch (e) { kommentarer = null; }
+    if (!kommentarer || typeof kommentarer !== 'object') kommentarer = {};
 
     const galleri = document.getElementById('galleri');
     const kort = ALLA_BILDER.map(b => {
         const k = document.createElement('div');
         k.className = 'kort';
-        k.innerHTML = `<div class="bild">
-                <img src="bilder/farg/${b.fil}.jpg" loading="lazy" alt="">
-                <img class="linjer" src="bilder/farg/${b.fil}.svg" loading="lazy" alt="">
+        k.innerHTML = `<div class="par">
+                <img src="bilder/farg/${b.fil}.svg" loading="lazy" alt="Konturer">
+                <img src="bilder/farg/${b.fil}.jpg" loading="lazy" alt="Färgbild">
             </div>
-            <div class="rad"><span class="nr">${b.nr}</span><span>${b.namn}</span><input type="checkbox"></div>`;
-        k.addEventListener('click', () => {
-            if (valda.has(b.nr)) valda.delete(b.nr); else valda.add(b.nr);
+            <div class="rad"><span class="nr">${b.nr}</span><span>${b.namn}</span>
+                <label><input type="checkbox"> aktiv</label></div>
+            <textarea rows="1" placeholder="Kommentar: vad behöver kontrolleras?"></textarea>`;
+        const ruta = k.querySelector('input');
+        const text = k.querySelector('textarea');
+        text.value = kommentarer[b.nr] || '';
+        ruta.addEventListener('change', () => {
+            if (ruta.checked) valda.add(b.nr); else valda.delete(b.nr);
+            uppdatera();
+        });
+        text.addEventListener('input', () => {
+            if (text.value.trim()) kommentarer[b.nr] = text.value; else delete kommentarer[b.nr];
             uppdatera();
         });
         galleri.appendChild(k);
-        return { b, k, ruta: k.querySelector('input') };
+        return { b, k, ruta, text };
     });
 
     function lista() { return [...valda].filter(n => ALLA_BILDER.some(b => b.nr === n)).sort((a, b) => a - b); }
 
     function uppdatera() {
         const filter = document.getElementById('filter').value;
-        kort.forEach(({ b, k, ruta }) => {
+        kort.forEach(({ b, k, ruta, text }) => {
             const vald = valda.has(b.nr);
+            const komm = !!text.value.trim();
             ruta.checked = vald;
             k.classList.toggle('vald', vald);
-            k.classList.toggle('dold', (filter === 'valda' && !vald) || (filter === 'ovalda' && vald));
+            k.classList.toggle('kommenterad', komm);
+            k.classList.toggle('dold', (filter === 'valda' && !vald) || (filter === 'ovalda' && vald)
+                || (filter === 'kommenterade' && !komm));
         });
         const l = lista();
-        document.getElementById('antal').textContent = `${l.length} valda av ${ALLA_BILDER.length}`;
-        document.getElementById('lista').textContent = 'AKTIVA: ' + l.join(', ');
-        try { localStorage.setItem(NYCKEL, JSON.stringify(l)); } catch (e) { }
+        const k = ALLA_BILDER.filter(b => (kommentarer[b.nr] || '').trim())
+            .map(b => `  ${b.nr} ${b.namn}: ${kommentarer[b.nr].trim().replace(/\s*\n\s*/g, ' / ')}`);
+        document.getElementById('antal').textContent =
+            `${l.length} aktiva av ${ALLA_BILDER.length}, ${k.length} med kommentar`;
+        document.getElementById('lista').textContent = 'AKTIVA: ' + l.join(', ')
+            + (k.length ? '\nKONTROLLERA:\n' + k.join('\n') : '');
+        try {
+            localStorage.setItem(NYCKEL, JSON.stringify(l));
+            localStorage.setItem(KOMMENTARER, JSON.stringify(kommentarer));
+        } catch (e) { }
     }
 
     document.getElementById('filter').addEventListener('change', uppdatera);
-    document.getElementById('visaKonturer').addEventListener('change', e => {
-        document.body.classList.toggle('konturer', e.target.checked);
-    });
     document.getElementById('kopiera').addEventListener('click', e => {
         const text = document.getElementById('lista').textContent;
         navigator.clipboard.writeText(text).then(() => {

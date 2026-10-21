@@ -27,7 +27,9 @@ färger, inga ljud, inga poäng, inga val att göra.
   får keIWs och testas när de läggs in, så vilken som helst kan aktiveras.
   Ägaren väljer på `galleri.html`
   (https://isak-wallo.github.io/Pensla/galleri.html, inte i `ASSETS`):
-  klicka i bilderna och skicka listan. För in den i `AKTIVA` och kör
+  konturer och färgbild visas bredvid varandra, kryssa i de aktiva och
+  skriv en kommentar vid bilder som behöver kontrolleras; ägaren skickar
+  listan (AKTIVA + KONTROLLERA). För in den i `AKTIVA` och kör
   `python verktyg/aktiva.py`.
 - Varje bild minns det man målat så länge appen är öppen
   (`pictureState`/`loadPicture`).
