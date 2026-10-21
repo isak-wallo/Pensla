@@ -47,15 +47,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Man måste hålla fingret intryckt i HOLD_MS (ca 1 s). BÖRJA OM: första
     // hållningen visar SÄKER?, andra hållningen tömmer bilden. SPARA: en
     // hållning sparar bilden. En kort tryckning gör inget — så att ett barn
-    // inte råkar sudda allt (eller fylla plattan med bilder) av misstag.
+    // inte råkar sudda allt (eller fylla plattan med bilder) av misstag —
+    // utom att knappen en stund (TIPS_MS) visar att man ska hålla inne.
     const HOLD_MS = 1000;
     // Synka håll-animationens längd i CSS med HOLD_MS (--hold-ms används
     // av .sys-btn.holding i style.css).
     document.documentElement.style.setProperty('--hold-ms', HOLD_MS + 'ms');
     let holdTimer = null;
+    let holdBtn = null;
+    const TIPS_MS = 5000;
+    let tipsTimer = null;
 
     function startHold(btn) {
         if (holdTimer) clearTimeout(holdTimer);
+        holdBtn = btn;
         holdTimer = setTimeout(() => {
             holdTimer = null;
             btn.classList.remove('holding');
@@ -64,8 +69,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }, HOLD_MS);
     }
 
-    function endHold() {
-        if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    // slappt = fingret (musknappen) släpptes på knappen; släpps den innan
+    // HOLD_MS gått visas tipset. Glider fingret av knappen visas inget.
+    function endHold(slappt) {
+        if (holdTimer) {
+            clearTimeout(holdTimer);
+            holdTimer = null;
+            if (slappt) visaHallTips(holdBtn);
+        }
+    }
+
+    function knappText(btn) {
+        if (btn === saveBtn) return 'SPARA';
+        return clearState ? 'SÄKER?' : 'BÖRJA OM';
+    }
+
+    function visaHallTips(btn) {
+        slackTips();
+        btn.textContent = btn === saveBtn ? 'HÅLL INNE FÖR ATT SPARA' : 'HÅLL INNE FÖR ATT BÖRJA OM';
+        btn.classList.add('tips');
+        tipsTimer = setTimeout(slackTips, TIPS_MS);
+    }
+
+    function slackTips() {
+        if (tipsTimer) { clearTimeout(tipsTimer); tipsTimer = null; }
+        [restartBtn, saveBtn].forEach(btn => {
+            if (btn.classList.contains('tips')) {
+                btn.classList.remove('tips');
+                btn.textContent = knappText(btn);
+            }
+        });
     }
 
     function resizeCanvas() {
@@ -626,7 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (restartBtn) {
             restartBtn.textContent = 'BÖRJA OM';
-            restartBtn.classList.remove('confirm');
+            restartBtn.classList.remove('confirm', 'tips');
         }
     }
 
@@ -678,14 +711,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // BÖRJA OM (två hållningar, SÄKER?) och SPARA (en hållning) — håll in
     // HOLD_MS (1 s). Touchstart stopPropagates så den inte målar; mousedown
     // för test på dator.
-    function holdEnd() {
-        endHold();
+    function holdEnd(slappt) {
+        endHold(slappt);
         restartBtn.classList.remove('holding');
         saveBtn.classList.remove('holding');
     }
 
     [restartBtn, saveBtn].forEach(btn => {
         const holdStart = () => {
+            slackTips();
             startHold(btn);
             btn.classList.add('holding');
         };
@@ -703,7 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const r = this.getBoundingClientRect();
             if (t.clientX < r.left || t.clientX > r.right ||
                 t.clientY < r.top || t.clientY > r.bottom) {
-                holdEnd();
+                holdEnd(false);
             }
         }, { passive: true });
 
@@ -713,13 +747,13 @@ document.addEventListener('DOMContentLoaded', () => {
             e.stopPropagation();
             holdStart();
         });
-        btn.addEventListener('mouseleave', holdEnd);
+        btn.addEventListener('mouseleave', () => holdEnd(false));
     });
 
     // touchend/cancel på hela fönstret stänger hållningen (fingret lyfts)
-    window.addEventListener('touchend', holdEnd, { passive: true });
-    window.addEventListener('touchcancel', holdEnd, { passive: true });
-    window.addEventListener('mouseup', holdEnd);
+    window.addEventListener('touchend', () => holdEnd(true), { passive: true });
+    window.addEventListener('touchcancel', () => holdEnd(false), { passive: true });
+    window.addEventListener('mouseup', () => holdEnd(true));
 
     // --- Back-knapp: håll användaren kvar i appen ---
     // Bakåt får aldrig lämna sidan — i pinnat läge strandar den installerade
