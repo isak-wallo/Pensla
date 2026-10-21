@@ -46,7 +46,11 @@ färger, inga ljud, inga poäng, inga val att göra.
   raket, två segelbåtar, tre polisbilar och två var av ambulans, betongbil,
   kranbil, buss, brandbil och dumper (33 bilder); i v57 nr 34–47
   (nya 3D-versioner av traktor, grävare, litet flygplan och sopbil, två
-  stora flygplan och två raketer), inaktiva tills ägaren valt i galleriet. De gamla svartvita bilderna (kodritade, spårade
+  stora flygplan och två raketer), inaktiva tills ägaren valt i galleriet.
+  v58: nr 48–74, 27 bilder från Copilot (Designer, 1536×1024, mer
+  detaljerade och mättade färger; beskärs till 4:3). De har mycket skräp i
+  konturerna, så de städas med `STADA` i `fargbild.py` (större minsta
+  bitstorlek) i stället för att plocka bitar för hand med `BORT`. De gamla svartvita bilderna (kodritade, spårade
   och rena sidor med färgpunkter) och all kod för dem togs bort i v47 —
   finns i git-historiken, och som PNG i `arkiv/` (se `arkiv/README.md`).
   När en bild byts ut flyttas den gamla till `arkiv/` (inte i `ASSETS`).
