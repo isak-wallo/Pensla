@@ -21,6 +21,14 @@ färger, inga ljud, inga poäng, inga val att göra.
   visar SPARAD ✓ en stund) och **BÖRJA OM** (håll 1 s → SÄKER?, håll 1 s
   igen → bilden töms; samma spärr som Kluddas RENSA). Håll-logiken
   (`startHold`/`holdEnd`) delas av SPARA och BÖRJA OM.
+- **Bildbanken:** alla bilder står med fast löpnummer i `bilder.js`
+  (`ALLA_BILDER`), men bara de vars nummer står i `AKTIVA` visas och cachas
+  (ägaren vill ha runt 20 aktiva åt gången). Alla bilder, även inaktiva,
+  får keIWs och testas när de läggs in, så vilken som helst kan aktiveras.
+  Ägaren väljer på `galleri.html`
+  (https://isak-wallo.github.io/Pensla/galleri.html, inte i `ASSETS`):
+  klicka i bilderna och skicka listan. För in den i `AKTIVA` och kör
+  `python verktyg/aktiva.py`.
 - Varje bild minns det man målat så länge appen är öppen
   (`pictureState`/`loadPicture`).
 - **keIWs** (den lilla blå klossfiguren) gömmer sig i varje bild, som krypet
@@ -107,8 +115,11 @@ pushas, annars fastnar plattan på gammal cache.
      (under `BORT_MAX` px) närmast varje punkt tas bort. Skriptet säger till
      om det inte hittar någon bit vid en punkt.
 3. Titta på SVG:n (t.ex. öppna den i Playwright och ta en skärmbild).
-4. Lägg en post i `PICTURES`: `{ namn, fil: 'NAMN', keiws: {...} }`, och
-   båda filerna i `ASSETS` i `sw.js`. Bumpa `VERSION`.
+4. Lägg en post sist i `ALLA_BILDER` i `bilder.js` med nästa lediga
+   löpnummer: `{ nr, namn, fil: 'NAMN', keiws: {...} }`. Numren är fasta och
+   återanvänds aldrig. Lägg numret i `AKTIVA` om bilden ska synas och kör
+   `python verktyg/aktiva.py` (skriver de aktiva bildernas filer i `ASSETS`
+   i `sw.js` och bumpar `VERSION`).
 5. Granska: `granskning/` (inte i git) har ett par per bild, konturer och
    färgbild bredvid varandra, så ägaren kan markera det som ska justeras.
 6. Testa: måla över bilden i sicksack med Playwright (▶ med `click`, inte

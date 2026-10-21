@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pensla – alla bilder</title>
+<style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: #eef4fa; color: #2c3440; }
+    header { position: sticky; top: 0; z-index: 1; background: #fff; padding: 12px 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+    h1 { font-size: 20px; margin: 0; }
+    #antal { font-weight: 600; }
+    button, label.knapp { font: inherit; border: 1px solid #c8d4e2; background: #f6f9fc; border-radius: 8px;
+        padding: 6px 12px; cursor: pointer; }
+    button:hover { background: #e6eef7; }
+    #lista { flex-basis: 100%; font-family: Consolas, monospace; font-size: 13px; background: #f3f6f9;
+        border-radius: 6px; padding: 6px 8px; word-break: break-word; }
+    main { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; padding: 16px; }
+    .kort { background: #fff; border-radius: 10px; overflow: hidden; border: 3px solid transparent;
+        box-shadow: 0 1px 4px rgba(0,0,0,.08); cursor: pointer; user-select: none; }
+    .kort.vald { border-color: #3a8ee6; }
+    .kort.dold { display: none; }
+    .bild { position: relative; aspect-ratio: 4 / 3; background: #fff; }
+    .bild img { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .bild .linjer { opacity: 0; background: #fff; }
+    body.konturer .bild .linjer { opacity: 1; }
+    .rad { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }
+    .nr { font-weight: 700; font-size: 18px; min-width: 2.2em; }
+    .rad input { width: 20px; height: 20px; margin-left: auto; pointer-events: none; }
+</style>
+</head>
+<body>
+<header>
+    <h1>Pensla – alla bilder</h1>
+    <span id="antal"></span>
+    <label class="knapp"><input type="checkbox" id="visaKonturer"> visa konturer</label>
+    <select id="filter">
+        <option value="alla">Visa alla</option>
+        <option value="valda">Bara valda</option>
+        <option value="ovalda">Bara ej valda</option>
+    </select>
+    <button id="kopiera">Kopiera listan</button>
+    <button id="aterstall">Återställ till appens nuvarande</button>
+    <div id="lista"></div>
+</header>
+<main id="galleri"></main>
+<script src="bilder.js"></script>
+<script>
+    // Galleri för att välja vilka bilder som ska vara aktiva i appen.
+    // Klicka på en bild för att välja den. Valet sparas i webbläsaren;
+    // kopiera listan och skicka den, så förs den in i AKTIVA i bilder.js.
+    const NYCKEL = 'pensla-galleri-val';
+    let valda;
+    try { valda = JSON.parse(localStorage.getItem(NYCKEL)); } catch (e) { valda = null; }
+    if (!Array.isArray(valda)) valda = AKTIVA.slice();
+    valda = new Set(valda);
+
+    const galleri = document.getElementById('galleri');
+    const kort = ALLA_BILDER.map(b => {
+        const k = document.createElement('div');
+        k.className = 'kort';
+        k.innerHTML = `<div class="bild">
+                <img src="bilder/farg/${b.fil}.jpg" loading="lazy" alt="">
+                <img class="linjer" src="bilder/farg/${b.fil}.svg" loading="lazy" alt="">
+            </div>
+            <div class="rad"><span class="nr">${b.nr}</span><span>${b.namn}</span><input type="checkbox"></div>`;
+        k.addEventListener('click', () => {
+            if (valda.has(b.nr)) valda.delete(b.nr); else valda.add(b.nr);
+            uppdatera();
+        });
+        galleri.appendChild(k);
+        return { b, k, ruta: k.querySelector('input') };
+    });
+
+    function lista() { return [...valda].filter(n => ALLA_BILDER.some(b => b.nr === n)).sort((a, b) => a - b); }
+
+    function uppdatera() {
+        const filter = document.getElementById('filter').value;
+        kort.forEach(({ b, k, ruta }) => {
+            const vald = valda.has(b.nr);
+            ruta.checked = vald;
+            k.classList.toggle('vald', vald);
+            k.classList.toggle('dold', (filter === 'valda' && !vald) || (filter === 'ovalda' && vald));
+        });
+        const l = lista();
+        document.getElementById('antal').textContent = `${l.length} valda av ${ALLA_BILDER.length}`;
+        document.getElementById('lista').textContent = 'AKTIVA: ' + l.join(', ');
+        try { localStorage.setItem(NYCKEL, JSON.stringify(l)); } catch (e) { }
+    }
+
+    document.getElementById('filter').addEventListener('change', uppdatera);
+    document.getElementById('visaKonturer').addEventListener('change', e => {
+        document.body.classList.toggle('konturer', e.target.checked);
+    });
+    document.getElementById('kopiera').addEventListener('click', e => {
+        const text = document.getElementById('lista').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            e.target.textContent = 'Kopierad ✓';
+            setTimeout(() => { e.target.textContent = 'Kopiera listan'; }, 1500);
+        });
+    });
+    document.getElementById('aterstall').addEventListener('click', () => {
+        valda = new Set(AKTIVA);
+        uppdatera();
+    });
+    uppdatera();
+</script>
+</body>
+</html>
