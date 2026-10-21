@@ -36,7 +36,8 @@ färger, inga ljud, inga poäng, inga val att göra.
   sopbil snett, traktor 2, två flygplan och två helikoptrar; i v52 kom två
   tåg, två båtar och två stora flygplan (lite mer 3D, se promptmallen). De gamla svartvita bilderna (kodritade, spårade
   och rena sidor med färgpunkter) och all kod för dem togs bort i v47 —
-  finns i git-historiken.
+  finns i git-historiken, och som PNG i `arkiv/` (se `arkiv/README.md`).
+  När en bild byts ut flyttas den gamla till `arkiv/` (inte i `ASSETS`).
 - Landskapslås, fullscreen, layoutlås/dö-yta, back-fälla och offline-SW är
   kopierade från Kludda — se Kluddas CLAUDE.md för detaljerna.
 - Ikonen (`icon-192.png`, `icon-512.png`, maskable) är dumpern ur en av de
