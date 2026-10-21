@@ -14,9 +14,15 @@
     button { font: inherit; border: 1px solid #c8d4e2; background: #f6f9fc; border-radius: 8px;
         padding: 6px 12px; cursor: pointer; }
     button:hover { background: #e6eef7; }
-    #lista { flex-basis: 100%; font-family: Consolas, monospace; font-size: 13px; background: #f3f6f9;
-        border-radius: 6px; padding: 6px 8px; word-break: break-word; white-space: pre-wrap;
-        max-height: 30vh; overflow: auto; }
+    #lista { flex-basis: 100%; font-family: Consolas, monospace; font-size: 12px; line-height: 1.35; background: #f3f6f9;
+        border-radius: 6px; padding: 4px 8px; word-break: break-word; white-space: pre-wrap;
+        max-height: 4.2em; overflow: auto; }
+    /* Telefon: rubriken följer inte med vid scroll, så bilderna får hela skärmen. */
+    @media (max-width: 700px) {
+        header { position: static; gap: 6px 8px; padding: 10px 12px; }
+        h1 { font-size: 17px; flex-basis: 100%; }
+        header button, header select { font-size: 13px; padding: 4px 8px; }
+    }
     main { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 14px; padding: 16px; }
     .kort { background: #fff; border-radius: 10px; overflow: hidden; border: 3px solid transparent;
         box-shadow: 0 1px 4px rgba(0,0,0,.08); }
@@ -30,7 +36,9 @@
     .par .tom { display: flex; align-items: center; justify-content: center; color: #8a96a6;
         background: repeating-linear-gradient(45deg, #f4f7fa 0 12px, #fff 12px 24px); }
     .kort.utan .rad label { color: #8a96a6; cursor: default; }
-    .rad { display: flex; align-items: center; gap: 8px; padding: 8px 10px 4px; }
+    .rad { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px 4px; }
+    .rad .bort { font-size: 13px; padding: 4px 8px; color: #a03030; }
+    .kort.borttagen { opacity: .6; }
     .nr { font-weight: 700; font-size: 18px; min-width: 2.2em; }
     .rad label { margin-left: auto; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
     .rad input { width: 20px; height: 20px; cursor: pointer; }
@@ -47,11 +55,13 @@
         <option value="valda">Bara aktiva</option>
         <option value="ovalda">Bara ej aktiva</option>
         <option value="kommenterade">Bara med kommentar</option>
+        <option value="borttagna">Borttagna (ångra)</option>
     </select>
     <button id="allaPa">Välj alla</button>
     <button id="allaAv">Välj ingen</button>
     <button id="kopiera">Kopiera listan</button>
     <button id="aterstall">Återställ till appens nuvarande</button>
+    <button id="rensa">Rensa alla kommentarer</button>
     <div id="lista"></div>
 </header>
 <main id="galleri"></main>
@@ -61,7 +71,9 @@
     // Varje bild visas med konturer och färgbild bredvid varandra. Kryssa i
     // de aktiva och skriv en kommentar om något behöver kontrolleras. Valen
     // sparas i webbläsaren; kopiera listan och skicka den, så förs den in i
-    // AKTIVA i bilder.js och kommentarerna åtgärdas.
+    // AKTIVA i bilder.js och kommentarerna åtgärdas. "Ta bort från
+    // galleriet" döljer bilden direkt här; när listan skickas förs den in i
+    // BORTTAGNA i bilder.js (filerna och numret ligger kvar i repot).
     const NYCKEL = 'pensla-galleri-val';
     const KOMMENTARER = 'pensla-galleri-kommentarer';
     let valda;
@@ -71,11 +83,17 @@
     let kommentarer;
     try { kommentarer = JSON.parse(localStorage.getItem(KOMMENTARER)); } catch (e) { kommentarer = null; }
     if (!kommentarer || typeof kommentarer !== 'object') kommentarer = {};
+    const BORT_NYCKEL = 'pensla-galleri-borttagna';
+    let borttagna;
+    try { borttagna = JSON.parse(localStorage.getItem(BORT_NYCKEL)); } catch (e) { borttagna = null; }
+    borttagna = new Set(Array.isArray(borttagna) ? borttagna : []);
+    // Bilder i BORTTAGNA (bilder.js) är bortplockade för gott.
+    const BILDER = ALLA_BILDER.filter(b => !BORTTAGNA.includes(b.nr));
 
     // Bilderna visas grupperade efter typ (namnet utan löpnummer), i
     // bokstavsordning, och inom typen efter nummer.
     const typ = b => b.namn.replace(/ \(arkiv \d+\)$/, '').replace(/ \d+$/, '').replace(/ snett$/, '');
-    const sorterade = ALLA_BILDER.slice().sort((a, b) =>
+    const sorterade = BILDER.slice().sort((a, b) =>
         typ(a).localeCompare(typ(b), 'sv') || a.nr - b.nr);
     const galleri = document.getElementById('galleri');
     const rubriker = {};
@@ -96,10 +114,17 @@
                     : `<img src="bilder/farg/${b.fil}.jpg" loading="lazy" alt="Färgbild">`}
             </div>
             <div class="rad"><span class="nr">${b.nr}</span><span>${b.namn}</span>
-                <label><input type="checkbox"${b.utanFarg ? ' disabled' : ''}> ${b.utanFarg ? 'saknar färg' : 'aktiv'}</label></div>
+                <label><input type="checkbox"${b.utanFarg ? ' disabled' : ''}> ${b.utanFarg ? 'saknar färg' : 'aktiv'}</label>
+                <button class="bort">Ta bort från galleriet</button></div>
             <textarea rows="1" placeholder="Kommentar: vad behöver kontrolleras?"></textarea>`;
         const ruta = k.querySelector('input');
         const text = k.querySelector('textarea');
+        const bort = k.querySelector('.bort');
+        bort.addEventListener('click', () => {
+            if (borttagna.has(b.nr)) borttagna.delete(b.nr);
+            else { borttagna.add(b.nr); valda.delete(b.nr); }
+            uppdatera();
+        });
         text.value = kommentarer[b.nr] || '';
         ruta.addEventListener('change', () => {
             if (ruta.checked) valda.add(b.nr); else valda.delete(b.nr);
@@ -110,39 +135,50 @@
             uppdatera();
         });
         galleri.appendChild(k);
-        return { b, k, ruta, text };
+        return { b, k, ruta, text, bort };
     });
 
-    function lista() { return [...valda].filter(n => ALLA_BILDER.some(b => b.nr === n && !b.utanFarg)).sort((a, b) => a - b); }
+    const finns = b => !borttagna.has(b.nr);
+    function lista() { return [...valda].filter(n => BILDER.some(b => b.nr === n && !b.utanFarg && finns(b))).sort((a, b) => a - b); }
 
     function uppdatera() {
         const filter = document.getElementById('filter').value;
-        kort.forEach(({ b, k, ruta, text }) => {
+        kort.forEach(({ b, k, ruta, text, bort }) => {
             const vald = valda.has(b.nr);
             const komm = !!text.value.trim();
+            const borta = borttagna.has(b.nr);
             ruta.checked = vald;
+            ruta.disabled = !!b.utanFarg || borta;
+            bort.textContent = borta ? 'Ångra borttagning' : 'Ta bort från galleriet';
             k.classList.toggle('vald', vald);
             k.classList.toggle('kommenterad', komm);
-            k.classList.toggle('dold', (filter === 'valda' && !vald) || (filter === 'ovalda' && vald)
+            k.classList.toggle('borttagen', borta);
+            k.classList.toggle('dold', filter === 'borttagna' ? !borta : borta
+                || (filter === 'valda' && !vald) || (filter === 'ovalda' && vald)
                 || (filter === 'kommenterade' && !komm));
         });
         for (const [t, h] of Object.entries(rubriker)) {
-            const egna = kort.filter(({ b }) => typ(b) === t);
-            h.classList.toggle('dold', egna.every(({ k }) => k.classList.contains('dold')));
+            const alla = kort.filter(({ b }) => typ(b) === t);
+            const egna = alla.filter(({ b }) => finns(b));
+            h.classList.toggle('dold', alla.every(({ k }) => k.classList.contains('dold')));
             const valbara = egna.filter(({ b }) => !b.utanFarg);
             h.lastChild.textContent = `(${valbara.filter(({ b }) => valda.has(b.nr)).length} av ${valbara.length} aktiva`
                 + (valbara.length < egna.length ? `, ${egna.length - valbara.length} utan färg)` : ')');
         }
         const l = lista();
-        const k = ALLA_BILDER.filter(b => (kommentarer[b.nr] || '').trim())
+        const bort = BILDER.filter(b => borttagna.has(b.nr)).map(b => b.nr).sort((a, b) => a - b);
+        const k = BILDER.filter(b => finns(b) && (kommentarer[b.nr] || '').trim())
             .map(b => `  ${b.nr} ${b.namn}: ${kommentarer[b.nr].trim().replace(/\s*\n\s*/g, ' / ')}`);
         document.getElementById('antal').textContent =
-            `${l.length} aktiva av ${ALLA_BILDER.filter(b => !b.utanFarg).length}, ${k.length} med kommentar`;
+            `${l.length} aktiva av ${BILDER.filter(b => !b.utanFarg && finns(b)).length}, ${k.length} med kommentar`
+            + (bort.length ? `, ${bort.length} borttagna` : '');
         document.getElementById('lista').textContent = 'AKTIVA: ' + l.join(', ')
+            + (bort.length ? '\nTA BORT: ' + bort.join(', ') : '')
             + (k.length ? '\nKONTROLLERA:\n' + k.join('\n') : '');
         try {
             localStorage.setItem(NYCKEL, JSON.stringify(l));
             localStorage.setItem(KOMMENTARER, JSON.stringify(kommentarer));
+            localStorage.setItem(BORT_NYCKEL, JSON.stringify([...borttagna]));
         } catch (e) { }
     }
 
@@ -155,11 +191,17 @@
         });
     });
     document.getElementById('allaPa').addEventListener('click', () => {
-        valda = new Set(ALLA_BILDER.filter(b => !b.utanFarg).map(b => b.nr));
+        valda = new Set(BILDER.filter(b => !b.utanFarg && finns(b)).map(b => b.nr));
         uppdatera();
     });
     document.getElementById('allaAv').addEventListener('click', () => {
         valda = new Set();
+        uppdatera();
+    });
+    document.getElementById('rensa').addEventListener('click', () => {
+        if (!confirm('Rensa alla kommentarer?')) return;
+        kommentarer = {};
+        kort.forEach(({ text }) => { text.value = ''; });
         uppdatera();
     });
     document.getElementById('aterstall').addEventListener('click', () => {

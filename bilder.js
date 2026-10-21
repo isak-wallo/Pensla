@@ -3,7 +3,8 @@
 // Varje bild har ett fast löpnummer `nr` som aldrig återanvänds. Bara
 // bilderna vars nummer står i AKTIVA visas i appen (och cachas av sw.js —
 // kör `python verktyg/aktiva.py` efter att AKTIVA ändrats). Välj bilder på
-// galleri.html.
+// galleri.html. Nummer i BORTTAGNA visas inte i galleriet (och kan inte
+// vara aktiva), men bilderna och numren ligger kvar.
 //
 // `utanFarg: true` = bara konturer, ingen färgbild än (kan inte vara aktiv).
 // `fil` = NAMN i bilder/farg/ (NAMN.svg = konturerna, NAMN.jpg = färgbilden).
@@ -123,5 +124,7 @@ const ALLA_BILDER = [
     { nr: 107, namn: 'Traktor 9', fil: 'traktor9', keiws: { x: 520, y: 440, s: 0.45, ytor: [[540, 260], [520, 360]] } }, // i hytten
     { nr: 108, namn: 'Traktor 10', fil: 'traktor10', keiws: { x: 440, y: 410, s: 0.4, ytor: [[400, 260], [460, 330]] } }, // i hytten
 ];
+
+const BORTTAGNA = [];
 
 const AKTIVA = [2, 4, 5, 6, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 22, 25, 27, 28, 31, 32, 33, 35, 37, 38, 41, 46, 48, 49, 50, 52, 53, 55, 57, 60, 61, 62, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 106, 107, 108];

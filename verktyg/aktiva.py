@@ -25,6 +25,9 @@ def main():
     utan = [int(n) for n in re.findall(r"nr: (\d+), [^}]*utanFarg: true", b)]
     if set(aktiva) & set(utan):
         raise SystemExit(f'AKTIVA har bilder utan färgbild: {sorted(set(aktiva) & set(utan))}')
+    bort = [int(n) for n in re.findall(r'\d+', re.search(r'const BORTTAGNA = \[(.*?)\]', b, re.S).group(1))]
+    if set(aktiva) & set(bort):
+        raise SystemExit(f'AKTIVA har bilder som är borttagna ur galleriet: {sorted(set(aktiva) & set(bort))}')
     filer = []
     for n in aktiva:
         for ext in ('svg', 'jpg'):

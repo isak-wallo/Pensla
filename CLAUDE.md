@@ -29,7 +29,9 @@ färger, inga ljud, inga poäng, inga val att göra.
   (https://isak-wallo.github.io/Pensla/galleri.html, inte i `ASSETS`):
   konturer och färgbild visas bredvid varandra, kryssa i de aktiva och
   skriv en kommentar vid bilder som behöver kontrolleras; ägaren skickar
-  listan (AKTIVA + KONTROLLERA).
+  listan (AKTIVA + KONTROLLERA + TA BORT). Bilder under TA BORT förs in i
+  `BORTTAGNA` i `bilder.js`: de försvinner ur galleriet men filerna och
+  numret ligger kvar i repot (numret återanvänds aldrig).
   Galleriet är ett levande dokument: allt i `ALLA_BILDER` visas, grupperat
   efter typ, så nya bilder dyker upp där av sig själva. v62: de gamla
   bilderna i `arkiv/` ligger i banken som nr 75–105 (`verktyg/arkivbild.py`
