@@ -16,7 +16,7 @@ behåller sitt format (t.ex. 16:10 -> 1440x900); nästan 4:3 (Geminis
 Kräver Pillow, numpy, scipy, potrace och OpenCV
 (pip install potracer opencv-python-headless).
 """
-import os, sys
+import os, sys, heapq
 import numpy as np, potrace
 from PIL import Image
 from scipy import ndimage as nd
@@ -34,23 +34,33 @@ LINJEFARG = '#3a3a44'
 # konturer: punkter (x, y i bilden, 900 px hög) per bild. Den lilla bit (under
 # BORT_MAX px i förlagan) som ligger närmast punkten tas bort.
 BORT_MAX = 4000
-# Bilder där konturerna också tas från färgkanterna (Canny i Lab-färg).
-# Copilot-bilderna (nr 48–74) har inga konturer runt moln, sol, ränder och
-# kors, och mörka linjer mot mörka ytor syns dåligt. Förlagan skalas först
-# upp till 2400 px bred så att linjerna blir lika tjocka som i Gemini-bilderna.
+# Bilder där konturerna också tas från färgkanterna (Canny i Lab-färg), för
+# former som saknar mörk kontur. Förlagan skalas först upp till 1800 px
+# höjd så att linjerna blir lika tjocka som i Gemini-bilderna. (Copilot-
+# bilderna låg här t.o.m. v69, se FARGOMRADEN.)
 # Värdet = minsta bitstorlek (px i den uppskalade förlagan), i stället för MIN_BIT.
 FARGKANTER = {
-    'gravare5': 600, 'traktor5': 600, 'flygplan6': 600, 'sopbil5': 600, 'flygplan-stort5': 600,
-    'kranbil3': 600, 'traktor6': 600, 'betongbil3': 600, 'brandbil3': 600, 'ambulans3': 600,
-    'polisbil4': 600, 'brandbil4': 600, 'raddningsbat': 600, 'sopbil6': 600, 'helikopter3': 600,
-    'dumper3': 600, 'skordetroska': 600, 'dumper4': 600, 'plogbil': 600, 'bargningsbil': 600,
-    'postbil': 600, 'traktor7': 600, 'lastfartyg': 600, 'sopbil7': 600, 'buss3': 600,
-    'brandbil5': 600, 'polisbil5': 600,
     'bat': 600,  # skrovets underkant mot vattnet har ingen mörk kontur
     'traktor8': 600, 'traktor9': 600, 'traktor10': 600,  # Gemini/ChatGPT-test 2026-10-21
     'betongbil4': 600, 'betongbil5': 600, 'ambulans4': 600, 'ambulans5': 600,  # mellanstil 2026-10-21
 }
 KANT_LAG, KANT_HOG = 20, 50   # Canny-trösklarna
+# Copilot-bilderna (nr 48–74) spåras sedan v70 med färgområden i stället
+# (`omradeslinjer`): mörka linjer med hysteres (frön mörkare än MORK_HOG
+# växer in i det som är mörkare än MORK_LAG, så linjerna blir hela i
+# stället för hackiga) plus gränserna mellan färgområden. Områdena tas
+# fram genom mean shift + k-means och slås sedan ihop med grannar vars
+# färg skiljer mindre än OMRADE_SKILLNAD (Lab), så att skuggningar inte
+# blir linjer men ränder, kors, moln och sol blir det.
+FARGOMRADEN = {
+    'gravare5', 'traktor5', 'flygplan6', 'sopbil5', 'flygplan-stort5', 'kranbil3', 'traktor6',
+    'betongbil3', 'brandbil3', 'ambulans3', 'polisbil4', 'brandbil4', 'raddningsbat', 'sopbil6',
+    'helikopter3', 'dumper3', 'skordetroska', 'dumper4', 'plogbil', 'bargningsbil', 'postbil',
+    'traktor7', 'lastfartyg', 'sopbil7', 'buss3', 'brandbil5', 'polisbil5',
+}
+MORK_HOG, MORK_LAG = 40, 14
+OMRADE_SKILLNAD = 22   # färgskillnad (Lab) som håller isär två områden
+OMRADE_MIN = 150       # mindre områden (px vid 900 px höjd) går alltid ihop med närmaste granne
 BORT = {
     'traktor': [(740, 320), (190, 395), (315, 530), (825, 600), (710, 715)],
     'traktor2': [(630, 495)],
@@ -148,6 +158,96 @@ def linjer(im):
     return storlek[bit] >= MIN_BIT
 
 
+def omraden(im):
+    """Gränserna mellan färgområdena i im (som är 900 px hög)."""
+    a = np.asarray(im)
+    lab = cv2.cvtColor(cv2.pyrMeanShiftFiltering(a, 10, 16, maxLevel=1), cv2.COLOR_RGB2LAB).astype(np.float32)
+    lab[..., 0] *= 100 / 255
+    lab[..., 1:] -= 128
+    krit = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 1.0)
+    cv2.setRNGSeed(1)
+    _, q, _ = cv2.kmeans(lab.reshape(-1, 3), 32, None, krit, 1, cv2.KMEANS_PP_CENTERS)
+    q = q.reshape(a.shape[:2])
+    # Sammanhängande bitar av varje färg är startområdena
+    bit = np.zeros(q.shape, np.int32)
+    n = 0
+    for k in range(32):
+        b, m = nd.label(q == k)
+        bit[b > 0] = b[b > 0] + n
+        n += m
+    n += 1
+    antal = np.bincount(bit.ravel(), minlength=n).astype(float)
+    medel = list(np.stack([np.bincount(bit.ravel(), lab[..., i].ravel(), minlength=n)
+                           for i in range(3)], 1) / np.maximum(antal, 1)[:, None])
+    antal = list(antal)
+    pa = np.concatenate([bit[:, 1:].ravel(), bit[1:, :].ravel()])
+    pb = np.concatenate([bit[:, :-1].ravel(), bit[:-1, :].ravel()])
+    olika = pa != pb
+    par = np.unique(np.stack([np.minimum(pa[olika], pb[olika]), np.maximum(pa[olika], pb[olika])], 1), axis=0)
+    grannar = [set() for _ in range(n)]
+    for x, y in par:
+        grannar[x].add(y)
+        grannar[y].add(x)
+    # Slå ihop de mest lika grannarna först, med uppdaterat medelvärde
+    far = list(range(n))
+    avst = lambda x, y: float(np.linalg.norm(medel[x] - medel[y]))
+    ko = [(avst(x, y), int(x), int(y)) for x, y in par]
+    heapq.heapify(ko)
+    while ko:
+        d0, x, y = heapq.heappop(ko)
+        if far[x] != x or far[y] != y or y not in grannar[x]:
+            continue
+        d = avst(x, y)
+        if d > d0 + 1e-6:
+            heapq.heappush(ko, (d, x, y))
+            continue
+        if d >= OMRADE_SKILLNAD and min(antal[x], antal[y]) >= OMRADE_MIN:
+            continue
+        if antal[x] < antal[y]:
+            x, y = y, x
+        medel[x] = (medel[x] * antal[x] + medel[y] * antal[y]) / (antal[x] + antal[y])
+        antal[x] += antal[y]
+        far[y] = x
+        for z in grannar[y]:
+            if z != x:
+                grannar[z].discard(y)
+                grannar[z].add(x)
+                grannar[x].add(z)
+                heapq.heappush(ko, (avst(x, z), min(x, z), max(x, z)))
+        grannar[x].discard(y)
+        grannar[y] = set()
+    def rot(x):
+        while far[x] != x:
+            x = far[x]
+        return x
+    R = np.array([rot(x) for x in range(n)])[bit]
+    kant = np.zeros(R.shape, bool)
+    kant[:, 1:] |= R[:, 1:] != R[:, :-1]
+    kant[1:, :] |= R[1:, :] != R[:-1, :]
+    return kant
+
+
+def omradeslinjer(im):
+    """Mörka linjer (hysteres) plus gränser mellan färgområden, för
+    FARGOMRADEN-bilderna. im är 1800 px hög."""
+    L = nd.median_filter(np.asarray(im, dtype=float) @ [0.299, 0.587, 0.114], 5)
+    morkare = nd.grey_closing(L, size=(OMGIVNING, OMGIVNING)) - L
+    fron = nd.binary_opening(morkare > MORK_HOG, np.ones((3, 3)))
+    mork = nd.binary_propagation(fron, mask=morkare > MORK_LAG)
+    liten = im.resize((round(HOJD * im.width / im.height), HOJD), Image.LANCZOS)
+    kant = np.asarray(Image.fromarray(omraden(liten)).resize(im.size, Image.NEAREST))
+    # Gränserna intill en mörk linje behövs inte, de gör den bara tjock.
+    kant = nd.binary_dilation(kant, np.ones((5, 5))) & ~nd.binary_dilation(mork, np.ones((11, 11)))
+    bit, n = nd.label(kant)
+    storlek = np.bincount(bit.ravel())
+    storlek[0] = 0
+    kant = storlek[bit] >= 600
+    bit, n = nd.label(mork | kant)
+    storlek = np.bincount(bit.ravel())
+    storlek[0] = 0
+    return storlek[bit] >= 800
+
+
 def fargkanter(im, min_bit):
     """Mörka linjer (utan skuggspärren) plus färgkanter, för FARGKANTER-bilder."""
     L = nd.median_filter(np.asarray(im, dtype=float) @ [0.299, 0.587, 0.114], 5)
@@ -186,7 +286,10 @@ def main():
     for fil in sys.argv[1:]:
         namn = os.path.splitext(os.path.basename(fil))[0]
         im = till_format(Image.open(fil).convert('RGB'), namn)
-        if namn in FARGKANTER:
+        if namn in FARGOMRADEN:
+            stor = im.resize((round(1800 * im.width / im.height), 1800), Image.LANCZOS)
+            m = ta_bort(omradeslinjer(stor), BORT.get(namn, []))
+        elif namn in FARGKANTER:
             stor = im.resize((round(1800 * im.width / im.height), 1800), Image.LANCZOS) if im.height < 1800 else im
             m = ta_bort(fargkanter(stor, FARGKANTER[namn]), BORT.get(namn, []))
         else:

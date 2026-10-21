@@ -67,7 +67,9 @@ färger, inga ljud, inga poäng, inga val att göra.
   v58: nr 48–74, 27 bilder från Copilot (Designer, 1536×1024, mer
   detaljerade och mättade färger; beskärs till 4:3). De saknar konturer
   runt moln, sol, ränder och kors, så i v61 tas deras konturer även från
-  färgkanterna (`FARGKANTER` i `fargbild.py`, se nedan). v61: ägaren valde
+  färgkanterna (`FARGKANTER` i `fargbild.py`, se nedan); i v70 spårades de
+  om med färgområden (`FARGOMRADEN`, se nedan) eftersom de var hackiga i
+  svartvitt. v61: ägaren valde
   47 aktiva bilder i galleriet. v63: nr 106–108, traktorer mellan tecknat
   och verkligt (106–107 Gemini, 108 ChatGPT, se "Mellanstil" nedan), aktiva
   direkt eftersom ägaren valde dem. De gamla svartvita bilderna (kodritade, spårade
@@ -140,10 +142,19 @@ pushas, annars fastnar plattan på gammal cache.
      2400 × 1792) och de äldre 3:2-bilderna i `BESKAR_4_3` beskärs mitt på
      till 4:3 = 1200 × 900, så att deras keIWs-mått stämmer.
    - Glapp i konturerna gör inget (färgen tas ändå ur färgbilden).
-   - Bilder där viktiga former saknar mörk kontur (Copilot-bilderna, båten)
-     står i `FARGKANTER`: där läggs färgkanter (Canny i Lab, `KANT_LAG`/
-     `KANT_HOG`) till de mörka linjerna, och förlagan skalas först upp till
-     2400 px bred. Kräver `pip install opencv-python-headless`.
+   - Bilder där viktiga former saknar mörk kontur (båten, traktor8–10,
+     betongbil4–5, ambulans4–5) står i `FARGKANTER`: där läggs färgkanter
+     (Canny i Lab, `KANT_LAG`/`KANT_HOG`) till de mörka linjerna, och
+     förlagan skalas först upp till 1800 px hög. Kräver
+     `pip install opencv-python-headless`.
+   - Copilot-bilderna (nr 48–74) står i `FARGOMRADEN` (v70,
+     `omradeslinjer`): mörka linjer med hysteres (`MORK_HOG`/`MORK_LAG`,
+     så att linjerna blir hela) plus gränserna mellan färgområden (mean
+     shift + k-means, sedan slås grannar ihop så länge Lab-skillnaden är
+     under `OMRADE_SKILLNAD` eller området är mindre än `OMRADE_MIN`).
+     Ger hela konturer runt ränder, kors, moln och sol. Bra för detaljerade
+     bilder med mättade färger där Canny blir hackigt; prova den för nya
+     sådana bilder.
    - Glans- och skuggstreck som ändå blir kvar tas bort för hand med `BORT`
      i skriptet: `'NAMN': [(x, y), ...]` i 1200-skala; den lilla biten
      (under `BORT_MAX` px) närmast varje punkt tas bort. Skriptet säger till
