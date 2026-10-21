@@ -45,6 +45,7 @@ FARGKANTER = {
     'postbil': 600, 'traktor7': 600, 'lastfartyg': 600, 'sopbil7': 600, 'buss3': 600,
     'brandbil5': 600, 'polisbil5': 600,
     'bat': 600,  # skrovets underkant mot vattnet har ingen mörk kontur
+    'traktor8': 600, 'traktor9': 600, 'traktor10': 600,  # Gemini/ChatGPT-test 2026-10-21
 }
 KANT_LAG, KANT_HOG = 20, 50   # Canny-trösklarna
 BORT = {

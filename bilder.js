@@ -118,6 +118,10 @@ const ALLA_BILDER = [
     { nr: 103, namn: 'Sopbil (arkiv 29)', fil: 'arkiv-29-sopbil', utanFarg: true },
     { nr: 104, namn: 'Tåg (arkiv 30)', fil: 'arkiv-30-tag', utanFarg: true },
     { nr: 105, namn: 'Båt (arkiv 31)', fil: 'arkiv-31-bat', utanFarg: true },
+    // Traktorer mittemellan tecknat och verkligt (2026-10-21): 106–107 Gemini, 108 ChatGPT.
+    { nr: 106, namn: 'Traktor 8', fil: 'traktor8', keiws: { x: 650, y: 355, s: 0.45, ytor: [[650, 280], [700, 230]] } }, // i framrutan
+    { nr: 107, namn: 'Traktor 9', fil: 'traktor9', keiws: { x: 520, y: 440, s: 0.45, ytor: [[540, 260], [520, 360]] } }, // i hytten
+    { nr: 108, namn: 'Traktor 10', fil: 'traktor10', keiws: { x: 440, y: 410, s: 0.4, ytor: [[400, 260], [460, 330]] } }, // i hytten
 ];
 
-const AKTIVA = [2, 4, 5, 6, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 22, 25, 27, 28, 31, 32, 33, 35, 37, 38, 41, 46, 48, 49, 50, 52, 53, 55, 57, 60, 61, 62, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74];
+const AKTIVA = [2, 4, 5, 6, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 22, 25, 27, 28, 31, 32, 33, 35, 37, 38, 41, 46, 48, 49, 50, 52, 53, 55, 57, 60, 61, 62, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 106, 107, 108];

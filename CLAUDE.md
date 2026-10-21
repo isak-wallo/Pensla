@@ -63,7 +63,9 @@ färger, inga ljud, inga poäng, inga val att göra.
   detaljerade och mättade färger; beskärs till 4:3). De saknar konturer
   runt moln, sol, ränder och kors, så i v61 tas deras konturer även från
   färgkanterna (`FARGKANTER` i `fargbild.py`, se nedan). v61: ägaren valde
-  47 aktiva bilder i galleriet. De gamla svartvita bilderna (kodritade, spårade
+  47 aktiva bilder i galleriet. v63: nr 106–108, traktorer mellan tecknat
+  och verkligt (106–107 Gemini, 108 ChatGPT, se "Mellanstil" nedan), aktiva
+  direkt eftersom ägaren valde dem. De gamla svartvita bilderna (kodritade, spårade
   och rena sidor med färgpunkter) och all kod för dem togs bort i v47 —
   finns i git-historiken, och som PNG i `arkiv/` (se `arkiv/README.md`).
   När en bild byts ut flyttas den gamla till `arkiv/` (inte i `ASSETS`).
@@ -172,6 +174,41 @@ Style rules (important):
   doors, lights) but no tiny enclosed areas.
 - Background: <BAKGRUND>.
 - No people, no animals, no text, no frame, no signature, no paper texture.
+```
+
+### Mellanstil (v63)
+Mittemellan Geminis leksaksstil och Copilots mer verkliga bilder. Ägaren
+testade den i flera AI:er 2026-10-21: Gemini gav renast konturer och är
+förstahandsval, ChatGPT är alternativet för en lite mer verklig stil.
+Blir den för tecknad, byt "halfway between" mot "a bit closer to a
+realistic drawing"; blir den för verklig, ta bort "(not chubby, not a toy)".
+```
+A friendly picture-book illustration for small children, halfway between a
+cartoon and a realistic drawing: a modern red farm tractor with a cab, big
+back wheels and smaller front wheels, on a dirt road between green fields,
+seen from the side at a slight three-quarter angle. Landscape format 4:3,
+wider than tall, the whole tractor visible with space around it.
+
+Style rules (important):
+- Proportions close to a real modern tractor (not chubby, not a toy), but
+  simplified and friendly: smooth rounded edges, clean shapes, no small
+  mechanical clutter.
+- Bold, clean, smooth outlines in near-black around EVERY shape, all about
+  the same thickness. Every area must be fully closed by outlines, no gaps.
+  Also outline the clouds, the sun, stripes and any color change.
+- Only the outlines are black. All fill colors are lighter: tires and dark
+  parts are medium gray, never black.
+- A soft 3D look: gentle light gradients and soft highlights give the
+  shapes volume, but colors stay light, never cross an outline, and there
+  are no dark shadows or dark bands along the outlines. No reflections or
+  glare lines on the windows, just a soft light blue.
+- A moderate amount of detail (cab windows with a seat and steering wheel,
+  exhaust pipe, lights, a step, a grille with a few wide slots, tire treads
+  with a few large blocks) but no tiny enclosed areas.
+- Background: rolling green hills, a few round trees, a small red barn, a
+  wooden fence, light blue sky with a few outlined clouds and an outlined sun.
+- No people, no animals, no text, no letters, no logos, no frame, no
+  signature, no paper texture.
 ```
 
 ## Konventioner
