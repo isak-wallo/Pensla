@@ -22,7 +22,9 @@
         box-shadow: 0 1px 4px rgba(0,0,0,.08); }
     .kort.vald { border-color: #3a8ee6; }
     .kort.kommenterad { box-shadow: 0 0 0 2px #f0a030; }
-    .kort.dold { display: none; }
+    .kort.dold, h2.dold { display: none; }
+    h2 { grid-column: 1 / -1; margin: 10px 0 -4px; font-size: 18px; }
+    h2 span { font-weight: 400; color: #6a7686; font-size: 15px; }
     .par { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: #dde5ee; }
     .par img { display: block; width: 100%; aspect-ratio: 4 / 3; background: #fff; }
     .rad { display: flex; align-items: center; gap: 8px; padding: 8px 10px 4px; }
@@ -43,6 +45,8 @@
         <option value="ovalda">Bara ej aktiva</option>
         <option value="kommenterade">Bara med kommentar</option>
     </select>
+    <button id="allaPa">Välj alla</button>
+    <button id="allaAv">Välj ingen</button>
     <button id="kopiera">Kopiera listan</button>
     <button id="aterstall">Återställ till appens nuvarande</button>
     <div id="lista"></div>
@@ -65,8 +69,21 @@
     try { kommentarer = JSON.parse(localStorage.getItem(KOMMENTARER)); } catch (e) { kommentarer = null; }
     if (!kommentarer || typeof kommentarer !== 'object') kommentarer = {};
 
+    // Bilderna visas grupperade efter typ (namnet utan löpnummer), i
+    // bokstavsordning, och inom typen efter nummer.
+    const typ = b => b.namn.replace(/ \d+$/, '').replace(/ snett$/, '');
+    const sorterade = ALLA_BILDER.slice().sort((a, b) =>
+        typ(a).localeCompare(typ(b), 'sv') || a.nr - b.nr);
     const galleri = document.getElementById('galleri');
-    const kort = ALLA_BILDER.map(b => {
+    const rubriker = {};
+    const kort = sorterade.map(b => {
+        if (!rubriker[typ(b)]) {
+            const h = document.createElement('h2');
+            h.textContent = typ(b) + ' ';
+            h.appendChild(document.createElement('span'));
+            galleri.appendChild(h);
+            rubriker[typ(b)] = h;
+        }
         const k = document.createElement('div');
         k.className = 'kort';
         k.innerHTML = `<div class="par">
@@ -104,6 +121,11 @@
             k.classList.toggle('dold', (filter === 'valda' && !vald) || (filter === 'ovalda' && vald)
                 || (filter === 'kommenterade' && !komm));
         });
+        for (const [t, h] of Object.entries(rubriker)) {
+            const egna = kort.filter(({ b }) => typ(b) === t);
+            h.classList.toggle('dold', egna.every(({ k }) => k.classList.contains('dold')));
+            h.lastChild.textContent = `(${egna.filter(({ b }) => valda.has(b.nr)).length} av ${egna.length} aktiva)`;
+        }
         const l = lista();
         const k = ALLA_BILDER.filter(b => (kommentarer[b.nr] || '').trim())
             .map(b => `  ${b.nr} ${b.namn}: ${kommentarer[b.nr].trim().replace(/\s*\n\s*/g, ' / ')}`);
@@ -124,6 +146,14 @@
             e.target.textContent = 'Kopierad ✓';
             setTimeout(() => { e.target.textContent = 'Kopiera listan'; }, 1500);
         });
+    });
+    document.getElementById('allaPa').addEventListener('click', () => {
+        valda = new Set(ALLA_BILDER.map(b => b.nr));
+        uppdatera();
+    });
+    document.getElementById('allaAv').addEventListener('click', () => {
+        valda = new Set();
+        uppdatera();
     });
     document.getElementById('aterstall').addEventListener('click', () => {
         valda = new Set(AKTIVA);
