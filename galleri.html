@@ -37,7 +37,7 @@
         background: repeating-linear-gradient(45deg, #f4f7fa 0 12px, #fff 12px 24px); }
     .kort.utan .rad label { color: #8a96a6; cursor: default; }
     .rad { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px 4px; }
-    .rad .bort { font-size: 13px; padding: 4px 8px; color: #a03030; }
+    .rad label + label { margin-left: 4px; color: #a03030; }
     .kort.borttagen { opacity: .6; }
     .nr { font-weight: 700; font-size: 18px; min-width: 2.2em; }
     .rad label { margin-left: auto; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
@@ -55,7 +55,7 @@
         <option value="valda">Bara aktiva</option>
         <option value="ovalda">Bara ej aktiva</option>
         <option value="kommenterade">Bara med kommentar</option>
-        <option value="borttagna">Borttagna (ångra)</option>
+        <option value="borttagna">Bara markerade ta bort</option>
     </select>
     <button id="allaPa">Välj alla</button>
     <button id="allaAv">Välj ingen</button>
@@ -71,8 +71,8 @@
     // Varje bild visas med konturer och färgbild bredvid varandra. Kryssa i
     // de aktiva och skriv en kommentar om något behöver kontrolleras. Valen
     // sparas i webbläsaren; kopiera listan och skicka den, så förs den in i
-    // AKTIVA i bilder.js och kommentarerna åtgärdas. "Ta bort från
-    // galleriet" döljer bilden direkt här; när listan skickas förs den in i
+    // AKTIVA i bilder.js och kommentarerna åtgärdas. Bilder med "ta bort"
+    // ikryssat tonas ner här; när listan skickas förs de in i
     // BORTTAGNA i bilder.js (filerna och numret ligger kvar i repot).
     const NYCKEL = 'pensla-galleri-val';
     const KOMMENTARER = 'pensla-galleri-kommentarer';
@@ -115,14 +115,14 @@
             </div>
             <div class="rad"><span class="nr">${b.nr}</span><span>${b.namn}</span>
                 <label><input type="checkbox"${b.utanFarg ? ' disabled' : ''}> ${b.utanFarg ? 'saknar färg' : 'aktiv'}</label>
-                <button class="bort">Ta bort från galleriet</button></div>
+                <label><input type="checkbox" class="bort"> ta bort</label></div>
             <textarea rows="1" placeholder="Kommentar: vad behöver kontrolleras?"></textarea>`;
         const ruta = k.querySelector('input');
         const text = k.querySelector('textarea');
         const bort = k.querySelector('.bort');
-        bort.addEventListener('click', () => {
-            if (borttagna.has(b.nr)) borttagna.delete(b.nr);
-            else { borttagna.add(b.nr); valda.delete(b.nr); }
+        bort.addEventListener('change', () => {
+            if (bort.checked) { borttagna.add(b.nr); valda.delete(b.nr); }
+            else borttagna.delete(b.nr);
             uppdatera();
         });
         text.value = kommentarer[b.nr] || '';
@@ -149,11 +149,11 @@
             const borta = borttagna.has(b.nr);
             ruta.checked = vald;
             ruta.disabled = !!b.utanFarg || borta;
-            bort.textContent = borta ? 'Ångra borttagning' : 'Ta bort från galleriet';
+            bort.checked = borta;
             k.classList.toggle('vald', vald);
             k.classList.toggle('kommenterad', komm);
             k.classList.toggle('borttagen', borta);
-            k.classList.toggle('dold', filter === 'borttagna' ? !borta : borta
+            k.classList.toggle('dold', (filter === 'borttagna' && !borta)
                 || (filter === 'valda' && !vald) || (filter === 'ovalda' && vald)
                 || (filter === 'kommenterade' && !komm));
         });
@@ -171,7 +171,7 @@
             .map(b => `  ${b.nr} ${b.namn}: ${kommentarer[b.nr].trim().replace(/\s*\n\s*/g, ' / ')}`);
         document.getElementById('antal').textContent =
             `${l.length} aktiva av ${BILDER.filter(b => !b.utanFarg && finns(b)).length}, ${k.length} med kommentar`
-            + (bort.length ? `, ${bort.length} borttagna` : '');
+            + (bort.length ? `, ${bort.length} att ta bort` : '');
         document.getElementById('lista').textContent = 'AKTIVA: ' + l.join(', ')
             + (bort.length ? '\nTA BORT: ' + bort.join(', ') : '')
             + (k.length ? '\nKONTROLLERA:\n' + k.join('\n') : '');
