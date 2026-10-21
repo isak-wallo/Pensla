@@ -11,6 +11,10 @@ Bilder som har funnits i appen men inte används längre, sparade som PNG
 Den gamla koden som ritade bilderna finns i git-historiken (commit i
 tabellen).
 
+Sedan v62 finns alla de här bilderna också i bildbanken (`bilder.js`,
+nr 75–105, NN + 74) via `verktyg/arkivbild.py`, så de kan väljas i
+galleriet. De utan färgbild står som `utanFarg` och kan inte väljas än.
+
 När en bild i appen byts ut flyttas den gamla hit: färgbilden från
 `bilder/farg/NAMN.jpg` som `NN-namn.png` och konturerna från
 `bilder/farg/NAMN.svg` som `NN-namn-linjer.png`.

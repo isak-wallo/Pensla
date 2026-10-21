@@ -29,7 +29,15 @@ färger, inga ljud, inga poäng, inga val att göra.
   (https://isak-wallo.github.io/Pensla/galleri.html, inte i `ASSETS`):
   konturer och färgbild visas bredvid varandra, kryssa i de aktiva och
   skriv en kommentar vid bilder som behöver kontrolleras; ägaren skickar
-  listan (AKTIVA + KONTROLLERA). För in den i `AKTIVA` och kör
+  listan (AKTIVA + KONTROLLERA).
+  Galleriet är ett levande dokument: allt i `ALLA_BILDER` visas, grupperat
+  efter typ, så nya bilder dyker upp där av sig själva. v62: de gamla
+  bilderna i `arkiv/` ligger i banken som nr 75–105 (`verktyg/arkivbild.py`
+  skriver `bilder/farg/arkiv-NN-namn.svg/.jpg`). 16 av dem har bara
+  konturer (`utanFarg: true`): de syns i galleriet men kan inte väljas, och
+  `aktiva.py` vägrar ta med dem. Får en av dem en färgbild senare: lägg den
+  som `forlagor/arkiv-NN-namn.jpg`, kör `fargbild.py` på den (troligen med
+  `FARGKANTER`), byt `utanFarg` mot en `keiws`-post och behåll numret. För in den i `AKTIVA` och kör
   `python verktyg/aktiva.py`.
   Om ytor-punkten hamnar på en linje (t.ex. efter omspårning) syns inte
   keIWs: ge då flera punkter inne i rutan.

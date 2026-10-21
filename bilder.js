@@ -5,6 +5,7 @@
 // kör `python verktyg/aktiva.py` efter att AKTIVA ändrats). Välj bilder på
 // galleri.html.
 //
+// `utanFarg: true` = bara konturer, ingen färgbild än (kan inte vara aktiv).
 // `fil` = NAMN i bilder/farg/ (NAMN.svg = konturerna, NAMN.jpg = färgbilden).
 // `keiws` = var den lilla kompisen keIWs gömmer sig: (x, y) = mitt under
 // fötterna, s = skala, `ytor` = punkter i de ytor han syns i (han ritas bara
@@ -84,6 +85,39 @@ const ALLA_BILDER = [
     { nr: 72, namn: 'Buss 3', fil: 'buss3', keiws: { x: 515, y: 500, s: 0.3, ytor: [[515, 400]] } }, // i ett sidofönster
     { nr: 73, namn: 'Brandbil 5', fil: 'brandbil5', keiws: { x: 950, y: 490, s: 0.3, ytor: [[950, 380]] } }, // i vindrutan
     { nr: 74, namn: 'Polisbil 5', fil: 'polisbil5', keiws: { x: 245, y: 400, s: 0.25, ytor: [[220, 360], [260, 370], [280, 320]] } }, // i bakre rutan
+    // Gamla bilder ur arkiv/ (verktyg/arkivbild.py). De utan färgbild
+    // (utanFarg) syns i galleriet men kan inte väljas.
+    { nr: 75, namn: 'Traktor (arkiv 1)', fil: 'arkiv-01-traktor', utanFarg: true },
+    { nr: 76, namn: 'Grävare (arkiv 2)', fil: 'arkiv-02-gravmaskin', utanFarg: true },
+    { nr: 77, namn: 'Traktor (arkiv 3)', fil: 'arkiv-03-traktor', keiws: { x: 750, y: 390, s: 0.4, ytor: [[700, 300], [800, 260]] } }, // i bakre rutan
+    { nr: 78, namn: 'Grävare (arkiv 4)', fil: 'arkiv-04-gravmaskin', keiws: { x: 580, y: 470, s: 0.35, ytor: [[550, 380]] } }, // i hytten
+    { nr: 79, namn: 'Traktor (arkiv 5)', fil: 'arkiv-05-traktor', keiws: { x: 480, y: 430, s: 0.4, ytor: [[460, 300], [540, 300]] } }, // i hytten
+    { nr: 80, namn: 'Grävare (arkiv 6)', fil: 'arkiv-06-gravmaskin', keiws: { x: 650, y: 590, s: 0.4, ytor: [[630, 480], [700, 480]] } }, // i hyttens fönster
+    { nr: 81, namn: 'Stort flygplan (arkiv 7)', fil: 'arkiv-07-flygplan', keiws: { x: 150, y: 610, s: 0.35, ytor: [[150, 520]] } }, // bakom molnet
+    { nr: 82, namn: 'Traktor (arkiv 8)', fil: 'arkiv-08-traktor-snett', keiws: { x: 570, y: 320, s: 0.4, ytor: [[560, 220], [620, 260]] } }, // i hytten
+    { nr: 83, namn: 'Grävare (arkiv 9)', fil: 'arkiv-09-gravmaskin', keiws: { x: 650, y: 590, s: 0.4, ytor: [[630, 480], [700, 480]] } }, // i hyttens fönster
+    { nr: 84, namn: 'Helikopter (arkiv 10)', fil: 'arkiv-10-helikopter', keiws: { x: 470, y: 450, s: 0.4, ytor: [[470, 380]] } }, // i fönstret
+    { nr: 85, namn: 'Grävare (arkiv 11)', fil: 'arkiv-11-gravmaskin-verklig', keiws: { x: 780, y: 520, s: 0.45, ytor: [[720, 400], [800, 380], [760, 470]] } }, // i hytten
+    { nr: 86, namn: 'Traktor (arkiv 12)', fil: 'arkiv-12-traktor-verklig', keiws: { x: 600, y: 300, s: 0.45, ytor: [[560, 180], [640, 200]] } }, // i hytten
+    { nr: 87, namn: 'Grävare (arkiv 13)', fil: 'arkiv-13-gravmaskin-verklig', keiws: { x: 730, y: 500, s: 0.4, ytor: [[720, 400]] } }, // i hyttens fönster
+    { nr: 88, namn: 'Stort flygplan (arkiv 14)', fil: 'arkiv-14-flygplan', utanFarg: true },
+    { nr: 89, namn: 'Traktor (arkiv 15)', fil: 'arkiv-15-traktor', utanFarg: true },
+    { nr: 90, namn: 'Grävare (arkiv 16)', fil: 'arkiv-16-gravmaskin', utanFarg: true },
+    { nr: 91, namn: 'Helikopter (arkiv 17)', fil: 'arkiv-17-helikopter', utanFarg: true },
+    { nr: 92, namn: 'Grävare (arkiv 18)', fil: 'arkiv-18-gravmaskin-snett', utanFarg: true },
+    { nr: 93, namn: 'Flygplan (arkiv 19)', fil: 'arkiv-19-propellerplan', utanFarg: true },
+    { nr: 94, namn: 'Traktor (arkiv 20)', fil: 'arkiv-20-traktor-snett', utanFarg: true },
+    { nr: 95, namn: 'Flygplan (arkiv 21)', fil: 'arkiv-21-litet-flygplan', keiws: { x: 470, y: 500, s: 0.35, ytor: [[470, 430]] } }, // i cockpitrutan
+    { nr: 96, namn: 'Helikopter (arkiv 22)', fil: 'arkiv-22-helikopter', utanFarg: true },
+    { nr: 97, namn: 'Stort flygplan (arkiv 23)', fil: 'arkiv-23-flygplan-snett', utanFarg: true },
+    { nr: 98, namn: 'Helikopter (arkiv 24)', fil: 'arkiv-24-helikopter-pa-stigen', keiws: { x: 380, y: 520, s: 0.45, ytor: [[310, 470], [380, 450], [430, 450]] } }, // i glaskupan
+    { nr: 99, namn: 'Helikopter (arkiv 25)', fil: 'arkiv-25-helikopter-i-luften', keiws: { x: 595, y: 655, s: 0.3, ytor: [[595, 600]] } }, // i sidofönstret
+    { nr: 100, namn: 'Flygplan (arkiv 26)', fil: 'arkiv-26-flygplan-vid-faltet', keiws: { x: 530, y: 560, s: 0.25, ytor: [[525, 530]] } }, // i cockpitrutan
+    { nr: 101, namn: 'Brandbil (arkiv 27)', fil: 'arkiv-27-brandbil', utanFarg: true },
+    { nr: 102, namn: 'Dumper (arkiv 28)', fil: 'arkiv-28-dumper', utanFarg: true },
+    { nr: 103, namn: 'Sopbil (arkiv 29)', fil: 'arkiv-29-sopbil', utanFarg: true },
+    { nr: 104, namn: 'Tåg (arkiv 30)', fil: 'arkiv-30-tag', utanFarg: true },
+    { nr: 105, namn: 'Båt (arkiv 31)', fil: 'arkiv-31-bat', utanFarg: true },
 ];
 
 const AKTIVA = [2, 4, 5, 6, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 22, 25, 27, 28, 31, 32, 33, 35, 37, 38, 41, 46, 48, 49, 50, 52, 53, 55, 57, 60, 61, 62, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74];

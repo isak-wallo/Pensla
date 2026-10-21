@@ -26,7 +26,10 @@
     h2 { grid-column: 1 / -1; margin: 10px 0 -4px; font-size: 18px; }
     h2 span { font-weight: 400; color: #6a7686; font-size: 15px; }
     .par { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: #dde5ee; }
-    .par img { display: block; width: 100%; aspect-ratio: 4 / 3; background: #fff; }
+    .par img, .par .tom { display: block; width: 100%; aspect-ratio: 4 / 3; background: #fff; }
+    .par .tom { display: flex; align-items: center; justify-content: center; color: #8a96a6;
+        background: repeating-linear-gradient(45deg, #f4f7fa 0 12px, #fff 12px 24px); }
+    .kort.utan .rad label { color: #8a96a6; cursor: default; }
     .rad { display: flex; align-items: center; gap: 8px; padding: 8px 10px 4px; }
     .nr { font-weight: 700; font-size: 18px; min-width: 2.2em; }
     .rad label { margin-left: auto; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
@@ -71,7 +74,7 @@
 
     // Bilderna visas grupperade efter typ (namnet utan löpnummer), i
     // bokstavsordning, och inom typen efter nummer.
-    const typ = b => b.namn.replace(/ \d+$/, '').replace(/ snett$/, '');
+    const typ = b => b.namn.replace(/ \(arkiv \d+\)$/, '').replace(/ \d+$/, '').replace(/ snett$/, '');
     const sorterade = ALLA_BILDER.slice().sort((a, b) =>
         typ(a).localeCompare(typ(b), 'sv') || a.nr - b.nr);
     const galleri = document.getElementById('galleri');
@@ -85,13 +88,15 @@
             rubriker[typ(b)] = h;
         }
         const k = document.createElement('div');
-        k.className = 'kort';
+        // Bilder utan färgbild (utanFarg) visas men kan inte väljas.
+        k.className = b.utanFarg ? 'kort utan' : 'kort';
         k.innerHTML = `<div class="par">
                 <img src="bilder/farg/${b.fil}.svg" loading="lazy" alt="Konturer">
-                <img src="bilder/farg/${b.fil}.jpg" loading="lazy" alt="Färgbild">
+                ${b.utanFarg ? '<div class="tom">saknar färgbild</div>'
+                    : `<img src="bilder/farg/${b.fil}.jpg" loading="lazy" alt="Färgbild">`}
             </div>
             <div class="rad"><span class="nr">${b.nr}</span><span>${b.namn}</span>
-                <label><input type="checkbox"> aktiv</label></div>
+                <label><input type="checkbox"${b.utanFarg ? ' disabled' : ''}> ${b.utanFarg ? 'saknar färg' : 'aktiv'}</label></div>
             <textarea rows="1" placeholder="Kommentar: vad behöver kontrolleras?"></textarea>`;
         const ruta = k.querySelector('input');
         const text = k.querySelector('textarea');
@@ -108,7 +113,7 @@
         return { b, k, ruta, text };
     });
 
-    function lista() { return [...valda].filter(n => ALLA_BILDER.some(b => b.nr === n)).sort((a, b) => a - b); }
+    function lista() { return [...valda].filter(n => ALLA_BILDER.some(b => b.nr === n && !b.utanFarg)).sort((a, b) => a - b); }
 
     function uppdatera() {
         const filter = document.getElementById('filter').value;
@@ -124,13 +129,15 @@
         for (const [t, h] of Object.entries(rubriker)) {
             const egna = kort.filter(({ b }) => typ(b) === t);
             h.classList.toggle('dold', egna.every(({ k }) => k.classList.contains('dold')));
-            h.lastChild.textContent = `(${egna.filter(({ b }) => valda.has(b.nr)).length} av ${egna.length} aktiva)`;
+            const valbara = egna.filter(({ b }) => !b.utanFarg);
+            h.lastChild.textContent = `(${valbara.filter(({ b }) => valda.has(b.nr)).length} av ${valbara.length} aktiva`
+                + (valbara.length < egna.length ? `, ${egna.length - valbara.length} utan färg)` : ')');
         }
         const l = lista();
         const k = ALLA_BILDER.filter(b => (kommentarer[b.nr] || '').trim())
             .map(b => `  ${b.nr} ${b.namn}: ${kommentarer[b.nr].trim().replace(/\s*\n\s*/g, ' / ')}`);
         document.getElementById('antal').textContent =
-            `${l.length} aktiva av ${ALLA_BILDER.length}, ${k.length} med kommentar`;
+            `${l.length} aktiva av ${ALLA_BILDER.filter(b => !b.utanFarg).length}, ${k.length} med kommentar`;
         document.getElementById('lista').textContent = 'AKTIVA: ' + l.join(', ')
             + (k.length ? '\nKONTROLLERA:\n' + k.join('\n') : '');
         try {
@@ -148,7 +155,7 @@
         });
     });
     document.getElementById('allaPa').addEventListener('click', () => {
-        valda = new Set(ALLA_BILDER.map(b => b.nr));
+        valda = new Set(ALLA_BILDER.filter(b => !b.utanFarg).map(b => b.nr));
         uppdatera();
     });
     document.getElementById('allaAv').addEventListener('click', () => {

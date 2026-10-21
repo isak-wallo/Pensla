@@ -22,6 +22,9 @@ def main():
     saknas = [n for n in aktiva if n not in alla]
     if saknas:
         raise SystemExit(f'AKTIVA har nummer som inte finns i ALLA_BILDER: {saknas}')
+    utan = [int(n) for n in re.findall(r"nr: (\d+), [^}]*utanFarg: true", b)]
+    if set(aktiva) & set(utan):
+        raise SystemExit(f'AKTIVA har bilder utan färgbild: {sorted(set(aktiva) & set(utan))}')
     filer = []
     for n in aktiva:
         for ext in ('svg', 'jpg'):
