@@ -44,7 +44,9 @@ färger, inga ljud, inga poäng, inga val att göra.
   sopbil snett, traktor 2, två flygplan och två helikoptrar; i v52 kom två
   tåg, två båtar och två stora flygplan (lite mer 3D, se promptmallen); i v55
   raket, två segelbåtar, tre polisbilar och två var av ambulans, betongbil,
-  kranbil, buss, brandbil och dumper (33 bilder). De gamla svartvita bilderna (kodritade, spårade
+  kranbil, buss, brandbil och dumper (33 bilder); i v57 nr 34–47
+  (nya 3D-versioner av traktor, grävare, litet flygplan och sopbil, två
+  stora flygplan och två raketer), inaktiva tills ägaren valt i galleriet. De gamla svartvita bilderna (kodritade, spårade
   och rena sidor med färgpunkter) och all kod för dem togs bort i v47 —
   finns i git-historiken, och som PNG i `arkiv/` (se `arkiv/README.md`).
   När en bild byts ut flyttas den gamla till `arkiv/` (inte i `ASSETS`).
