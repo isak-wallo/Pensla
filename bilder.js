@@ -63,7 +63,7 @@ const ALLA_BILDER = [
     { nr: 49, namn: 'Traktor 5', fil: 'traktor5', keiws: { x: 420, y: 330, s: 0.28, ytor: [[420, 260], [420, 310]] } }, // i hyttfönstret
     { nr: 50, namn: 'Flygplan 6', fil: 'flygplan6', keiws: { x: 610, y: 440, s: 0.2, ytor: [[610, 410]] } }, // i ett runt fönster
     { nr: 51, namn: 'Sopbil 5', fil: 'sopbil5', keiws: { x: 375, y: 480, s: 0.28, ytor: [[375, 400]] } }, // i sidorutan
-    { nr: 52, namn: 'Stort flygplan 5', fil: 'flygplan-stort5', keiws: { x: 860, y: 172, s: 0.25, ytor: [[860, 140]] } }, // i tornet
+    { nr: 52, namn: 'Stort flygplan 5', fil: 'flygplan-stort5', keiws: { x: 860, y: 172, s: 0.25, ytor: [[850, 140], [875, 140]] } }, // i tornet
     { nr: 53, namn: 'Kranbil 3', fil: 'kranbil3', keiws: { x: 770, y: 380, s: 0.3, ytor: [[770, 310]] } }, // i kranhytten
     { nr: 54, namn: 'Traktor 6', fil: 'traktor6', keiws: { x: 380, y: 320, s: 0.3, ytor: [[380, 250], [380, 300], [405, 305]] } }, // i hyttfönstret
     { nr: 55, namn: 'Betongbil 3', fil: 'betongbil3', keiws: { x: 365, y: 380, s: 0.28, ytor: [[365, 320]] } }, // i sidorutan

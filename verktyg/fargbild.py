@@ -70,9 +70,10 @@ TECKNING = set(FARGOMRADEN)   # alla Copilot-bilder sedan v73
 DAL_HOG, DAL_LAG = 30, 12
 LINJE_BREDD = 7
 BRED_DAL, BRED_MORK = 16, 90
+FARG_DAL, GRA_MAX = 7, 25
 LINJE_MIN = 800          # mindre mörka bitar är skuggfläckar (px vid 1800 px höjd)
 TECKNING_SKILLNAD = 28
-HAL_MAX = 400  # mindre hål i linjerna fylls innan de tunnas (px vid 1800 px höjd)
+HAL_MAX, HAL_BREDD = 400, 2.5  # mindre hål i linjerna fylls innan de tunnas (px vid 1800 px höjd)
 SPORRE = 30   # kortare grenar som slutar fritt tas bort (px vid 1800 px höjd)
 BORT = {
     'traktor': [(740, 320), (190, 395), (315, 530), (825, 600), (710, 715)],
@@ -261,25 +262,25 @@ def omradeslinjer(im):
     return storlek[bit] >= 800
 
 
-def dalar(L, radier=(4, 7, 11, 16)):
+def dalar(L, C, radier=(4, 7, 11, 16)):
     """Hur mycket mörkare varje pixel är än båda sidor, i den riktning
-    och på det avstånd där skillnaden är störst. De bredaste (BRED_DAL)
-    räknas bara där det är riktigt mörkt (L < BRED_MORK), så att tjocka
-    fönsterramar blir en linje men inte röda kors och ränder."""
+    och på det avstånd där skillnaden är störst. Breda dalar räknas bara
+    där färgen är gråaktig (C < GRA_MAX från radie FARG_DAL), och de
+    bredaste (BRED_DAL) bara där det dessutom är riktigt mörkt (L <
+    BRED_MORK). Så blir tjocka fönsterramar en linje, men inte röda kors
+    och blå ränder."""
     bast = np.zeros_like(L)
     for r in radier:
-        if r >= BRED_DAL:
-            bred = np.zeros_like(L)
-            for dx, dy in ((r, 0), (0, r), (r, r), (r, -r)):
-                a = nd.shift(L, (dy, dx), order=0, mode='nearest')
-                b = nd.shift(L, (-dy, -dx), order=0, mode='nearest')
-                bred = np.maximum(bred, np.minimum(a, b) - L)
-            bast = np.maximum(bast, np.where(L < BRED_MORK, bred, 0))
-            continue
+        v = np.zeros_like(L)
         for dx, dy in ((r, 0), (0, r), (r, r), (r, -r)):
             a = nd.shift(L, (dy, dx), order=0, mode='nearest')
             b = nd.shift(L, (-dy, -dx), order=0, mode='nearest')
-            bast = np.maximum(bast, np.minimum(a, b) - L)
+            v = np.maximum(v, np.minimum(a, b) - L)
+        if r >= FARG_DAL:
+            v[C >= GRA_MAX] = 0
+        if r >= BRED_DAL:
+            v[L >= BRED_MORK] = 0
+        bast = np.maximum(bast, v)
     return bast
 
 
@@ -335,8 +336,10 @@ def stora_bitar(m, minst):
 def teckning(im):
     """Linjeteckning med jämn linjebredd, för TECKNING-bilderna. im är
     1800 px hög."""
-    L = nd.median_filter(np.asarray(im, dtype=float) @ [0.299, 0.587, 0.114], 3)
-    d = dalar(L)
+    rgb = cv2.medianBlur(np.asarray(im), 3)
+    L = rgb.astype(float) @ [0.299, 0.587, 0.114]
+    lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2LAB).astype(float)
+    d = dalar(L, np.hypot(lab[..., 1] - 128, lab[..., 2] - 128))
     fron = nd.binary_opening(d > DAL_HOG, np.ones((3, 3)))
     linje = stora_bitar(nd.binary_propagation(fron, mask=d > DAL_LAG), LINJE_MIN)
     ren = cv2.inpaint(np.asarray(im), nd.binary_dilation(linje, np.ones((5, 5))).astype(np.uint8),
@@ -345,12 +348,14 @@ def teckning(im):
     kant = cv2.resize(omraden(liten, TECKNING_SKILLNAD).astype(np.uint8), im.size, interpolation=cv2.INTER_NEAREST) > 0
     alla = linje | nd.binary_dilation(kant, np.ones((3, 3)))
     alla = nd.binary_closing(alla, np.ones((5, 5)))
-    # Små hål (mellan två linjer som nästan rör vid varandra) fylls, annars
-    # blir skelettet en stege av små öglor.
+    # Små smala hål (mellan två linjer som nästan rör vid varandra) fylls,
+    # annars blir skelettet en stege av små öglor. Runda hål, som små
+    # fönster, får vara kvar.
     hal, n = nd.label(~alla)
     storlek = np.bincount(hal.ravel())
     storlek[0] = 0
-    alla |= (storlek[hal] < HAL_MAX) & (hal > 0)
+    bredd = nd.maximum(nd.distance_transform_edt(hal > 0), hal, np.arange(n + 1))
+    alla |= (storlek[hal] < HAL_MAX) & (bredd[hal] <= HAL_BREDD) & (hal > 0)
     skelett = tunna(alla)
     skelett = stora_bitar(utan_sporrar(utan_sporrar(skelett, SPORRE), SPORRE), 40)
     rund = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (LINJE_BREDD, LINJE_BREDD))

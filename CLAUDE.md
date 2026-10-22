@@ -165,7 +165,10 @@ pushas, annars fastnar plattan på gammal cache.
      (`BRED_DAL`) räknas bara där det är mörkt, så att tjocka fönsterramar
      blir en linje; små hål fylls (`HAL_MAX`) och korta sporrar tas bort
      (`SPORRE`) innan/efter tunningen; små mörka bitar (`LINJE_MIN`) och
-     svaga färgskillnader (`TECKNING_SKILLNAD`) räknas som skugga.
+     svaga färgskillnader (`TECKNING_SKILLNAD`) räknas som skugga. v74:
+     bara smala hål fylls (`HAL_BREDD`, så att små fönster blir kvar), och
+     dalar från radie `FARG_DAL` räknas bara där färgen är gråaktig
+     (`GRA_MAX`), så att färgade ränder inte blir dubbla linjer.
    - Glans- och skuggstreck som ändå blir kvar tas bort för hand med `BORT`
      i skriptet: `'NAMN': [(x, y), ...]` i 1200-skala; den lilla biten
      (under `BORT_MAX` px) närmast varje punkt tas bort. Skriptet säger till
