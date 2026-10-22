@@ -36,7 +36,12 @@ färger, inga ljud, inga poäng, inga val att göra.
   `BORTTAGNA` i `bilder.js`: de försvinner ur galleriet men filerna och
   numret ligger kvar i repot (numret återanvänds aldrig).
   Galleriet är ett levande dokument: allt i `ALLA_BILDER` visas, grupperat
-  efter typ, så nya bilder dyker upp där av sig själva. v62: de gamla
+  i kategorier (`KATEGORIER` i `galleri.html`, t.ex. Båtar, Flygplan,
+  Bygge; en ny sort som inte står där blir en egen grupp sist, så lägg in
+  den), så nya bilder dyker upp där av sig själva. Ändras `AKTIVA` börjar
+  galleriets kryss om från appens lista (gamla sparade val gäller inte
+  längre). v77: 63 bilder borttagna (bl.a. alla Copilot-bilder och arkivet),
+  alla 54 som blev kvar är aktiva. v62: de gamla
   bilderna i `arkiv/` ligger i banken som nr 75–105 (`verktyg/arkivbild.py`
   skriver `bilder/farg/arkiv-NN-namn.svg/.jpg`). 16 av dem har bara
   konturer (`utanFarg: true`): de syns i galleriet men kan inte väljas, och

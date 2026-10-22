@@ -78,7 +78,12 @@
     const KOMMENTARER = 'pensla-galleri-kommentarer';
     let valda;
     try { valda = JSON.parse(localStorage.getItem(NYCKEL)); } catch (e) { valda = null; }
-    if (!Array.isArray(valda)) valda = AKTIVA.slice();
+    // Har AKTIVA i bilder.js ändrats sedan valen sparades (listan är
+    // inskickad och införd), börjar galleriet om från appens nuvarande.
+    const AKTIVA_NYCKEL = 'pensla-galleri-aktiva';
+    let nyAppLista = false;
+    try { nyAppLista = localStorage.getItem(AKTIVA_NYCKEL) !== JSON.stringify(AKTIVA); } catch (e) { }
+    if (!Array.isArray(valda) || nyAppLista) valda = AKTIVA.slice();
     valda = new Set(valda);
     let kommentarer;
     try { kommentarer = JSON.parse(localStorage.getItem(KOMMENTARER)); } catch (e) { kommentarer = null; }
@@ -86,15 +91,34 @@
     const BORT_NYCKEL = 'pensla-galleri-borttagna';
     let borttagna;
     try { borttagna = JSON.parse(localStorage.getItem(BORT_NYCKEL)); } catch (e) { borttagna = null; }
-    borttagna = new Set(Array.isArray(borttagna) ? borttagna : []);
+    borttagna = new Set(Array.isArray(borttagna) && !nyAppLista ? borttagna : []);
     // Bilder i BORTTAGNA (bilder.js) är bortplockade för gott.
     const BILDER = ALLA_BILDER.filter(b => !BORTTAGNA.includes(b.nr));
 
-    // Bilderna visas grupperade efter typ (namnet utan löpnummer), i
-    // bokstavsordning, och inom typen efter nummer.
-    const typ = b => b.namn.replace(/ \(arkiv \d+\)$/, '').replace(/ \d+$/, '').replace(/ snett$/, '');
-    const sorterade = BILDER.slice().sort((a, b) =>
-        typ(a).localeCompare(typ(b), 'sv') || a.nr - b.nr);
+    // Bilderna visas grupperade i kategorier (KATEGORIER, i den ordningen),
+    // så att liknande bilder hamnar bredvid varandra. Inom kategorin
+    // sorteras de efter sort (namnet utan löpnummer) och nummer. En sort
+    // som inte står i någon kategori blir en egen kategori sist.
+    const KATEGORIER = [
+        ['Båtar', ['Båt', 'Segelbåt', 'Räddningsbåt', 'Lastfartyg']],
+        ['Flygplan', ['Flygplan', 'Stort flygplan']],
+        ['Helikoptrar och raketer', ['Helikopter', 'Raket']],
+        ['Tåg och bussar', ['Tåg', 'Buss']],
+        ['Utryckning', ['Polisbil', 'Ambulans', 'Brandbil']],
+        ['Bygge', ['Grävare', 'Dumper', 'Betongbil', 'Kranbil']],
+        ['På gården', ['Traktor', 'Skördetröska']],
+        ['På gatan', ['Sopbil', 'Plogbil', 'Bärgningsbil', 'Postbil']],
+    ];
+    const sort = b => b.namn.replace(/ \(arkiv \d+\)$/, '').replace(/ \d+$/, '').replace(/ snett$/, '');
+    const plats = b => {
+        const i = KATEGORIER.findIndex(([, sorter]) => sorter.includes(sort(b)));
+        return i < 0 ? [KATEGORIER.length, 0] : [i, KATEGORIER[i][1].indexOf(sort(b))];
+    };
+    const typ = b => { const i = plats(b)[0]; return i < KATEGORIER.length ? KATEGORIER[i][0] : sort(b); };
+    const sorterade = BILDER.slice().sort((a, b) => {
+        const [ka, sa] = plats(a), [kb, sb] = plats(b);
+        return ka - kb || typ(a).localeCompare(typ(b), 'sv') || sa - sb || a.nr - b.nr;
+    });
     const galleri = document.getElementById('galleri');
     const rubriker = {};
     const kort = sorterade.map(b => {
@@ -179,6 +203,7 @@
             localStorage.setItem(NYCKEL, JSON.stringify(l));
             localStorage.setItem(KOMMENTARER, JSON.stringify(kommentarer));
             localStorage.setItem(BORT_NYCKEL, JSON.stringify([...borttagna]));
+            localStorage.setItem(AKTIVA_NYCKEL, JSON.stringify(AKTIVA));
         } catch (e) { }
     }
 
