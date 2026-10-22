@@ -155,6 +155,12 @@ pushas, annars fastnar plattan på gammal cache.
      Ger hela konturer runt ränder, kors, moln och sol. Bra för detaljerade
      bilder med mättade färger där Canny blir hackigt; prova den för nya
      sådana bilder.
+   - `TECKNING` (v71, `teckning`, än så länge bara ambulans3 som prov):
+     linjer = det som är mörkare än båda sidor (`dalar`, `DAL_HOG`/
+     `DAL_LAG`), färgområdena räknas på en bild där linjerna målats bort,
+     och allt tunnas till ett skelett som ritas om med jämn bredd
+     (`LINJE_BREDD`). Ger jämna linjer, färre skuggstreck och konturer runt
+     färgfält som ränder och kors. Tar ~20 s per bild.
    - Glans- och skuggstreck som ändå blir kvar tas bort för hand med `BORT`
      i skriptet: `'NAMN': [(x, y), ...]` i 1200-skala; den lilla biten
      (under `BORT_MAX` px) närmast varje punkt tas bort. Skriptet säger till

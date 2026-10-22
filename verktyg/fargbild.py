@@ -61,6 +61,14 @@ FARGOMRADEN = {
 MORK_HOG, MORK_LAG = 40, 14
 OMRADE_SKILLNAD = 22   # färgskillnad (Lab) som håller isär två områden
 OMRADE_MIN = 150       # mindre områden (px vid 900 px höjd) går alltid ihop med närmaste granne
+# TECKNING (v71, `teckning`) är nästa steg för Copilot-bilderna: linjer är
+# det som är mörkare än båda sidor (dalar, så att kanten på en röd yta inte
+# blir en linje), färgområdena räknas på en bild där linjerna målats bort
+# (så att gränserna hamnar mitt i linjerna), och allt tunnas till ett
+# skelett som ritas om med jämn bredd (LINJE_BREDD px vid 1800 px höjd).
+TECKNING = {'ambulans3'}
+DAL_HOG, DAL_LAG = 30, 12
+LINJE_BREDD = 7
 BORT = {
     'traktor': [(740, 320), (190, 395), (315, 530), (825, 600), (710, 715)],
     'traktor2': [(630, 495)],
@@ -248,6 +256,65 @@ def omradeslinjer(im):
     return storlek[bit] >= 800
 
 
+def dalar(L, radier=(4, 7, 11)):
+    """Hur mycket mörkare varje pixel är än båda sidor, i den riktning
+    och på det avstånd där skillnaden är störst."""
+    bast = np.zeros_like(L)
+    for r in radier:
+        for dx, dy in ((r, 0), (0, r), (r, r), (r, -r)):
+            a = nd.shift(L, (dy, dx), order=0, mode='nearest')
+            b = nd.shift(L, (-dy, -dx), order=0, mode='nearest')
+            bast = np.maximum(bast, np.minimum(a, b) - L)
+    return bast
+
+
+def tunna(m):
+    """Skelettet av m (Zhang-Suen), en pixel brett."""
+    m = np.pad(m.astype(np.uint8), 1)
+    grannar = ((-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1))
+    andrat = True
+    while andrat:
+        andrat = False
+        for steg in (0, 1):
+            P = [np.roll(np.roll(m, -dy, 0), -dx, 1) for dy, dx in grannar]
+            B = sum(P)
+            A = sum((P[i] == 0) & (P[(i + 1) % 8] == 1) for i in range(8))
+            if steg == 0:
+                c = (P[0] * P[2] * P[4] == 0) & (P[2] * P[4] * P[6] == 0)
+            else:
+                c = (P[0] * P[2] * P[6] == 0) & (P[0] * P[4] * P[6] == 0)
+            d = (m == 1) & (B >= 2) & (B <= 6) & (A == 1) & c
+            if d.any():
+                m[d] = 0
+                andrat = True
+    return m[1:-1, 1:-1].astype(bool)
+
+
+def stora_bitar(m, minst):
+    bit, n = nd.label(m, np.ones((3, 3)))
+    storlek = np.bincount(bit.ravel())
+    storlek[0] = 0
+    return storlek[bit] >= minst
+
+
+def teckning(im):
+    """Linjeteckning med jämn linjebredd, för TECKNING-bilderna. im är
+    1800 px hög."""
+    L = nd.median_filter(np.asarray(im, dtype=float) @ [0.299, 0.587, 0.114], 3)
+    d = dalar(L)
+    fron = nd.binary_opening(d > DAL_HOG, np.ones((3, 3)))
+    linje = stora_bitar(nd.binary_propagation(fron, mask=d > DAL_LAG), 300)
+    ren = cv2.inpaint(np.asarray(im), nd.binary_dilation(linje, np.ones((5, 5))).astype(np.uint8),
+                      5, cv2.INPAINT_TELEA)
+    liten = cv2.resize(ren, (round(HOJD * im.width / im.height), HOJD), interpolation=cv2.INTER_AREA)
+    kant = cv2.resize(omraden(liten).astype(np.uint8), im.size, interpolation=cv2.INTER_NEAREST) > 0
+    alla = linje | nd.binary_dilation(kant, np.ones((3, 3)))
+    skelett = stora_bitar(tunna(nd.binary_closing(alla, np.ones((5, 5)))), 40)
+    rund = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (LINJE_BREDD, LINJE_BREDD))
+    tjock = cv2.dilate(skelett.astype(np.uint8), rund).astype(float)
+    return nd.gaussian_filter(tjock, 1.5) > 0.45
+
+
 def fargkanter(im, min_bit):
     """Mörka linjer (utan skuggspärren) plus färgkanter, för FARGKANTER-bilder."""
     L = nd.median_filter(np.asarray(im, dtype=float) @ [0.299, 0.587, 0.114], 5)
@@ -286,7 +353,10 @@ def main():
     for fil in sys.argv[1:]:
         namn = os.path.splitext(os.path.basename(fil))[0]
         im = till_format(Image.open(fil).convert('RGB'), namn)
-        if namn in FARGOMRADEN:
+        if namn in TECKNING:
+            stor = im.resize((round(1800 * im.width / im.height), 1800), Image.LANCZOS)
+            m = ta_bort(teckning(stor), BORT.get(namn, []))
+        elif namn in FARGOMRADEN:
             stor = im.resize((round(1800 * im.width / im.height), 1800), Image.LANCZOS)
             m = ta_bort(omradeslinjer(stor), BORT.get(namn, []))
         elif namn in FARGKANTER:
