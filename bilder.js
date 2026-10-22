@@ -129,6 +129,10 @@ const ALLA_BILDER = [
     { nr: 111, namn: 'Ambulans 4', fil: 'ambulans4', keiws: { x: 690, y: 450, s: 0.4, ytor: [[690, 360], [660, 420]] } }, // i framrutan
     { nr: 112, namn: 'Ambulans 5', fil: 'ambulans5', keiws: { x: 600, y: 500, s: 0.4, ytor: [[560, 420], [640, 400], [620, 470]] } }, // i sidofönstret
     { nr: 113, namn: 'Stort flygplan 6', fil: 'flygplan-stort6', keiws: { x: 1245, y: 336, s: 0.35, ytor: [[1250, 300]] } }, // i terminalfönstret
+    { nr: 114, namn: 'Plogbil 2', fil: 'plogbil2', keiws: { x: 835, y: 336, s: 0.42, ytor: [[812, 312]] } }, // i framrutan
+    { nr: 115, namn: 'Plogbil 3', fil: 'plogbil3', keiws: { x: 562, y: 364, s: 0.42, ytor: [[525, 325]] } }, // i framrutan
+    { nr: 116, namn: 'Bärgningsbil 2', fil: 'bargningsbil2', keiws: { x: 277, y: 413, s: 0.42, ytor: [[225, 350]] } }, // i framrutan
+    { nr: 117, namn: 'Bärgningsbil 3', fil: 'bargningsbil3', keiws: { x: 1093, y: 406, s: 0.42, ytor: [[1112, 375]] } }, // i framrutan
 ];
 
 const BORTTAGNA = [];

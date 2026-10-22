@@ -245,6 +245,27 @@ Style rules (important):
   signature, no paper texture.
 ```
 
+### GPT-stilen (v75–v76), ägarens val för att göra om alla sorter
+GPT via Copilot med prompten nedan (här bärgningsbilen; byt fordon och
+miljö). Bilderna blir 3:2 (1080 × 720) fast prompten säger 16:10, och de
+behåller sitt format i appen (1350 × 900). Spåras med `TECKNING` (lägg
+namnet i `FARGOMRADEN`). Nr 113–117 är gjorda så och spårades rent.
+Snöbilder: be om ljusblåvit snö med egna konturer, annars försvinner den
+mot himlen. Be inte om rutor/plattor i marken (blir linjer).
+```
+A playful but slightly more realistic picture-book illustration for small children: a big tow truck driving along a street in a small town, towing a small broken-down car behind it on its lifting arm, seen from the side at a slight three-quarter angle. Realistic proportions: a truck cab with a big windshield and side window, a flat rear deck with a crane boom, a hook and a tow arm, big wheels, but still friendly and softly rounded, not a toy. Landscape format 16:10, wider than tall, the whole truck and the towed car visible with space around them.
+
+Style rules (important):
+- Bold, clean, smooth outlines in near-black around EVERY shape, all the same thickness, in the foreground AND the background: houses, trees, street, curb, road markings, clouds, the sun and each sun ray all get the same bold outline. No thin, light or colored lines anywhere.
+- Every area must be fully closed by outlines, no gaps. Stripes and warning patterns on the truck are separate areas with their own outlines.
+- Only the outlines are black. All fill colors are lighter: tires, the crane boom's dark parts and the grille are medium gray, never black or dark navy.
+- Mostly flat colors: each area has one main color with at most a very soft, light highlight. No strong gradients, no shading bands, no dark shadows along outlines, no shadows on the ground under the vehicles.
+- A bit more detail than a toy (a roof light bar, side mirrors, headlights, a door, a colored stripe along the cab, the crane boom with a hook and a chain), but no tiny enclosed areas. No grilles with many slots, no ribbed or accordion details, no panel lines, bolts or rivets, no tiny chain links.
+- The street is one plain area with a few wide outlined markings, no paving tiles, no cobblestones, no grid of lines on the ground.
+- Background: a few simple houses with big windows, a big rounded bush or tree near the truck, light blue sky with a few big puffy clouds and a sun. Keep background objects large and simple, no other vehicles.
+- No people, no animals, no text, no letters, no logos, no frame, no signature, no paper texture.
+```
+
 ## Konventioner
 - Svenska i UI och kommentarer. Ingen byggpipeline, inga dependencies.
 - Tänk på multi-touch och `stopPropagation` på nya knappar.
