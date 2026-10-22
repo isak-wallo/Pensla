@@ -155,7 +155,8 @@ pushas, annars fastnar plattan på gammal cache.
      Ger hela konturer runt ränder, kors, moln och sol. Bra för detaljerade
      bilder med mättade färger där Canny blir hackigt; prova den för nya
      sådana bilder.
-   - `TECKNING` (v71, `teckning`, än så länge bara ambulans3 som prov):
+   - `TECKNING` (v71, `teckning`; sedan v73 alla Copilot-bilder, före
+     `FARGOMRADEN` i main):
      linjer = det som är mörkare än båda sidor (`dalar`, `DAL_HOG`/
      `DAL_LAG`), färgområdena räknas på en bild där linjerna målats bort,
      och allt tunnas till ett skelett som ritas om med jämn bredd

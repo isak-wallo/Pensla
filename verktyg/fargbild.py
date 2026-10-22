@@ -66,7 +66,7 @@ OMRADE_MIN = 150       # mindre områden (px vid 900 px höjd) går alltid ihop 
 # blir en linje), färgområdena räknas på en bild där linjerna målats bort
 # (så att gränserna hamnar mitt i linjerna), och allt tunnas till ett
 # skelett som ritas om med jämn bredd (LINJE_BREDD px vid 1800 px höjd).
-TECKNING = {'ambulans3'}
+TECKNING = set(FARGOMRADEN)   # alla Copilot-bilder sedan v73
 DAL_HOG, DAL_LAG = 30, 12
 LINJE_BREDD = 7
 BRED_DAL, BRED_MORK = 16, 90
