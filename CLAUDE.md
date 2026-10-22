@@ -160,7 +160,11 @@ pushas, annars fastnar plattan på gammal cache.
      `DAL_LAG`), färgområdena räknas på en bild där linjerna målats bort,
      och allt tunnas till ett skelett som ritas om med jämn bredd
      (`LINJE_BREDD`). Ger jämna linjer, färre skuggstreck och konturer runt
-     färgfält som ränder och kors. Tar ~20 s per bild.
+     färgfält som ränder och kors. Tar ~20 s per bild. v72: breda dalar
+     (`BRED_DAL`) räknas bara där det är mörkt, så att tjocka fönsterramar
+     blir en linje; små hål fylls (`HAL_MAX`) och korta sporrar tas bort
+     (`SPORRE`) innan/efter tunningen; små mörka bitar (`LINJE_MIN`) och
+     svaga färgskillnader (`TECKNING_SKILLNAD`) räknas som skugga.
    - Glans- och skuggstreck som ändå blir kvar tas bort för hand med `BORT`
      i skriptet: `'NAMN': [(x, y), ...]` i 1200-skala; den lilla biten
      (under `BORT_MAX` px) närmast varje punkt tas bort. Skriptet säger till

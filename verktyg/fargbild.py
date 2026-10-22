@@ -69,6 +69,11 @@ OMRADE_MIN = 150       # mindre områden (px vid 900 px höjd) går alltid ihop 
 TECKNING = {'ambulans3'}
 DAL_HOG, DAL_LAG = 30, 12
 LINJE_BREDD = 7
+BRED_DAL, BRED_MORK = 16, 90
+LINJE_MIN = 800          # mindre mörka bitar är skuggfläckar (px vid 1800 px höjd)
+TECKNING_SKILLNAD = 28
+HAL_MAX = 400  # mindre hål i linjerna fylls innan de tunnas (px vid 1800 px höjd)
+SPORRE = 30   # kortare grenar som slutar fritt tas bort (px vid 1800 px höjd)
 BORT = {
     'traktor': [(740, 320), (190, 395), (315, 530), (825, 600), (710, 715)],
     'traktor2': [(630, 495)],
@@ -166,7 +171,7 @@ def linjer(im):
     return storlek[bit] >= MIN_BIT
 
 
-def omraden(im):
+def omraden(im, skillnad=OMRADE_SKILLNAD):
     """Gränserna mellan färgområdena i im (som är 900 px hög)."""
     a = np.asarray(im)
     lab = cv2.cvtColor(cv2.pyrMeanShiftFiltering(a, 10, 16, maxLevel=1), cv2.COLOR_RGB2LAB).astype(np.float32)
@@ -209,7 +214,7 @@ def omraden(im):
         if d > d0 + 1e-6:
             heapq.heappush(ko, (d, x, y))
             continue
-        if d >= OMRADE_SKILLNAD and min(antal[x], antal[y]) >= OMRADE_MIN:
+        if d >= skillnad and min(antal[x], antal[y]) >= OMRADE_MIN:
             continue
         if antal[x] < antal[y]:
             x, y = y, x
@@ -256,11 +261,21 @@ def omradeslinjer(im):
     return storlek[bit] >= 800
 
 
-def dalar(L, radier=(4, 7, 11)):
+def dalar(L, radier=(4, 7, 11, 16)):
     """Hur mycket mörkare varje pixel är än båda sidor, i den riktning
-    och på det avstånd där skillnaden är störst."""
+    och på det avstånd där skillnaden är störst. De bredaste (BRED_DAL)
+    räknas bara där det är riktigt mörkt (L < BRED_MORK), så att tjocka
+    fönsterramar blir en linje men inte röda kors och ränder."""
     bast = np.zeros_like(L)
     for r in radier:
+        if r >= BRED_DAL:
+            bred = np.zeros_like(L)
+            for dx, dy in ((r, 0), (0, r), (r, r), (r, -r)):
+                a = nd.shift(L, (dy, dx), order=0, mode='nearest')
+                b = nd.shift(L, (-dy, -dx), order=0, mode='nearest')
+                bred = np.maximum(bred, np.minimum(a, b) - L)
+            bast = np.maximum(bast, np.where(L < BRED_MORK, bred, 0))
+            continue
         for dx, dy in ((r, 0), (0, r), (r, r), (r, -r)):
             a = nd.shift(L, (dy, dx), order=0, mode='nearest')
             b = nd.shift(L, (-dy, -dx), order=0, mode='nearest')
@@ -290,6 +305,26 @@ def tunna(m):
     return m[1:-1, 1:-1].astype(bool)
 
 
+def utan_sporrar(sk, langd):
+    """Tar bort korta grenar (sporrar) som sticker ut från en korsning i
+    skelettet sk och slutar fritt."""
+    k = np.ones((3, 3))
+    grannar = nd.convolve(sk.astype(int), k, mode='constant') - sk
+    korsning = nd.binary_dilation(sk & (grannar >= 3), k) & sk
+    del_ = sk & ~korsning
+    bit, n = nd.label(del_, k)
+    if not n:
+        return sk
+    langder = np.bincount(bit.ravel(), minlength=n + 1)
+    fri = np.zeros(n + 1, bool)
+    fri[np.unique(bit[del_ & (grannar == 1)])] = True
+    vid = np.zeros(n + 1, bool)
+    vid[np.unique(bit[nd.binary_dilation(korsning, k) & del_])] = True
+    bort = fri & vid & (langder < langd)
+    bort[0] = False
+    return sk & ~bort[bit]
+
+
 def stora_bitar(m, minst):
     bit, n = nd.label(m, np.ones((3, 3)))
     storlek = np.bincount(bit.ravel())
@@ -303,13 +338,21 @@ def teckning(im):
     L = nd.median_filter(np.asarray(im, dtype=float) @ [0.299, 0.587, 0.114], 3)
     d = dalar(L)
     fron = nd.binary_opening(d > DAL_HOG, np.ones((3, 3)))
-    linje = stora_bitar(nd.binary_propagation(fron, mask=d > DAL_LAG), 300)
+    linje = stora_bitar(nd.binary_propagation(fron, mask=d > DAL_LAG), LINJE_MIN)
     ren = cv2.inpaint(np.asarray(im), nd.binary_dilation(linje, np.ones((5, 5))).astype(np.uint8),
                       5, cv2.INPAINT_TELEA)
     liten = cv2.resize(ren, (round(HOJD * im.width / im.height), HOJD), interpolation=cv2.INTER_AREA)
-    kant = cv2.resize(omraden(liten).astype(np.uint8), im.size, interpolation=cv2.INTER_NEAREST) > 0
+    kant = cv2.resize(omraden(liten, TECKNING_SKILLNAD).astype(np.uint8), im.size, interpolation=cv2.INTER_NEAREST) > 0
     alla = linje | nd.binary_dilation(kant, np.ones((3, 3)))
-    skelett = stora_bitar(tunna(nd.binary_closing(alla, np.ones((5, 5)))), 40)
+    alla = nd.binary_closing(alla, np.ones((5, 5)))
+    # Små hål (mellan två linjer som nästan rör vid varandra) fylls, annars
+    # blir skelettet en stege av små öglor.
+    hal, n = nd.label(~alla)
+    storlek = np.bincount(hal.ravel())
+    storlek[0] = 0
+    alla |= (storlek[hal] < HAL_MAX) & (hal > 0)
+    skelett = tunna(alla)
+    skelett = stora_bitar(utan_sporrar(utan_sporrar(skelett, SPORRE), SPORRE), 40)
     rund = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (LINJE_BREDD, LINJE_BREDD))
     tjock = cv2.dilate(skelett.astype(np.uint8), rund).astype(float)
     return nd.gaussian_filter(tjock, 1.5) > 0.45
