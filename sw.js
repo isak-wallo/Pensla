@@ -1,6 +1,6 @@
 // Höj VERSION (v1 -> v2 osv.) varje gång du laddar upp nya filer,
 // så hämtas och cachas den nya versionen säkert.
-const VERSION = 'v77';
+const VERSION = 'v78';
 const CACHE = 'pensla-' + VERSION;
 
 const ASSETS = [
@@ -151,7 +151,11 @@ self.addEventListener('activate', function (e) {
 self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET') return;
-  if (new URL(req.url).origin !== self.location.origin) return;
+  var url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+  // Galleriet (och dess bilder.js?farsk) hämtas alltid färskt från nätet,
+  // så att det visar det senaste även där appen är installerad.
+  if (url.pathname.endsWith('galleri.html') || url.search === '?farsk') return;
 
   e.respondWith(
     caches.match(req).then(function (cachedResponse) {

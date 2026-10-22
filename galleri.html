@@ -11,6 +11,7 @@
         box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
     h1 { font-size: 20px; margin: 0; }
     #antal { font-weight: 600; }
+    #version { color: #6a7686; }
     button { font: inherit; border: 1px solid #c8d4e2; background: #f6f9fc; border-radius: 8px;
         padding: 6px 12px; cursor: pointer; }
     button:hover { background: #e6eef7; }
@@ -50,6 +51,7 @@
 <header>
     <h1>Pensla – alla bilder</h1>
     <span id="antal"></span>
+    <span id="version"></span>
     <select id="filter">
         <option value="alla">Visa alla</option>
         <option value="valda">Bara aktiva</option>
@@ -65,7 +67,7 @@
     <div id="lista"></div>
 </header>
 <main id="galleri"></main>
-<script src="bilder.js"></script>
+<script src="bilder.js?farsk"></script>
 <script>
     // Galleri för att välja vilka bilder som ska vara aktiva i appen.
     // Varje bild visas med konturer och färgbild bredvid varandra. Kryssa i
@@ -234,6 +236,12 @@
         uppdatera();
     });
     uppdatera();
+
+    // Versionen som ligger ute just nu (VERSION i sw.js, utan cache)
+    fetch('sw.js?farsk', { cache: 'no-store' }).then(r => r.text()).then(t => {
+        const v = t.match(/const VERSION = '([^']*)'/);
+        if (v) document.getElementById('version').textContent = 'Version ' + v[1];
+    }).catch(() => { });
 </script>
 </body>
 </html>
