@@ -32,13 +32,16 @@ färger, inga ljud, inga poäng, inga val att göra.
   (https://isak-wallo.github.io/Pensla/galleri.html, inte i `ASSETS`):
   konturer och färgbild visas bredvid varandra, kryssa i de aktiva och
   skriv en kommentar vid bilder som behöver kontrolleras; ägaren skickar
-  listan (AKTIVA + KONTROLLERA + TA BORT). Bilder under TA BORT förs in i
-  `BORTTAGNA` i `bilder.js`: de försvinner ur galleriet men filerna och
-  numret ligger kvar i repot (numret återanvänds aldrig).
+  listan (AKTIVA + KONTROLLERA + TA BORT + TA TILLBAKA). Bilder under TA
+  BORT förs in i `BORTTAGNA` i `bilder.js` (filerna och numret ligger kvar
+  i repot, numret återanvänds aldrig); TA TILLBAKA tas ur `BORTTAGNA`.
+  Galleriet har tre flikar efter hur bilden står i appen just nu: Aktiva,
+  Inaktiva och Borttagna (v80). En bild som ändras stannar i sin flik med
+  en etikett ("blir aktiv", "tas bort" ...) tills listan är införd.
   Galleriet är ett levande dokument: allt i `ALLA_BILDER` visas, grupperat
   i kategorier (`KATEGORIER` i `galleri.html`, t.ex. Båtar, Flygplan,
   Bygge; en ny sort som inte står där blir en egen grupp sist, så lägg in
-  den), så nya bilder dyker upp där av sig själva. Ändras `AKTIVA` börjar
+  den), så nya bilder dyker upp där av sig själva. Ändras `AKTIVA` eller `BORTTAGNA` börjar
   galleriets kryss om från appens lista (gamla sparade val gäller inte
   längre). v77: 63 bilder borttagna (bl.a. alla Copilot-bilder och arkivet),
   alla 54 som blev kvar är aktiva. v62: de gamla
