@@ -260,6 +260,10 @@ behåller sitt format i appen (1350 × 900). Spåras med `TECKNING` (lägg
 namnet i `FARGOMRADEN`). Nr 113–117 är gjorda så och spårades rent.
 Snöbilder: be om ljusblåvit snö med egna konturer, annars försvinner den
 mot himlen. Be inte om rutor/plattor i marken (blir linjer).
+Alla sorter i den här stilen står i `verktyg/promptdokument.py`, som
+skriver `promptar/bilder.md` (till Gemini i Antigravity: agenten sparar
+bilderna i `inkorg/`, som git ignorerar) och `promptar/bilder.docx` (till
+en chatt). Hjullastare är en ny sort: lägg den i `KATEGORIER` (Bygge).
 ```
 A playful but slightly more realistic picture-book illustration for small children: a big tow truck driving along a street in a small town, towing a small broken-down car behind it on its lifting arm, seen from the side at a slight three-quarter angle. Realistic proportions: a truck cab with a big windshield and side window, a flat rear deck with a crane boom, a hook and a tow arm, big wheels, but still friendly and softly rounded, not a toy. Landscape format 16:10, wider than tall, the whole truck and the towed car visible with space around them.
 
