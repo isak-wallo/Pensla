@@ -60,6 +60,8 @@ färger, inga ljud, inga poäng, inga val att göra.
   `python verktyg/aktiva.py`.
   Om ytor-punkten hamnar på en linje (t.ex. efter omspårning) syns inte
   keIWs: ge då flera punkter inne i rutan.
+- Bildernas ordning blandas varje gång appen startar (v87, i `PICTURES`)
+  men ligger fast medan den är igång, så ◀ ▶ går fram och tillbaka.
 - Varje bild minns det man målat så länge appen är öppen
   (`pictureState`/`loadPicture`).
 - **keIWs** (den lilla blå klossfiguren) gömmer sig i varje bild, som krypet

@@ -249,7 +249,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // fram). Konturerna ritas på lineCanvas och färgbilden på colorCanvas.
 
     // Bilderna står i bilder.js; bara de aktiva visas.
+    // Ordningen blandas varje gång appen startar men ligger fast medan den
+    // är igång, så att ◀ och ▶ går fram och tillbaka i samma ordning.
     const PICTURES = ALLA_BILDER.filter(b => AKTIVA.includes(b.nr));
+    for (let i = PICTURES.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [PICTURES[i], PICTURES[j]] = [PICTURES[j], PICTURES[i]];
+    }
 
     // Bildfilerna laddas i förväg så att bläddring går direkt.
     PICTURES.forEach(pic => {
