@@ -1,6 +1,6 @@
 // Höj VERSION (v1 -> v2 osv.) varje gång du laddar upp nya filer,
 // så hämtas och cachas den nya versionen säkert.
-const VERSION = 'v87';
+const VERSION = 'v88';
 const CACHE = 'pensla-' + VERSION;
 
 const ASSETS = [
@@ -48,6 +48,10 @@ const ASSETS = [
   './bilder/farg/ambulans.jpg',
   './bilder/farg/ambulans2.svg',
   './bilder/farg/ambulans2.jpg',
+  './bilder/farg/betongbil2.svg',
+  './bilder/farg/betongbil2.jpg',
+  './bilder/farg/kranbil.svg',
+  './bilder/farg/kranbil.jpg',
   './bilder/farg/kranbil2.svg',
   './bilder/farg/kranbil2.jpg',
   './bilder/farg/buss.svg',
@@ -116,6 +120,20 @@ const ASSETS = [
   './bilder/farg/bargningsbil2.jpg',
   './bilder/farg/bargningsbil3.svg',
   './bilder/farg/bargningsbil3.jpg',
+  './bilder/farg/traktor11.svg',
+  './bilder/farg/traktor11.jpg',
+  './bilder/farg/traktor12.svg',
+  './bilder/farg/traktor12.jpg',
+  './bilder/farg/traktor13.svg',
+  './bilder/farg/traktor13.jpg',
+  './bilder/farg/hjullastare.svg',
+  './bilder/farg/hjullastare.jpg',
+  './bilder/farg/hjullastare2.svg',
+  './bilder/farg/hjullastare2.jpg',
+  './bilder/farg/hjullastare3.svg',
+  './bilder/farg/hjullastare3.jpg',
+  './bilder/farg/hjullastare4.svg',
+  './bilder/farg/hjullastare4.jpg',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'

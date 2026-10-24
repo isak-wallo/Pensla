@@ -7,25 +7,36 @@
 <style>
     * { box-sizing: border-box; }
     body { margin: 0; font-family: system-ui, sans-serif; background: #eef4fa; color: #2c3440; }
-    header { position: sticky; top: 0; z-index: 1; background: #fff; padding: 12px 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+    header { position: sticky; top: 0; z-index: 1; background: #fff; padding: 12px 16px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-direction: column; gap: 10px; }
+    .rad1 { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; }
+    .rad1 button { align-self: center; }
+    .listrad { display: flex; gap: 10px; align-items: flex-start; }
+    .listrad button { flex: none; }
     h1 { font-size: 20px; margin: 0; }
     #antal { font-weight: 600; }
     #version { color: #6a7686; }
     button { font: inherit; border: 1px solid #c8d4e2; background: #f6f9fc; border-radius: 8px;
         padding: 6px 12px; cursor: pointer; }
     button:hover { background: #e6eef7; }
-    #flikar { flex-basis: 100%; display: flex; gap: 6px; }
-    #flikar button { font-weight: 600; }
-    #flikar button.vald { background: #3a8ee6; border-color: #3a8ee6; color: #fff; }
-    #lista { flex-basis: 100%; font-family: Consolas, monospace; font-size: 12px; line-height: 1.35; background: #f3f6f9;
+    /* Flikar som sitter i rubrikens underkant; den valda går ihop med sidan under */
+    #flikar { display: flex; gap: 4px; margin: 0 -16px; padding: 0 16px; border-bottom: 1px solid #c8d4e2; }
+    #flikar button { font-weight: 600; font-size: 16px; color: #5a6676; background: #f3f6f9; border: 1px solid #c8d4e2;
+        border-bottom: 0; border-radius: 10px 10px 0 0; padding: 8px 18px; margin-bottom: -1px; }
+    #flikar button:hover { background: #e6eef7; }
+    #flikar button.vald { background: #eef4fa; color: #1f6fc4; border-top: 3px solid #3a8ee6; padding-top: 6px;
+        position: relative; }
+    #lista { flex: 1; min-width: 0; font-family: Consolas, monospace; font-size: 12px; line-height: 1.35; background: #f3f6f9;
         border-radius: 6px; padding: 4px 8px; word-break: break-word; white-space: pre-wrap;
         max-height: 4.2em; overflow: auto; }
     /* Telefon: rubriken följer inte med vid scroll, så bilderna får hela skärmen. */
     @media (max-width: 700px) {
-        header { position: static; gap: 6px 8px; padding: 10px 12px; }
-        h1 { font-size: 17px; flex-basis: 100%; }
+        header { position: static; gap: 8px; padding: 10px 12px 0; }
+        h1 { font-size: 17px; }
         header button { font-size: 13px; padding: 4px 8px; }
+        #flikar { margin: 0 -12px; padding: 0 8px; }
+        #flikar button { font-size: 14px; padding: 7px 10px; }
+        #flikar button.vald { padding-top: 5px; }
     }
     main { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 14px; padding: 16px; }
     .kort { background: #fff; border-radius: 10px; overflow: hidden; border: 3px solid transparent;
@@ -70,16 +81,11 @@
 </head>
 <body>
 <header>
-    <h1>Pensla – alla bilder</h1>
-    <span id="antal"></span>
-    <span id="version"></span>
-    <button id="allaPa">Välj alla i fliken</button>
-    <button id="allaAv">Välj ingen i fliken</button>
-    <button id="kopiera">Kopiera listan</button>
-    <button id="aterstall">Återställ till appens nuvarande</button>
-    <button id="rensa">Rensa alla kommentarer</button>
+    <div class="rad1"><h1>Pensla – alla bilder</h1><span id="version"></span><span id="antal"></span></div>
+    <div class="rad1"><button id="alla">Välj alla i fliken</button>
+        <button id="rensa">Rensa alla kommentarer</button></div>
+    <div class="listrad"><div id="lista"></div><button id="kopiera">Kopiera listan</button></div>
     <div id="flikar"></div>
-    <div id="lista"></div>
 </header>
 <main id="galleri"></main>
 <div id="stor" hidden>
@@ -366,6 +372,9 @@
             knapp.textContent = `${text} (${ALLA_BILDER.filter(b => lage(b) === f).length})`;
             knapp.classList.toggle('vald', f === flik);
         });
+        const alla = document.getElementById('alla');
+        alla.textContent = allaValda() ? 'Välj ingen i fliken' : 'Välj alla i fliken';
+        alla.disabled = !iFliken().length;
 
         const aktiva = ALLA_BILDER.filter(b => valda.has(b.nr) && !borttagna.has(b.nr) && !b.utanFarg)
             .map(b => b.nr).sort((a, b) => a - b);
@@ -395,25 +404,20 @@
             setTimeout(() => { e.target.textContent = 'Kopiera listan'; }, 1500);
         });
     });
-    // Välj alla / ingen gäller bilderna i den öppna fliken
-    const iFliken = () => kort.filter(({ b }) => lage(b) === flik && !b.utanFarg && !borttagna.has(b.nr));
-    document.getElementById('allaPa').addEventListener('click', () => {
-        iFliken().forEach(({ b }) => valda.add(b.nr));
-        uppdatera();
-    });
-    document.getElementById('allaAv').addEventListener('click', () => {
-        iFliken().forEach(({ b }) => valda.delete(b.nr));
+    // Välj alla / ingen (en knapp som växlar) gäller bilderna i den öppna fliken
+    function iFliken() {
+        return kort.filter(({ b }) => lage(b) === flik && !b.utanFarg && !borttagna.has(b.nr));
+    }
+    const allaValda = () => iFliken().length > 0 && iFliken().every(({ b }) => valda.has(b.nr));
+    document.getElementById('alla').addEventListener('click', () => {
+        const av = allaValda();
+        iFliken().forEach(({ b }) => { if (av) valda.delete(b.nr); else valda.add(b.nr); });
         uppdatera();
     });
     document.getElementById('rensa').addEventListener('click', () => {
         if (!confirm('Rensa alla kommentarer?')) return;
         kommentarer = {};
         kort.forEach(({ text }) => { text.value = ''; });
-        uppdatera();
-    });
-    document.getElementById('aterstall').addEventListener('click', () => {
-        valda = new Set(AKTIVA);
-        borttagna = new Set(BORTTAGNA);
         uppdatera();
     });
     uppdatera();
