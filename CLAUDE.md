@@ -275,7 +275,9 @@ mot himlen. Be inte om rutor/plattor i marken (blir linjer).
 Alla sorter i den här stilen står i `verktyg/promptdokument.py`, som
 skriver `promptar/bilder.md` (till Gemini i Antigravity: agenten sparar
 bilderna i `inkorg/`, som git ignorerar) och `promptar/bilder.docx` (till
-en chatt). Hjullastare är en ny sort: lägg den i `KATEGORIER` (Bygge).
+en chatt). Hjullastare står i `KATEGORIER` (Bygge). Nr 118–124 (v84, ägarens egna:
+tre traktorer med höbalsvagn och fyra hjullastare) spårades med `TECKNING`;
+keIWs i framrutan, kompisarna från `gomstallen.py`, inaktiva.
 ```
 A playful but slightly more realistic picture-book illustration for small children: a big tow truck driving along a street in a small town, towing a small broken-down car behind it on its lifting arm, seen from the side at a slight three-quarter angle. Realistic proportions: a truck cab with a big windshield and side window, a flat rear deck with a crane boom, a hook and a tow arm, big wheels, but still friendly and softly rounded, not a toy. Landscape format 16:10, wider than tall, the whole truck and the towed car visible with space around them.
 

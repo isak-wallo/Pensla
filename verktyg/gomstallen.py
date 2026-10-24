@@ -173,12 +173,15 @@ def main():
             if bild['nr'] in borttagna or bild.get('utanFarg') or (nummer and bild['nr'] not in nummer):
                 continue
             lab, rgb = ytor(bild['fil'])
-            k = bild['keiws']
+            k = bild.get('keiws')
             platser = {'keiws': k, 'gron': bild.get('gron'), 'rod': bild.get('rod')}
             if not bara_rita:
-                upptagna = [(k['x'], k['y'] - 120 * k['s'])]
-                s_lista = sorted({max(S_MIN, round(k['s'] * f, 2)) for f in (0.8, 0.9, 1.0)})
-                for farg in ('gron', 'rod'):
+                # En ny bild utan keIWs får ett förslag för honom också
+                # (helst flytta honom till hyttfönstret för hand)
+                farger = ('gron', 'rod') if k else ('keiws', 'gron', 'rod')
+                upptagna = [(k['x'], k['y'] - 120 * k['s'])] if k else []
+                s_lista = sorted({max(S_MIN, round(k['s'] * f, 2)) for f in (0.8, 0.9, 1.0)}) if k else [0.35, 0.4, 0.45]
+                for farg in farger:
                     v = valj(kandidater(lab, rgb, farg, s_lista), upptagna)
                     if not v:
                         print(bild['nr'], bild['fil'], farg, 'INGET GÖMSTÄLLE')
