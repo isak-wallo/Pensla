@@ -18,10 +18,12 @@ färger, inga ljud, inga poäng, inga val att göra.
   i stående): **◀** föregående bild, **▶** nästa bild (agerar direkt på
   `touchstart` med `stopPropagation`), **FÄRGLÄGG** (håll 1 s → hela
   färgbilden sveps fram från vänster och keIWs poppar upp, `fargaHela`;
-  BÖRJA OM ångrar), de lite mindre **SPARA** (håll 1 s → bilden laddas
-  ner som PNG i bildens storlek till plattans Hämtade filer, `sparaBild`; knappen
-  visar SPARAD ✓ en stund) och **BÖRJA OM** (håll 1 s → SÄKER?, håll 1 s
-  igen → bilden töms; samma spärr som Kluddas RENSA). Håll-logiken
+  BÖRJA OM ångrar), de lite mindre **SPARA** (håll 1 s → "HÅLL INNE IGEN
+  FÖR ATT SPARA" i 5 s, håll 1 s igen → bilden laddas ner som PNG i
+  bildens storlek till plattans Hämtade filer, `sparaBild`; knappen visar
+  SPARAD ✓ en stund) och **BÖRJA OM** (håll 1 s → bilden töms direkt; sedan
+  står "HÅLL INNE LÄNGE FÖR ATT NOLLSTÄLLA ALLA BILDER" i 4 s, och håller
+  man då i 4 s töms alla bilder, `pictureState`). Håll-logiken
   (`startHold`/`holdEnd`) delas av de tre. Ett för kort tryck visar
   "HÅLL INNE FÖR ATT …" i 5 s, som i Kludda.
 - **Bildbanken:** alla bilder står med fast löpnummer i `bilder.js`

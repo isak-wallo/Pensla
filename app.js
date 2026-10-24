@@ -53,17 +53,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const PAPER = 0xFFFFFFFF;
     const BAKGRUND = '#dcecf8';   // runt bilden (samma ljusblå som Poppas himmel)
 
+    // clearState 1 = bilden är nyss tömd och BÖRJA OM erbjuder att nollställa
+    // alla bilder; saveState 1 = SPARA väntar på andra hållningen.
     let clearState = 0;
+    let saveState = 0;
     let clearTimer = null;
     let viewRect = { left: 0, top: 0 };
     // --- Håll-in-logik för BÖRJA OM, SPARA och FÄRGLÄGG ---
-    // Man måste hålla fingret intryckt i HOLD_MS (ca 1 s). BÖRJA OM: första
-    // hållningen visar SÄKER?, andra hållningen tömmer bilden. SPARA: en
-    // hållning sparar bilden. FÄRGLÄGG: en hållning trollar fram hela
-    // färgbilden (BÖRJA OM ångrar). En kort tryckning gör inget — så att ett barn
-    // inte råkar sudda allt (eller fylla plattan med bilder) av misstag —
-    // utom att knappen en stund (TIPS_MS) visar att man ska hålla inne.
+    // Man måste hålla fingret intryckt i HOLD_MS (ca 1 s). BÖRJA OM: en
+    // hållning tömmer bilden, och sedan visar knappen en stund (ALLA_MS) att
+    // en lång hållning (ALLA_HOLD_MS) nollställer alla bilder. SPARA: första
+    // hållningen visar "HÅLL INNE IGEN FÖR ATT SPARA", andra sparar bilden.
+    // FÄRGLÄGG: en hållning trollar fram hela färgbilden (BÖRJA OM ångrar).
+    // En kort tryckning gör inget — så att ett barn inte råkar sudda allt
+    // (eller fylla plattan med bilder) av misstag — utom att knappen en
+    // stund (TIPS_MS) visar att man ska hålla inne.
     const HOLD_MS = 1000;
+    const ALLA_MS = 4000;
+    const ALLA_HOLD_MS = 4000;
+    const SAVE_MS = 5000;   // så länge SPARA väntar på andra hållningen
     // Synka håll-animationens längd i CSS med HOLD_MS (--hold-ms används
     // av .sys-btn.holding i style.css).
     document.documentElement.style.setProperty('--hold-ms', HOLD_MS + 'ms');
@@ -75,13 +83,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function startHold(btn) {
         if (holdTimer) clearTimeout(holdTimer);
         holdBtn = btn;
+        // Att nollställa alla bilder kräver en längre hållning
+        const ms = btn === restartBtn && clearState ? ALLA_HOLD_MS : HOLD_MS;
+        btn.style.setProperty('--hold-ms', ms + 'ms');
+        // Väntar knappen på andra hållningen får tiden inte ta slut mitt i den
+        if (vantar(btn) && clearTimer) { clearTimeout(clearTimer); clearTimer = null; }
         holdTimer = setTimeout(() => {
             holdTimer = null;
             btn.classList.remove('holding');
-            if (btn === saveBtn) sparaBild();
+            if (btn === saveBtn) handleSave();
             else if (btn === fillBtn) fargaHela();
             else handleClear();
-        }, HOLD_MS);
+        }, ms);
     }
 
     // slappt = fingret (musknappen) släpptes på knappen; släpps den innan
@@ -91,17 +104,27 @@ document.addEventListener('DOMContentLoaded', () => {
             clearTimeout(holdTimer);
             holdTimer = null;
             if (slappt) visaHallTips(holdBtn);
+            // Avbruten andra hållning: knappen väntar en stund till
+            if (vantar(holdBtn) && !clearTimer) {
+                clearTimer = setTimeout(aterstallKnappar, holdBtn === saveBtn ? SAVE_MS : ALLA_MS);
+            }
         }
     }
 
+    function vantar(btn) {
+        return (btn === saveBtn && saveState) || (btn === restartBtn && clearState);
+    }
+
     function knappText(btn) {
-        if (btn === saveBtn) return 'SPARA';
+        if (btn === saveBtn) return saveState ? 'HÅLL INNE IGEN FÖR ATT SPARA' : 'SPARA';
         if (btn === fillBtn) return 'FÄRGLÄGG';
-        return clearState ? 'SÄKER?' : 'BÖRJA OM';
+        return clearState ? 'HÅLL INNE LÄNGE FÖR ATT NOLLSTÄLLA ALLA BILDER' : 'BÖRJA OM';
     }
 
     function visaHallTips(btn) {
         slackTips();
+        // Väntar knappen redan på en andra hållning står det där vad man ska göra
+        if (vantar(btn)) return;
         btn.textContent = 'HÅLL INNE FÖR ATT ' +
             (btn === saveBtn ? 'SPARA' : btn === fillBtn ? 'FÄRGLÄGGA' : 'BÖRJA OM');
         btn.classList.add('tips');
@@ -446,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         fCtx.putImageData(fillImage, 0, 0);
         dirty = null;
-        resetClearButton();
+        aterstallKnappar();
         requestRender();
     }
 
@@ -569,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function fargaHela() {
         stoppaFarga();
-        if (clearState) resetClearButton();
+        if (clearState || saveState) aterstallKnappar();
         const start = performance.now();
         let x = 0;
         const steg = now => {
@@ -606,7 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Efter varje penseldrag: har han målats fram?
     function checkTouched() {
         if (keiws && !keiws.hittad && keiws.traff >= KEIWS_TRAFF) poppaKeiws();
-        if (clearState) resetClearButton();
+        if (clearState || saveState) aterstallKnappar();
         requestRender();
     }
 
@@ -683,35 +706,66 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2000);
     }
 
-    // BÖRJA OM — tvåstegs med hållning: första hållningen (1 s) visar
-    // "SÄKER?" (5 s timeout / nollställs om man målar), andra hållningen
-    // (1 s) tömmer bilden.
-    function handleClear() {
-        if (clearState === 0) {
-            clearState = 1;
-            restartBtn.textContent = 'SÄKER?';
-            restartBtn.classList.add('confirm');
-            clearTimer = setTimeout(resetClearButton, 5000);
+    // SPARA — tvåstegs med hållning: första hållningen (1 s) visar "HÅLL
+    // INNE IGEN FÖR ATT SPARA" (SAVE_MS timeout / nollställs om man målar),
+    // andra hållningen (1 s) sparar.
+    function handleSave() {
+        if (saveState === 0) {
+            aterstallKnappar();
+            saveState = 1;
+            saveBtn.textContent = knappText(saveBtn);
+            saveBtn.classList.add('confirm', 'lang');
+            clearTimer = setTimeout(aterstallKnappar, SAVE_MS);
         } else {
-            stoppaFarga();
-            if (keiws) { keiws.hittad = false; keiws.traff = 0; }
-            fillPx.fill(PAPER);
-            fCtx.putImageData(fillImage, 0, 0);
-            dirty = null;
-            requestRender();
-            resetClearButton();
+            aterstallKnappar();
+            sparaBild();
         }
     }
 
-    function resetClearButton() {
+    // BÖRJA OM — en hållning (1 s) tömmer bilden. Sedan står det en stund
+    // (ALLA_MS, eller tills man målar) att en lång hållning (ALLA_HOLD_MS)
+    // nollställer alla bilder till svartvitt.
+    function handleClear() {
+        if (clearState === 0) {
+            tomBild();
+            aterstallKnappar();
+            clearState = 1;
+            restartBtn.textContent = knappText(restartBtn);
+            restartBtn.classList.add('confirm', 'lang');
+            clearTimer = setTimeout(aterstallKnappar, ALLA_MS);
+        } else {
+            pictureState.length = 0;
+            tomBild();
+            aterstallKnappar();
+            restartBtn.textContent = 'ALLA NOLLSTÄLLDA ✓';
+            restartBtn.classList.add('lang');
+            clearTimer = setTimeout(aterstallKnappar, 2000);
+        }
+    }
+
+    function tomBild() {
+        stoppaFarga();
+        if (keiws) { keiws.hittad = false; keiws.traff = 0; }
+        fillPx.fill(PAPER);
+        fCtx.putImageData(fillImage, 0, 0);
+        dirty = null;
+        requestRender();
+    }
+
+    function aterstallKnappar() {
         clearState = 0;
+        saveState = 0;
         if (clearTimer) {
             clearTimeout(clearTimer);
             clearTimer = null;
         }
         if (restartBtn) {
             restartBtn.textContent = 'BÖRJA OM';
-            restartBtn.classList.remove('confirm', 'tips');
+            restartBtn.classList.remove('confirm', 'tips', 'lang');
+        }
+        if (saveBtn && saveBtn.classList.contains('confirm')) {
+            saveBtn.textContent = 'SPARA';
+            saveBtn.classList.remove('confirm', 'lang');
         }
     }
 
@@ -742,7 +796,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // tillbaka in i fullscreen. Det målade påverkas inte.
     function showStartOverlay() {
         startOverlay.style.display = 'flex';
-        resetClearButton();
+        aterstallKnappar();
     }
 
     // --- Händelsebindningar (tidigare inline i HTML) ---
@@ -760,8 +814,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { passive: false });
     });
 
-    // BÖRJA OM (två hållningar, SÄKER?), SPARA och FÄRGLÄGG (en hållning) — håll in
-    // HOLD_MS (1 s). Touchstart stopPropagates så den inte målar; mousedown
+    // BÖRJA OM, SPARA (två hållningar) och FÄRGLÄGG (en hållning) — håll in
+    // HOLD_MS (1 s, ALLA_HOLD_MS för att nollställa alla bilder). Touchstart stopPropagates så den inte målar; mousedown
     // för test på dator.
     function holdEnd(slappt) {
         endHold(slappt);
@@ -940,7 +994,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', debouncedLayout);
     window.addEventListener('orientationchange', debouncedLayout);
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden) resetClearButton();
+        if (document.hidden) aterstallKnappar();
     });
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', debouncedLayout);
