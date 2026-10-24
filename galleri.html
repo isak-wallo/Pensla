@@ -51,6 +51,21 @@
     .rad input { width: 20px; height: 20px; cursor: pointer; }
     textarea { display: block; width: calc(100% - 20px); margin: 4px 10px 10px; font: inherit; font-size: 14px;
         border: 1px solid #c8d4e2; border-radius: 6px; padding: 6px 8px; resize: vertical; min-height: 2.4em; }
+    .par { cursor: zoom-in; }
+    /* Helskärm: ett par i taget, under varandra på stående telefon */
+    #stor { position: fixed; inset: 0; z-index: 10; background: #e6ecf2; display: flex; flex-direction: column; }
+    #stor[hidden] { display: none; }
+    #stor .topp { display: flex; align-items: center; gap: 10px; padding: 8px 12px; color: #2c3440; font-size: 17px; font-weight: 600; }
+    #stor .topp span { flex: 1; }
+    #stor button { font: inherit; font-size: 22px; color: #2c3440; background: rgba(255,255,255,.85); border: 0;
+        border-radius: 8px; padding: 6px 14px; cursor: pointer; }
+    #stor .bilder { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; padding: 0 6px 6px; }
+    #stor .bilder img, #stor .bilder .tom { flex: 1 1 0; min-width: 0; min-height: 0; width: 100%; object-fit: contain; }
+    #stor .bilder .tom { display: flex; align-items: center; justify-content: center; color: #8a96a6; }
+    @media (orientation: landscape) { #stor .bilder { flex-direction: row; } #stor .bilder img { height: 100%; } }
+    #stor .pil { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,.8); padding: 14px 12px; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+    #stor-fore { left: 6px; }
+    #stor-nasta { right: 6px; }
 </style>
 </head>
 <body>
@@ -67,6 +82,12 @@
     <div id="lista"></div>
 </header>
 <main id="galleri"></main>
+<div id="stor" hidden>
+    <div class="topp"><span id="stor-namn"></span><button id="stor-stang" aria-label="Stäng">✕</button></div>
+    <div class="bilder"></div>
+    <button id="stor-fore" class="pil" aria-label="Föregående">◀</button>
+    <button id="stor-nasta" class="pil" aria-label="Nästa">▶</button>
+</div>
 <script src="keiws.js"></script>
 <script src="bilder.js?farsk"></script>
 <script>
@@ -200,6 +221,53 @@
         img.src = c.toDataURL('image/jpeg', 0.85);
     }
 
+    // Helskärm: tryck på ett par. ◀ ▶, piltangenterna eller svep byter
+    // till förra/nästa bild i fliken; ✕ eller Esc stänger.
+    const stor = document.getElementById('stor');
+    let storKort = null;
+    function visaStor(k) {
+        storKort = k;
+        const b = kort.find(x => x.k === k).b;
+        document.getElementById('stor-namn').textContent = `${b.nr} ${b.namn}`;
+        stor.querySelector('.bilder').innerHTML = k.querySelector('.par').innerHTML;
+        stor.querySelectorAll('.bilder img').forEach(i => i.removeAttribute('loading'));
+        stor.hidden = false;
+        document.body.style.overflow = 'hidden';
+    }
+    function stangStor() {
+        stor.hidden = true;
+        document.body.style.overflow = '';
+        if (storKort) storKort.scrollIntoView({ block: 'nearest' });
+    }
+    function bladdra(steg) {
+        const synliga = kort.map(x => x.k).filter(k => !k.classList.contains('dold'));
+        const i = synliga.indexOf(storKort);
+        if (i < 0 || !synliga.length) return;
+        visaStor(synliga[(i + steg + synliga.length) % synliga.length]);
+    }
+    document.getElementById('stor-stang').addEventListener('click', stangStor);
+    document.getElementById('stor-fore').addEventListener('click', () => bladdra(-1));
+    document.getElementById('stor-nasta').addEventListener('click', () => bladdra(1));
+    document.addEventListener('keydown', e => {
+        if (stor.hidden) return;
+        if (e.key === 'Escape') stangStor();
+        if (e.key === 'ArrowLeft') bladdra(-1);
+        if (e.key === 'ArrowRight') bladdra(1);
+    });
+    let svep = null;
+    stor.addEventListener('touchstart', e => {
+        svep = e.touches.length === 1 ? [e.touches[0].clientX, e.touches[0].clientY] : null;
+    }, { passive: true });
+    stor.addEventListener('touchend', e => {
+        if (!svep || e.touches.length) return;
+        const dx = e.changedTouches[0].clientX - svep[0], dy = e.changedTouches[0].clientY - svep[1];
+        svep = null;
+        // Bara ett tydligt sidledes svep, och inte när sidan är inzoomad
+        if (Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy) && (!window.visualViewport || visualViewport.scale <= 1.01)) {
+            bladdra(dx < 0 ? 1 : -1);
+        }
+    });
+
     const galleri = document.getElementById('galleri');
     const rubriker = {};
     const kort = sorterade.map(b => {
@@ -222,6 +290,7 @@
                 <label><input type="checkbox" class="aktiv"> ${b.utanFarg ? 'saknar färg' : 'aktiv'}</label>
                 <label><input type="checkbox" class="bort"> ta bort</label></div>
             <textarea rows="1" placeholder="Kommentar: vad behöver kontrolleras?"></textarea>`;
+        k.querySelector('.par').addEventListener('click', () => visaStor(k));
         const ruta = k.querySelector('.aktiv');
         const bort = k.querySelector('.bort');
         const text = k.querySelector('textarea');

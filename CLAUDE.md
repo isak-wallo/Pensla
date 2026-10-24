@@ -40,7 +40,9 @@ färger, inga ljud, inga poäng, inga val att göra.
   Galleriet har tre flikar efter hur bilden står i appen just nu: Aktiva,
   Inaktiva och Borttagna (v80). Sedan v85 ritas keIWs och kompisarna in i
   färgbilden i galleriet (maskade till sina ytor som i appen,
-  `ritaKompisar`), så att ägaren kan granska gömställena där. En bild som ändras stannar i sin flik med
+  `ritaKompisar`), så att ägaren kan granska gömställena där. Ett tryck
+  på ett par visar det i helskärm (v86, `visaStor`; ◀ ▶, piltangenter eller
+  svep bläddrar i fliken). En bild som ändras stannar i sin flik med
   en etikett ("blir aktiv", "tas bort" ...) tills listan är införd.
   Galleriet är ett levande dokument: allt i `ALLA_BILDER` visas, grupperat
   i kategorier (`KATEGORIER` i `galleri.html`, t.ex. Båtar, Flygplan,
