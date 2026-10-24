@@ -38,7 +38,9 @@ färger, inga ljud, inga poäng, inga val att göra.
   BORT förs in i `BORTTAGNA` i `bilder.js` (filerna och numret ligger kvar
   i repot, numret återanvänds aldrig); TA TILLBAKA tas ur `BORTTAGNA`.
   Galleriet har tre flikar efter hur bilden står i appen just nu: Aktiva,
-  Inaktiva och Borttagna (v80). En bild som ändras stannar i sin flik med
+  Inaktiva och Borttagna (v80). Sedan v85 ritas keIWs och kompisarna in i
+  färgbilden i galleriet (maskade till sina ytor som i appen,
+  `ritaKompisar`), så att ägaren kan granska gömställena där. En bild som ändras stannar i sin flik med
   en etikett ("blir aktiv", "tas bort" ...) tills listan är införd.
   Galleriet är ett levande dokument: allt i `ALLA_BILDER` visas, grupperat
   i kategorier (`KATEGORIER` i `galleri.html`, t.ex. Båtar, Flygplan,

@@ -67,6 +67,7 @@
     <div id="lista"></div>
 </header>
 <main id="galleri"></main>
+<script src="keiws.js"></script>
 <script src="bilder.js?farsk"></script>
 <script>
     // Galleri för att välja vilka bilder som ska vara aktiva i appen.
@@ -130,6 +131,75 @@
         const [ka, sa] = plats(a), [kb, sb] = plats(b);
         return ka - kb || typ(a).localeCompare(typ(b), 'sv') || sa - sb || a.nr - b.nr;
     });
+    // keIWs och kompisarna ritas in i färgbilden som i appen: bara i sina
+    // ytor (fyllda från ytor-punkterna i konturerna), under linjerna.
+    // Görs när kortet syns, en bild i taget.
+    const KOMPISAR = [
+        ['keiws', KEIWS.farger],
+        ['gron', { bla: '#50c499', ljus: '#64d2aa', oga: '#101628' }],
+        ['rod', { bla: '#d66d61', ljus: '#e38277', oga: '#101628' }],
+    ];
+    const LINE_ALPHA = 200;
+    const kompisBild = new Map();
+    let kompisKo = Promise.resolve();
+    const visaKompisar = new IntersectionObserver(poster => poster.forEach(p => {
+        if (!p.isIntersecting) return;
+        visaKompisar.unobserve(p.target);
+        const b = kompisBild.get(p.target);
+        kompisKo = kompisKo.then(() => ritaKompisar(p.target, b)).catch(() => { });
+    }), { rootMargin: '300px' });
+
+    function laddaBild(src) {
+        const im = new Image();
+        im.src = src;
+        return im.decode().then(() => im);
+    }
+
+    async function ritaKompisar(img, b) {
+        const [farg, linjer] = await Promise.all([laddaBild(`bilder/farg/${b.fil}.jpg`), laddaBild(`bilder/farg/${b.fil}.svg`)]);
+        const H = 900, W = Math.round(H * farg.naturalWidth / farg.naturalHeight);
+        const c = document.createElement('canvas');
+        c.width = W;
+        c.height = H;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(linjer, 0, 0, W, H);
+        const alfa = ctx.getImageData(0, 0, W, H).data;
+        ctx.clearRect(0, 0, W, H);
+        ctx.drawImage(farg, 0, 0, W, H);
+        KOMPISAR.forEach(([nyckel, farger]) => {
+            const k = b[nyckel];
+            if (!k) return;
+            // Ytan: fyll från punkterna genom allt som inte är linje (4-grannar)
+            const yta = new Uint8Array(W * H), stack = [];
+            k.ytor.forEach(([x, y]) => stack.push(Math.round(y) * W + Math.round(x)));
+            while (stack.length) {
+                const i = stack.pop();
+                if (yta[i] || alfa[i * 4 + 3] >= LINE_ALPHA) continue;
+                yta[i] = 1;
+                const x = i % W;
+                if (x > 0) stack.push(i - 1);
+                if (x < W - 1) stack.push(i + 1);
+                if (i >= W) stack.push(i - W);
+                if (i < W * (H - 1)) stack.push(i + W);
+            }
+            const t = document.createElement('canvas');
+            t.width = W;
+            t.height = H;
+            const tctx = t.getContext('2d');
+            const X = v => Math.round(k.x + (v - 80) * k.s), Y = v => Math.round(k.y + (v - 204) * k.s);
+            KEIWS.stilla.forEach(([x0, y0, x1, y1, f]) => {
+                tctx.fillStyle = farger[f];
+                tctx.fillRect(X(x0), Y(y0), X(x1) - X(x0), Y(y1) - Y(y0));
+            });
+            const d = tctx.getImageData(0, 0, W, H);
+            for (let i = 0; i < yta.length; i++) if (!yta[i]) d.data[i * 4 + 3] = 0;
+            tctx.putImageData(d, 0, 0);
+            ctx.drawImage(t, 0, 0);
+        });
+        ctx.drawImage(linjer, 0, 0, W, H);
+        img.src = c.toDataURL('image/jpeg', 0.85);
+    }
+
     const galleri = document.getElementById('galleri');
     const rubriker = {};
     const kort = sorterade.map(b => {
@@ -170,6 +240,11 @@
             uppdatera();
         });
         galleri.appendChild(k);
+        if (!b.utanFarg && b.keiws) {
+            const img = k.querySelectorAll('.par img')[1];
+            kompisBild.set(img, b);
+            visaKompisar.observe(img);
+        }
         return { b, k, ruta, bort, text, andras: k.querySelector('.andras') };
     });
     const tom = document.createElement('p');
