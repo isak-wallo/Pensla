@@ -62,7 +62,10 @@ färger, inga ljud, inga poäng, inga val att göra.
   i Richard Scarrys böcker. Han syns inte från början; när man målat
   `KEIWS_TRAFF` pixlar där han är poppar han upp
   med en liten studs, vinkar, blinkar och blir kvar. BÖRJA OM gömmer honom
-  igen.
+  igen. Sedan v83 har han två kompisar, exakta kopior i mintgrönt och
+  korallrött (`KOMPISAR` i `app.js`), gömda på andra ställen i bilden. Var
+  och en poppar för sig; när barnet målat fram alla tre vinkar de en gång
+  till tillsammans (`festTid`). FÄRGLÄGG tar fram alla tre utan fest.
 - **Namn:** appen hette Färga fram till v49; repot döptes om till Pensla i
   v50 (den gamla Pages-adressen /Farga/ slutade då fungera). Den lokala
   mappen heter fortfarande `Farga`. Ingen pensla.keiws.com förrän ägaren
@@ -117,8 +120,8 @@ pushas, annars fastnar plattan på gammal cache.
   kant. Ytorna behövs bara för keIWs-masken; färgen tas alltid pixel för
   pixel ur färgbilden (`facitPx`, `franFargbild`).
 - **Måla**: `stamp`/`stroke` skriver färgbildens pixlar i `fillPx` där
-  penseln går, och räknar träffar på keIWs. `checkTouched` poppar honom
-  när `KEIWS_TRAFF` nåtts. Ritning sker en gång per frame (`requestRender`,
+  penseln går, och räknar träffar på keIWs och kompisarna. `checkTouched`
+  (`kollaKompisar`) poppar den som nått `KEIWS_TRAFF`. Ritning sker en gång per frame (`requestRender`,
   `dirty`).
 
 ## keIWs (`ritaKeiws`, `prepKeiws`, `renderKeiws`)
@@ -131,6 +134,13 @@ pushas, annars fastnar plattan på gammal cache.
   ytornas pixlar (mask), ovanpå färgen men under linjerna — så det som
   ligger framför (fönsterkarmen, ratten) skymmer honom och han ser ut att
   titta fram bakom det. Hyttfönster är bra gömställen.
+- Kompisarna står i `gron` och `rod` med samma mått (saknas de har bilden
+  bara keIWs). `verktyg/gomstallen.py` föreslår deras platser: en yta där
+  kroppen och ögonen ligger nästan helt och fötterna står bakom kanten,
+  som skiljer sig i färg från kompisen, inte är himlen och ligger en bit
+  från de andra. Förslagen skrivs ut, och förhandsbilder med alla tre
+  hamnar i `granskning/kompisar/`. Granska dem och flytta de som hamnar
+  konstigt. Kör den för varje ny bild (`python verktyg/gomstallen.py NR`).
 
 ## Lägga till en ny bild (`verktyg/fargbild.py`)
 1. Be Gemini om en tecknad, lekfull färgbild (4:3, wider than tall) med

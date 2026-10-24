@@ -326,69 +326,97 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- keIWs ---
+    // --- keIWs och hans kompisar ---
     // Den lilla blå kompisen gömmer sig i varje bild, som krypet i Richard
-    // Scarrys böcker. Han syns inte från början; när man målar där han är
-    // poppar han upp, vinkar och blir kvar. Han ritas av sina klossar
-    // (KEIWS i keiws.js, origo i kroppens övre vänstra hörn), så han blir
-    // skarp i alla storlekar.
+    // Scarrys böcker, och med sig har han två kompisar: en grön och en röd
+    // (exakta kopior i andra färger). De syns inte från början; när man
+    // målar där en av dem är poppar han upp, vinkar och blir kvar. När alla
+    // tre är hittade (genom att måla) vinkar de en gång till tillsammans.
+    // De ritas av sina klossar (KEIWS i keiws.js, origo i kroppens övre
+    // vänstra hörn), så de blir skarpa i alla storlekar.
     const KEIWS_TRAFF = 40;     // så många målade pixlar på honom innan han poppar
     const KEIWS_UPP_MS = 600;   // upp bakom kanten med en liten studs …
     const KEIWS_VINKA = 700;    // … vinkar sedan (KEIWS.vinka) …
     const KEIWS_VINKA_MS = KEIWS.vinka.reduce((t, b) => t + b.tid, 0);
     const KEIWS_BLINK = KEIWS_VINKA + KEIWS_VINKA_MS + 300;   // … och blinkar en gång
     const KEIWS_MS = KEIWS_BLINK + 400;
-    let keiws = null;           // { x, y, s, box, mask, tmp, hittad, start, traff }
-    let keiwsYta = new Uint8Array(1);   // 1 för ytor han syns i
+    const FEST_PAUS_MS = 300;   // från sista kompisens blink till festvinkningen
+    // Nyckeln i bilder.js och färgerna (samma nycklar som KEIWS.farger)
+    const KOMPISAR = [
+        ['keiws', KEIWS.farger],
+        ['gron', { bla: '#50c499', ljus: '#64d2aa', oga: '#101628' }],   // mintgrön
+        ['rod', { bla: '#d66d61', ljus: '#e38277', oga: '#101628' }],    // korallröd
+    ];
+    // Kompisarna i bilden: { farger, x, y, s, box, yta, mask, tmp, hittad, start, traff }
+    let kompisar = [];
+    let festTid = null;         // när alla tre ska vinka tillsammans
 
     // (x, y) = mitt under fötterna, s = skala.
-    function ritaKeiws(ctx, x, y, s, rekt) {
+    function ritaKeiws(ctx, x, y, s, rekt, farger) {
         const X = v => Math.round(x + (v - 80) * s), Y = v => Math.round(y + (v - 204) * s);
         rekt.forEach(([x0, y0, x1, y1, f]) => {
-            ctx.fillStyle = KEIWS.farger[f];
+            ctx.fillStyle = farger[f];
             ctx.fillRect(X(x0), Y(y0), X(x1) - X(x0), Y(y1) - Y(y0));
         });
     }
 
-    // Förbereder keIWs för bilden: ruta, mask (de ytor han syns i) och
-    // en arbetscanvas. Anropas efter labelRegions.
-    function prepKeiws(c, hittad) {
-        keiwsYta = new Uint8Array(antalYtor);
-        c.ytor.forEach(([px, py]) => {
-            const l = labels[Math.round(py) * PAPER_W + Math.round(px)];
-            if (l > 0) keiwsYta[l] = 1;
-        });
-        // Rutan rymmer honom med armarna ute och lite luft ovanför (han
-        // studsar lite förbi och vinkar med armen över huvudet)
-        const x0 = Math.max(0, Math.floor(c.x - 126 * c.s));
-        const x1 = Math.min(PAPER_W - 1, Math.ceil(c.x + 138 * c.s));
-        const y0 = Math.max(0, Math.floor(c.y - 252 * c.s * 1.2));
-        const y1 = Math.min(PAPER_H - 1, Math.ceil(c.y));
-        const w = x1 - x0 + 1, h = y1 - y0 + 1;
-        const mask = document.createElement('canvas');
-        mask.width = w;
-        mask.height = h;
-        const mctx = mask.getContext('2d');
-        const img = mctx.createImageData(w, h);
-        const px = new Uint32Array(img.data.buffer);
-        for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-                if (keiwsYta[labels[(y0 + y) * PAPER_W + x0 + x]]) px[y * w + x] = 0xFF000000;
+    // Förbereder kompisarna för bilden: ruta, mask (de ytor han syns i) och
+    // en arbetscanvas var. Anropas efter labelRegions.
+    function prepKeiws(pic, hittade) {
+        festTid = null;
+        kompisar = [];
+        KOMPISAR.forEach(([nyckel, farger], i) => {
+            const c = pic[nyckel];
+            if (!c) return;
+            const yta = new Uint8Array(antalYtor);
+            c.ytor.forEach(([px, py]) => {
+                const l = labels[Math.round(py) * PAPER_W + Math.round(px)];
+                if (l > 0) yta[l] = 1;
+            });
+            // Rutan rymmer honom med armarna ute och lite luft ovanför (han
+            // studsar lite förbi och vinkar med armen över huvudet)
+            const x0 = Math.max(0, Math.floor(c.x - 126 * c.s));
+            const x1 = Math.min(PAPER_W - 1, Math.ceil(c.x + 138 * c.s));
+            const y0 = Math.max(0, Math.floor(c.y - 252 * c.s * 1.2));
+            const y1 = Math.min(PAPER_H - 1, Math.ceil(c.y));
+            const w = x1 - x0 + 1, h = y1 - y0 + 1;
+            const mask = document.createElement('canvas');
+            mask.width = w;
+            mask.height = h;
+            const mctx = mask.getContext('2d');
+            const img = mctx.createImageData(w, h);
+            const px = new Uint32Array(img.data.buffer);
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    if (yta[labels[(y0 + y) * PAPER_W + x0 + x]]) px[y * w + x] = 0xFF000000;
+                }
             }
-        }
-        mctx.putImageData(img, 0, 0);
-        const tmp = document.createElement('canvas');
-        tmp.width = w;
-        tmp.height = h;
-        keiws = { x: c.x, y: c.y, s: c.s, box: { x0, y0, x1, y1, w, h },
-                  mask, tmp, hittad, start: -Infinity, traff: 0 };
+            mctx.putImageData(img, 0, 0);
+            const tmp = document.createElement('canvas');
+            tmp.width = w;
+            tmp.height = h;
+            kompisar.push({ farger, x: c.x, y: c.y, s: c.s, box: { x0, y0, x1, y1, w, h },
+                            yta, mask, tmp, hittad: !!(hittade && hittade[i]), start: -Infinity, traff: 0 });
+        });
     }
 
-    function poppaKeiws() {
-        if (!keiws || keiws.hittad) return;
-        keiws.hittad = true;
-        keiws.start = performance.now();
+    function poppaKeiws(k) {
+        if (k.hittad) return;
+        k.hittad = true;
+        k.start = performance.now();
         requestRender();
+    }
+
+    // Efter penseldrag: poppar de som målats fram. Blev det den sista
+    // vinkar alla tillsammans när han vinkat klart.
+    function kollaKompisar() {
+        let ny = null;
+        kompisar.forEach(k => {
+            if (!k.hittad && k.traff >= KEIWS_TRAFF) { poppaKeiws(k); ny = k; }
+        });
+        if (ny && kompisar.length > 1 && kompisar.every(k => k.hittad)) {
+            festTid = ny.start + KEIWS_MS + FEST_PAUS_MS;
+        }
     }
 
     // Vilka klossar som visas vid tiden t (ms sedan han hittades).
@@ -404,30 +432,39 @@ document.addEventListener('DOMContentLoaded', () => {
         return KEIWS.stilla;
     }
 
-    // Ritar keIWs maskad till sina ytor på ctx (i bildkoordinater).
-    function ritaKeiwsMaskad(ctx, upp, rekt) {
-        const b = keiws.box, tctx = keiws.tmp.getContext('2d');
+    // Ritar kompisen k maskad till sina ytor på ctx (i bildkoordinater).
+    function ritaKeiwsMaskad(ctx, k, upp, rekt) {
+        const b = k.box, tctx = k.tmp.getContext('2d');
         tctx.globalCompositeOperation = 'source-over';
         tctx.clearRect(0, 0, b.w, b.h);
-        ritaKeiws(tctx, keiws.x - b.x0, keiws.y - b.y0 + (1 - upp) * 204 * keiws.s, keiws.s, rekt);
+        ritaKeiws(tctx, k.x - b.x0, k.y - b.y0 + (1 - upp) * 204 * k.s, k.s, rekt, k.farger);
         tctx.globalCompositeOperation = 'destination-in';
-        tctx.drawImage(keiws.mask, 0, 0);
+        tctx.drawImage(k.mask, 0, 0);
         tctx.globalCompositeOperation = 'source-over';
-        ctx.drawImage(keiws.tmp, b.x0, b.y0);
+        ctx.drawImage(k.tmp, b.x0, b.y0);
     }
 
-    // Ritar keIWs (om han är hittad) på vCtx, som redan har bildens transform.
-    // Returnerar true medan animationen pågår.
+    // Ritar de hittade kompisarna på vCtx, som redan har bildens transform.
+    // Returnerar true medan någon animation pågår (eller festen väntar).
     function renderKeiws(now) {
-        if (!keiws || !keiws.hittad) return false;
-        const t = now - keiws.start;
-        let upp = 1;
-        if (t < KEIWS_UPP_MS) {
-            const p = t / KEIWS_UPP_MS, k = 1.5;
-            upp = 1 + (k + 1) * Math.pow(p - 1, 3) + k * Math.pow(p - 1, 2);
+        if (festTid !== null && now >= festTid) {
+            // Festen: alla vinkar och blinkar en gång till (redan uppe)
+            kompisar.forEach(k => { k.start = now - KEIWS_VINKA; });
+            festTid = null;
         }
-        ritaKeiwsMaskad(vCtx, upp, keiwsLage(t));
-        return t < KEIWS_MS;
+        let ror = festTid !== null;
+        kompisar.forEach(k => {
+            if (!k.hittad) return;
+            const t = now - k.start;
+            let upp = 1;
+            if (t < KEIWS_UPP_MS) {
+                const p = t / KEIWS_UPP_MS, kk = 1.5;
+                upp = 1 + (kk + 1) * Math.pow(p - 1, 3) + kk * Math.pow(p - 1, 2);
+            }
+            ritaKeiwsMaskad(vCtx, k, upp, keiwsLage(t));
+            if (t < KEIWS_MS) ror = true;
+        });
+        return ror;
     }
 
     // Varje bild minns det man målat medan appen är öppen, så man kan
@@ -447,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
         vantarPaBild = -1;
         stoppaFarga();
         if (pictureLoaded) {
-            pictureState[currentPicture] = { fill: fillPx.slice(), keiws: !!(keiws && keiws.hittad) };
+            pictureState[currentPicture] = { fill: fillPx.slice(), hittade: kompisar.map(k => k.hittad) };
         }
         pictureLoaded = true;
         currentPicture = index;
@@ -461,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
         labelRegions();
         franFargbild();
         const saved = pictureState[index];
-        prepKeiws(PICTURES[index].keiws, !!(saved && saved.keiws));
+        prepKeiws(PICTURES[index], saved && saved.hittade);
         if (saved) {
             fillPx.set(saved.fill);
         } else {
@@ -572,21 +609,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if (xa > xb) continue;
             if (xa < minX) minX = xa;
             if (xb > maxX) maxX = xb;
-            const kollaKeiws = keiws && !keiws.hittad && y >= keiws.box.y0 && y <= keiws.box.y1;
-            for (let i = y * W + xa, end = y * W + xb; i <= end; i++) {
-                const l = labels[i];
-                if (kollaKeiws && keiwsYta[l]) {
-                    const x = i - y * W;
-                    if (x >= keiws.box.x0 && x <= keiws.box.x1) keiws.traff++;
+            for (const k of kompisar) {
+                if (k.hittad || y < k.box.y0 || y > k.box.y1) continue;
+                const ka = Math.max(xa, k.box.x0), kb = Math.min(xb, k.box.x1);
+                for (let i = y * W + ka, end = y * W + kb; i <= end; i++) {
+                    if (k.yta[labels[i]]) k.traff++;
                 }
-                if (l > 0) fillPx[i] = facitPx[i];
+            }
+            for (let i = y * W + xa, end = y * W + xb; i <= end; i++) {
+                if (labels[i] > 0) fillPx[i] = facitPx[i];
             }
         }
         if (maxX >= minX) markDirty(minX, y0, maxX, y1);
     }
 
     // FÄRGLÄGG — hela färgbilden trollas fram, svepande från vänster till
-    // höger under FARGA_MS, och sedan poppar keIWs fram.
+    // höger under FARGA_MS, och sedan poppar keIWs och kompisarna fram
+    // (utan festvinkning: den får man när man målat fram dem själv).
     const FARGA_MS = 1200;
     let fargaAnim = null;
 
@@ -608,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 requestRender();
             }
             if (x < PAPER_W) fargaAnim = requestAnimationFrame(steg);
-            else { fargaAnim = null; poppaKeiws(); }
+            else { fargaAnim = null; kompisar.forEach(poppaKeiws); }
         };
         fargaAnim = requestAnimationFrame(steg);
     }
@@ -628,7 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Efter varje penseldrag: har han målats fram?
     function checkTouched() {
-        if (keiws && !keiws.hittad && keiws.traff >= KEIWS_TRAFF) poppaKeiws();
+        kollaKompisar();
         if (clearState || saveState) aterstallKnappar();
         requestRender();
     }
@@ -678,7 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, PAPER_W, PAPER_H);
         ctx.drawImage(fillCanvas, 0, 0);
-        if (keiws && keiws.hittad) ritaKeiwsMaskad(ctx, 1, KEIWS.stilla);
+        kompisar.forEach(k => { if (k.hittad) ritaKeiwsMaskad(ctx, k, 1, KEIWS.stilla); });
         ctx.drawImage(lineCanvas, 0, 0);
         const d = new Date(), tv = n => String(n).padStart(2, '0');
         const namn = 'pensla-' + PICTURES[currentPicture].namn.toLowerCase()
@@ -745,7 +784,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function tomBild() {
         stoppaFarga();
-        if (keiws) { keiws.hittad = false; keiws.traff = 0; }
+        kompisar.forEach(k => { k.hittad = false; k.traff = 0; });
+        festTid = null;
         fillPx.fill(PAPER);
         fCtx.putImageData(fillImage, 0, 0);
         dirty = null;
