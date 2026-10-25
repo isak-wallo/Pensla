@@ -1,6 +1,6 @@
 // Höj VERSION (v1 -> v2 osv.) varje gång du laddar upp nya filer,
 // så hämtas och cachas den nya versionen säkert.
-const VERSION = 'v88';
+const VERSION = 'v89';
 const CACHE = 'pensla-' + VERSION;
 
 const ASSETS = [

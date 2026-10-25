@@ -1,21 +1,35 @@
-"""Föreslår gömställen för keIWs kompisar (den gröna och den röda).
+"""Gömställen för keIWs och hans kompisar (den gröna och den röda).
 
 Ytorna tas fram som i appen: konturerna (bilder/farg/NAMN.svg) ritas i
 bildens storlek i Chrome, och det som är svagare än LINE_ALPHA numreras i
-sammanhängande ytor (4-grannar). Ett gömställe är en plats där kompisens
-kropp (med ögonen) ligger nästan helt i en yta medan fötterna står bakom
-dess underkant, så att han tittar fram bakom något: ett fönster, en buske,
-ett moln eller en kulle. Ytan ska skilja sig tydligt i färg från kompisen
-och platsen ska ligga en bit från keIWs och den andra kompisen.
+sammanhängande ytor (4-grannar). Figuren syns bara i sin yta.
 
-Ut kommer förslagen (att klistra in i bilder.js) och förhandsbilder i
-granskning/kompisar/NAMN.png med alla tre utritade så som de syns i appen.
+Ett bra gömställe är där han tittar fram bakom något: kroppen och ögonen
+ligger i en yta (himlen, ett fönster, en vägg) och precis under kroppen
+börjar en sak som står framför honom (en buske, en höbal, fönsterkarmen,
+motorhuven) och skymmer fötterna. Kanten han tittar fram bakom ska vara en
+riktig, mörk kontur i färgbilden, inte bara en färgskiftning mellan två fält
+(sådana kanter spårar TECKNING också, men där ser det ut som att han står
+mitt i ett fält). Saken framför ska vara en och samma sak över hela hans
+bredd.
 
-    python verktyg/gomstallen.py              # alla aktiva och inaktiva bilder
-    python verktyg/gomstallen.py 114 115      # bara de här numren
-    python verktyg/gomstallen.py --rita 114   # bara förhandsbild av det som står i bilder.js
+Det går inte att avgöra helt automatiskt vad som är fint, så valet görs i
+två steg:
 
-Kräver att `python -m http.server 8765` körs i repots rot.
+    python verktyg/gomstallen.py --kandidater 114 115
+        Söker gömställen och ritar numrerade kandidater i
+        granskning/kompisar/kand-NAMN.png (kandidaterna sparas i
+        granskning/kompisar/kandidater.json). Titta på bilderna.
+    python verktyg/gomstallen.py --valj 114:keiws=3,gron=7,rod=1 115:gron=2
+        Skriver de valda kandidaterna i bilder.js. keiws=- behåller den
+        befintliga platsen, rod=B flyttar rod dit keIWs står nu och gron=@640,420,0.4 är en egen plats (x, y
+        under fötterna, skala; ytan tas mitt i kroppen). Säger till om
+        figuren är för lik ytan i färg.
+    python verktyg/gomstallen.py --rita 114 115
+        Förhandsbild av det som står i bilder.js (granskning/kompisar/NAMN.png).
+
+Utan nummer gäller det alla bilder som inte är borttagna. Kräver att
+`python -m http.server 8765` körs i repots rot.
 """
 import base64
 import json
@@ -24,16 +38,24 @@ import re
 import sys
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from playwright.sync_api import sync_playwright
 from scipy import ndimage as nd
 
 ROT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 UT = os.path.join(ROT, 'granskning', 'kompisar')
+KANDIDATFIL = os.path.join(UT, 'kandidater.json')
 PAPER_H = 900
 LINE_ALPHA = 200
 URL = 'http://localhost:8765/'
-S_MIN = 0.3   # mindre än så blir kompisarna svåra att se på en platta
+SKALOR = (0.3, 0.36, 0.42, 0.5)
+KROPP_MIN = 0.85    # så stor del av kroppen som ska ligga i ytan
+FOTTER_MAX = 0.25   # högst så stor del av fötterna får synas
+MORK = 95           # konturen framför honom ska vara mörkare än så (luminans 0–255)
+LINJE_MIN = 0.8     # andel av kanten under honom som ska vara mörk kontur
+FRAMFOR_MIN = 0.6   # andel av bredden där samma sak står framför
+KONTRAST_MIN = 30   # Lab-avstånd mellan figurens färg och ytan bakom
+ANTAL = 16          # kandidater per bild
 
 src = open(os.path.join(ROT, 'keiws.js'), encoding='utf-8').read()
 STILLA = json.loads(re.search(r'stilla: (\[\[.*?\]\]),', src).group(1))
@@ -91,112 +113,177 @@ def hexlab(h):
     return lab_farg([int(h[i:i + 2], 16) for i in (1, 3, 5)])
 
 
-def kandidater(lab, rgb, farg, s_lista):
-    """Alla platser (poäng, x, y, s, yta) där kompisen kan titta fram."""
+def kandidater(lab, rgb):
+    """Platser där en figur tittar fram bakom något, bästa först och spridda över bilden."""
     H, W = lab.shape
-    ut = []
-    flab = hexlab(FARGER[farg]['bla'])
-    storlek = np.bincount(lab.ravel())
-    # Himlen (ytor som når överkanten) är inget gömställe: där svävar han bara
-    himmel = set(np.unique(lab[0])) | set(np.unique(lab[:, 0][:H // 3])) | set(np.unique(lab[:, -1][:H // 3]))
+    lum = rgb @ np.array([0.299, 0.587, 0.114])
+    flab = {k: hexlab(v['bla']) for k, v in FARGER.items()}
     medel = {}
-    for s in s_lista:
-        b, kh, fh = round(160 * s), round(160 * s), round(44 * s)
-        steg = max(6, b // 6)
-        for y in range(round(204 * s) + 4, H - 2, steg):
-            top = y - round(204 * s)
-            for x in range(b // 2 + 30, W - b // 2 - 30, steg):
+    hitta = []
+    for s in SKALOR:
+        b, kh, fh, hel = round(160 * s), round(160 * s), round(44 * s), round(204 * s)
+        steg = max(5, b // 7)
+        for y in range(hel + 4, H - 2, steg):
+            top = y - hel
+            for x in range(b // 2 + 10, W - b // 2 - 10, steg):
                 x0 = x - b // 2
                 l = lab[top + kh // 2, x]
-                if l == 0 or l in himmel or storlek[l] > 0.3 * H * W:
+                if l == 0:
                     continue
                 kropp = lab[top:top + kh, x0:x0 + b] == l
-                if kropp.mean() < 0.9:
+                if kropp.mean() < KROPP_MIN:
                     continue
                 ogon = lab[top + round(25 * s):top + round(61 * s), x0 + round(22 * s):x0 + round(138 * s)] == l
                 if not ogon.all():
                     continue
-                fotter = lab[y - fh:y, x0:x0 + b] == l
-                if fotter.mean() > 0.4:
+                if (lab[y - fh:y, x0:x0 + b] == l).mean() > FOTTER_MAX:
+                    continue
+                # Kanten under honom: första raden (från mitten av kroppen) som inte är ytan
+                under = lab[top + kh // 2:y, x0:x0 + b] != l
+                har = under.any(0)
+                if har.mean() < 0.9:
+                    continue
+                kant = top + kh // 2 + under.argmax(0)
+                kol = np.arange(x0, x0 + b)[har]
+                kant = kant[har]
+                # Är kanten en mörk kontur i färgbilden?
+                mork = np.array([lum[max(0, r - 3):min(H, r + 9), c].min() for r, c in zip(kant, kol)])
+                linje = (mork < MORK).mean()
+                if linje < LINJE_MIN:
+                    continue
+                # Vad står framför: första yta under kanten i varje kolumn
+                framfor = []
+                for r, c in zip(kant, kol):
+                    kolumn = lab[r:min(H, r + 16), c]
+                    nz = kolumn[(kolumn != 0) & (kolumn != l)]
+                    framfor.append(nz[0] if len(nz) else 0)
+                framfor = np.array(framfor)
+                m = np.bincount(framfor[framfor > 0]).argmax() if (framfor > 0).any() else 0
+                andel = (framfor == m).mean() if m else 0
+                if andel < FRAMFOR_MIN:
                     continue
                 if l not in medel:
                     medel[l] = lab_farg(rgb[lab == l].mean(0))
-                kontrast = np.linalg.norm(medel[l] - flab)
-                if kontrast < 40:
+                kontrast = {k: float(np.linalg.norm(medel[l] - v)) for k, v in flab.items()}
+                if max(kontrast.values()) < KONTRAST_MIN:
                     continue
-                ut.append((kontrast + 40 * s, x, y, s, int(l)))
-    return ut
-
-
-def valj(kand, upptagna, min_avst=260):
-    """Bästa kandidaten som ligger minst min_avst från de upptagna platserna."""
-    for p, x, y, s, l in sorted(kand, reverse=True):
-        mitt = (x, y - 120 * s)
-        if all(np.hypot(mitt[0] - ux, mitt[1] - uy) >= min_avst for ux, uy in upptagna):
-            return x, y, s, l
-    return None
-
-
-def rita(lab, rgb, platser, fil):
-    """Förhandsbild: färgbilden blekt, kompisarna maskade till sina ytor, ytorna markerade."""
-    im = Image.fromarray((rgb * 0.55 + 255 * 0.45).astype(np.uint8))
-    for namn, c in platser.items():
-        if not c:
+                poang = 100 * s + 25 * linje + 15 * andel + 0.1 * kropp.mean() * 100
+                hitta.append((poang, x, y, s, int(l), int(m), round(top + kh // 2), kontrast))
+    # Spridda: en per par av yta och sak framför, och en bit ifrån varandra
+    valda, par = [], set()
+    for p, x, y, s, l, m, my, k in sorted(hitta, key=lambda h: -h[0]):
+        if (l, m) in par:
             continue
-        s, x, y = c['s'], c['x'], c['y']
-        lager = Image.new('RGBA', im.size)
-        d = ImageDraw.Draw(lager)
-        X = lambda v: round(x + (v - 80) * s)
-        Y = lambda v: round(y + (v - 204) * s)
-        for x0, y0, x1, y1, f in STILLA:
-            d.rectangle([X(x0), Y(y0), X(x1) - 1, Y(y1) - 1], fill=FARGER[namn][f])
-        mask = np.isin(lab, [lab[round(py), round(px)] for px, py in c['ytor']])
-        a = np.asarray(lager).copy()
-        a[..., 3] = np.where(mask, a[..., 3], 0)
-        im.paste(Image.fromarray(a), (0, 0), Image.fromarray(a))
-        ImageDraw.Draw(im).ellipse([x - 5, y - 5, x + 5, y + 5], outline=FARGER[namn]['bla'], width=3)
-    im.save(os.path.join(UT, fil + '.png'))
+        mitt = (x, y - 120 * s)
+        if any(np.hypot(mitt[0] - v['x'], mitt[1] - (v['y'] - 120 * v['s'])) < 130 for v in valda):
+            continue
+        par.add((l, m))
+        valda.append({'x': x, 'y': y, 's': s, 'ytor': [[x, my]],
+                      'kontrast': {kk: round(vv) for kk, vv in k.items()}})
+        if len(valda) >= ANTAL:
+            break
+    return valda
+
+
+def rita_figur(im, lab, c, farg, nummer=None):
+    """Ritar figuren maskad till sina ytor (som i appen) och ev. ett nummer bredvid."""
+    s, x, y = c['s'], c['x'], c['y']
+    lager = Image.new('RGBA', im.size)
+    d = ImageDraw.Draw(lager)
+    X = lambda v: round(x + (v - 80) * s)
+    Y = lambda v: round(y + (v - 204) * s)
+    for x0, y0, x1, y1, f in STILLA:
+        d.rectangle([X(x0), Y(y0), X(x1) - 1, Y(y1) - 1], fill=FARGER[farg][f])
+    mask = np.isin(lab, [lab[round(py), round(px)] for px, py in c['ytor']])
+    a = np.asarray(lager).copy()
+    a[..., 3] = np.where(mask, a[..., 3], 0)
+    im.paste(Image.fromarray(a), (0, 0), Image.fromarray(a))
+    if nummer is not None:
+        font = ImageFont.truetype('C:/Windows/Fonts/segoeuib.ttf', 30)
+        dd = ImageDraw.Draw(im)
+        tx, ty = X(160) + 4, Y(0) - 6
+        dd.rectangle([tx - 3, ty, tx + 22 * len(str(nummer)) + 3, ty + 36], fill='white', outline='black')
+        dd.text((tx, ty - 2), str(nummer), fill='black', font=font)
+
+
+def blek(rgb):
+    return Image.fromarray((rgb * 0.7 + 255 * 0.3).astype(np.uint8))
+
+
+def satt_in(rader, nr, platser):
+    """Byter keiws/gron/rod i bild nr:s rad i bilder.js."""
+    for i, rad in enumerate(rader):
+        if not re.match(r'\s*\{ nr: %d,' % nr, rad):
+            continue
+        for namn, c in platser.items():
+            ny = '%s: { x: %d, y: %d, s: %s, ytor: %s }' % (namn, c['x'], c['y'], c['s'], json.dumps(c['ytor'], separators=(',', ':')).replace(',', ', '))
+            gammal = re.search(r'%s: \{[^{}]*\[\[[^{}]*\]\][^{}]*\}' % namn, rad)
+            if gammal:
+                rad = rad[:gammal.start()] + ny + rad[gammal.end():]
+            else:
+                # sist i posten, före '}' (och en ev. kommentar)
+                slut = rad.rindex('}')
+                rad = rad[:slut].rstrip() + ', ' + ny + ' ' + rad[slut:]
+        rader[i] = rad
+        return
+    raise SystemExit('Hittar inte nr %d i bilder.js' % nr)
 
 
 def main():
     global SIDA
     arg = sys.argv[1:]
-    bara_rita = '--rita' in arg
-    nummer = {int(a) for a in arg if a.isdigit()}
     os.makedirs(UT, exist_ok=True)
+    if '--valj' in arg:
+        kand = json.load(open(KANDIDATFIL, encoding='utf-8'))
+        p = os.path.join(ROT, 'bilder.js')
+        rader = open(p, encoding='utf-8').read().split('\n')
+        for a in arg[arg.index('--valj') + 1:]:
+            nr, val = a.split(':')
+            platser = {}
+            for namn, k in re.findall(r'(\w+)=(@[\d.]+,[\d.]+,[\d.]+|[\d-]+|B)', val):
+                if k == 'B':
+                    # den plats keIWs har nu (före ändringarna på raden)
+                    rad = next(r for r in rader if re.match(r'\s*\{ nr: %s,' % nr, r))
+                    g = re.search(r'keiws: \{ x: (\d+), y: (\d+), s: ([\d.]+), ytor: (\[\[.*?\]\]) \}', rad)
+                    platser[namn] = {'x': int(g[1]), 'y': int(g[2]), 's': g[3], 'ytor': json.loads(g[4])}
+                elif k.startswith('@'):
+                    x, y, s = (float(t) for t in k[1:].split(','))
+                    platser[namn] = {'x': round(x), 'y': round(y), 's': s, 'ytor': [[round(x), round(y - 124 * s)]]}
+                elif k != '-':
+                    c = kand[nr][int(k) - 1]
+                    if c['kontrast'][namn] < KONTRAST_MIN:
+                        print('OBS', nr, namn, k, 'lik ytan i färg', c['kontrast'][namn])
+                    platser[namn] = {kk: c[kk] for kk in ('x', 'y', 's', 'ytor')}
+            satt_in(rader, int(nr), platser)
+        open(p, 'w', encoding='utf-8').write('\n'.join(rader))
+        return
+    nummer = {int(a) for a in arg if a.isdigit()}
     with sync_playwright() as pw:
         b = pw.chromium.launch()
         SIDA = b.new_page()
         SIDA.goto(URL + 'galleri.html')
         alla, aktiva, borttagna = bilder()
+        kand = json.load(open(KANDIDATFIL, encoding='utf-8')) if os.path.exists(KANDIDATFIL) else {}
         for bild in alla:
             if bild['nr'] in borttagna or bild.get('utanFarg') or (nummer and bild['nr'] not in nummer):
                 continue
             lab, rgb = ytor(bild['fil'])
-            k = bild.get('keiws')
-            platser = {'keiws': k, 'gron': bild.get('gron'), 'rod': bild.get('rod')}
-            if not bara_rita:
-                # En ny bild utan keIWs får ett förslag för honom också
-                # (helst flytta honom till hyttfönstret för hand)
-                farger = ('gron', 'rod') if k else ('keiws', 'gron', 'rod')
-                upptagna = [(k['x'], k['y'] - 120 * k['s'])] if k else []
-                s_lista = sorted({max(S_MIN, round(k['s'] * f, 2)) for f in (0.8, 0.9, 1.0)}) if k else [0.35, 0.4, 0.45]
-                for farg in farger:
-                    v = valj(kandidater(lab, rgb, farg, s_lista), upptagna)
-                    if not v:
-                        print(bild['nr'], bild['fil'], farg, 'INGET GÖMSTÄLLE')
-                        platser[farg] = None
-                        continue
-                    x, y, s, l = v
-                    py, px = map(int, np.argwhere(lab == l)[len(np.argwhere(lab == l)) // 2])
-                    # ytpunkten: mitt i kroppen om den ligger i ytan
-                    kx, ky = x, round(y - 120 * s)
-                    if lab[ky, kx] == l:
-                        px, py = kx, ky
-                    platser[farg] = {'x': x, 'y': y, 's': s, 'ytor': [[px, py]]}
-                    upptagna.append((x, y - 120 * s))
-                    print(f"    {bild['nr']} {bild['fil']} {farg}: {{ x: {x}, y: {y}, s: {s}, ytor: [[{px}, {py}]] }}")
-            rita(lab, rgb, platser, bild['fil'])
+            if '--kandidater' in arg:
+                k = kandidater(lab, rgb)
+                kand[str(bild['nr'])] = k
+                im = blek(rgb)
+                for i, c in enumerate(k):
+                    rita_figur(im, lab, c, 'keiws', i + 1)
+                im.save(os.path.join(UT, 'kand-' + bild['fil'] + '.png'))
+                print(bild['nr'], bild['fil'], len(k), 'kandidater')
+            else:
+                im = blek(rgb)
+                for namn in ('keiws', 'gron', 'rod'):
+                    if bild.get(namn):
+                        rita_figur(im, lab, bild[namn], namn)
+                im.save(os.path.join(UT, bild['fil'] + '.png'))
+        if '--kandidater' in arg:
+            json.dump(kand, open(KANDIDATFIL, 'w', encoding='utf-8'))
         b.close()
 
 

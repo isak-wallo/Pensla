@@ -42,7 +42,8 @@ färger, inga ljud, inga poäng, inga val att göra.
   färgbilden i galleriet (maskade till sina ytor som i appen,
   `ritaKompisar`), så att ägaren kan granska gömställena där. Ett tryck
   på ett par visar det i helskärm (v86, `visaStor`; ◀ ▶, piltangenter eller
-  svep bläddrar i fliken). En bild som ändras stannar i sin flik med
+  svep bläddrar i fliken; figurerna ritas in innan bilden visas, v89
+  `ritaInKompisar`). En bild som ändras stannar i sin flik med
   en etikett ("blir aktiv", "tas bort" ...) tills listan är införd.
   Galleriet är ett levande dokument: allt i `ALLA_BILDER` visas, grupperat
   i kategorier (`KATEGORIER` i `galleri.html`, t.ex. Båtar, Flygplan,
@@ -139,14 +140,25 @@ pushas, annars fastnar plattan på gammal cache.
   fötterna, `ytor` = punkter i de ytor han syns i. Han ritas bara på de
   ytornas pixlar (mask), ovanpå färgen men under linjerna — så det som
   ligger framför (fönsterkarmen, ratten) skymmer honom och han ser ut att
-  titta fram bakom det. Hyttfönster är bra gömställen.
+  titta fram bakom det. Stora hyttfönster är bra gömställen, men i små
+  fönster (tornfönster, runda ventiler, små hytter) syns han för dåligt —
+  flytta då ut honom.
 - Kompisarna står i `gron` och `rod` med samma mått (saknas de har bilden
-  bara keIWs). `verktyg/gomstallen.py` föreslår deras platser: en yta där
-  kroppen och ögonen ligger nästan helt och fötterna står bakom kanten,
-  som skiljer sig i färg från kompisen, inte är himlen och ligger en bit
-  från de andra. Förslagen skrivs ut, och förhandsbilder med alla tre
-  hamnar i `granskning/kompisar/`. Granska dem och flytta de som hamnar
-  konstigt. Kör den för varje ny bild (`python verktyg/gomstallen.py NR`).
+  bara keIWs). De ska titta fram *bakom något*: kroppen i en bakgrundsyta
+  (himmel, ruta, kulle, vägg) och fötterna bakom ett riktigt föremål med
+  mörk kontur (tak, buske, rotor, stjärtfena, bom, träd) — inte vid en
+  godtycklig färgskarv mellan två fält. Undvik grön på grönt och röd på rött.
+  `verktyg/gomstallen.py` gör det i två steg:
+  1. `python verktyg/gomstallen.py --kandidater NR...` ritar numrerade
+     kandidater i `granskning/kompisar/kand-FIL.png` (sparas i
+     `kandidater.json`). Titta på dem.
+  2. `python verktyg/gomstallen.py --valj NR:keiws=3,gron=7,rod=1 ...`
+     skriver valen i bilder.js. `-` behåller platsen, `B` tar keIWs
+     nuvarande plats och `@x,y,s` är en egen plats. `OBS … lik ytan i
+     färg` betyder dålig kontrast (himlen ger ofta falsklarm, titta själv).
+  3. `python verktyg/gomstallen.py --rita NR...` ger förhandsbilder i
+     `granskning/kompisar/FIL.png`. Granska dem innan push.
+  Gör det för varje ny bild. Alla 62 aktiva gicks igenom för hand i v89.
 
 ## Lägga till en ny bild (`verktyg/fargbild.py`)
 1. Be Gemini om en tecknad, lekfull färgbild (4:3, wider than tall) med

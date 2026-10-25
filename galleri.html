@@ -169,11 +169,17 @@
     const LINE_ALPHA = 200;
     const kompisBild = new Map();
     let kompisKo = Promise.resolve();
+    const kompisRitad = new Map();   // img -> löfte som uppfylls när figurerna är inritade
+    function ritaInKompisar(img) {
+        if (!kompisRitad.has(img)) {
+            visaKompisar.unobserve(img);
+            kompisKo = kompisKo.then(() => ritaKompisar(img, kompisBild.get(img))).catch(() => { });
+            kompisRitad.set(img, kompisKo);
+        }
+        return kompisRitad.get(img);
+    }
     const visaKompisar = new IntersectionObserver(poster => poster.forEach(p => {
-        if (!p.isIntersecting) return;
-        visaKompisar.unobserve(p.target);
-        const b = kompisBild.get(p.target);
-        kompisKo = kompisKo.then(() => ritaKompisar(p.target, b)).catch(() => { });
+        if (p.isIntersecting) ritaInKompisar(p.target);
     }), { rootMargin: '300px' });
 
     function laddaBild(src) {
@@ -237,6 +243,14 @@
         document.getElementById('stor-namn').textContent = `${b.nr} ${b.namn}`;
         stor.querySelector('.bilder').innerHTML = k.querySelector('.par').innerHTML;
         stor.querySelectorAll('.bilder img').forEach(i => i.removeAttribute('loading'));
+        // Kortet har kanske inte syntes än: rita in figurerna och byt bild när de är klara
+        const farg = k.querySelectorAll('.par img')[1];
+        if (farg && kompisBild.has(farg)) {
+            ritaInKompisar(farg).then(() => {
+                const ny = stor.querySelectorAll('.bilder img')[1];
+                if (storKort === k && !stor.hidden && ny) ny.src = farg.src;
+            });
+        }
         stor.hidden = false;
         document.body.style.overflow = 'hidden';
     }
