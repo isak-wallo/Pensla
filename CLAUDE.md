@@ -75,7 +75,7 @@ färger, inga ljud, inga poäng, inga val att göra.
   till tillsammans (`festTid`). FÄRGLÄGG tar fram alla tre utan fest.
 - **Namn:** appen hette Färga fram till v49; repot döptes om till Pensla i
   v50 (den gamla Pages-adressen /Farga/ slutade då fungera). Den lokala
-  mappen heter fortfarande `Farga`. Ingen pensla.keiws.com förrän ägaren
+  mappen heter `Pensla` sedan 2026-10-28 (förut `Farga`). Ingen pensla.keiws.com förrän ägaren
   säger till.
 - Bilder (oktober 2026, ny uppsättning): traktor, grävare, sopbil från sidan,
   sopbil snett, traktor 2, två flygplan och två helikoptrar; i v52 kom två
