@@ -97,6 +97,12 @@
 <script src="keiws.js"></script>
 <script src="bilder.js?farsk"></script>
 <script>
+    // Öppnas galleriet från Pensla test (GALLERI-knappen) gäller appens
+    // landskapslås här också; släpp det så att plattan kan vridas.
+    if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('any').catch(() => {});
+    }
+
     // Galleri för att välja vilka bilder som ska vara aktiva i appen.
     // Alla bilder i ALLA_BILDER visas, i tre flikar efter hur de står i
     // appen just nu: aktiva (AKTIVA), inaktiva och borttagna (BORTTAGNA).
