@@ -29,7 +29,8 @@ färger, inga ljud, inga poäng, inga val att göra.
   "HÅLL INNE FÖR ATT …" i 5 s, som i Kludda.
 - **Bildbanken:** alla bilder står med fast löpnummer i `bilder.js`
   (`ALLA_BILDER`), men bara de vars nummer står i `AKTIVA` visas och cachas
-  (ägaren vill ha runt 20 aktiva åt gången). Alla bilder, även inaktiva,
+  (sedan 2026-10-31 vill ägaren ha så många aktiva som möjligt, inte
+  runt 20 som förut; nya bilder läggs ändå in inaktiva tills ägaren valt). Alla bilder, även inaktiva,
   får keIWs och testas när de läggs in, så vilken som helst kan aktiveras.
   Ägaren väljer på `galleri.html`
   (https://test.pensla.keiws.com/galleri.html, bara i testmiljön, inte i `ASSETS`):
