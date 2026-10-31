@@ -4,9 +4,9 @@ https://test.pensla.keiws.com är testmiljön och publiceras efter varje push
 med --test, med VERSION i sw.js som den är (v90, v91 ...), galleriet
 (galleri.html och alla bilder i banken, även inaktiva) och en robots.txt som
 stänger ute sökmotorerna. Testversionen heter "Pensla test", så att båda går
-att installera, och har en GALLERI-knapp på startskärmen (galleriet går inte
-att installera som egen app bredvid den), som på Android öppnar galleriet i
-Chrome, där det går att vrida.
+att installera. Pensla test gäller bara index.html, så galleriet är en egen
+app (galleri.json, "Pensla galleri") som går att vrida. GALLERI-knappen på
+startskärmen öppnar det i Chrome på Android.
 
 pensla.keiws.com byts bara när det här skriptet körs med --skarpt. Den skarpa
 sidan har egna versionsnummer: i den släppta sw.js byts VERSION mot
@@ -67,7 +67,7 @@ def bygg(nr):
     filer = [f for f in re.findall(r"'\./([^']*)'", re.search(r'const ASSETS = \[(.*?)\];', sw, re.S).group(1)) if f]
     filer.append('sw.js')
     if nr is None:
-        filer += ['galleri.html'] + git('ls-tree', '-r', '--name-only', 'origin/main', 'bilder/').split('\n')
+        filer += ['galleri.html', 'galleri.json'] + git('ls-tree', '-r', '--name-only', 'origin/main', 'bilder/').split('\n')
     for fil in dict.fromkeys(filer):
         mal = os.path.join(WEBB, fil)
         os.makedirs(os.path.dirname(mal), exist_ok=True)
@@ -83,15 +83,18 @@ def bygg(nr):
         # Eget namn, så att testversionen och den skarpa går att skilja åt när båda är installerade
         for fil, fran, till in [('manifest.json', '"name": "Pensla"', '"name": "Pensla test"'),
                                 ('manifest.json', '"short_name": "Pensla"', '"short_name": "Pensla test"'),
+                                # Pensla test gäller bara själva appsidan, så att galleriet (egen
+                                # app, galleri.json) inte öppnas inne i den och låses i landskap.
+                                # Kräver html_handling "none" i wrangler.jsonc (env test).
+                                ('manifest.json', '"start_url": "."', '"start_url": "./index.html"'),
+                                ('manifest.json', '"scope": "."', '"scope": "./index.html"'),
                                 ('index.html', '<title>Pensla</title>', '<title>Pensla test</title>'),
-                                # Galleriet går inte att installera bredvid Pensla test (samma
-                                # webbplats), så testversionen har en knapp till det på startskärmen.
-                                # På Android öppnas det i Chrome (intent-länk), eftersom appens
-                                # landskapslås inte går att släppa inne i appen.
+                                # Knapp till galleriet på startskärmen. På Android öppnas det i
+                                # Chrome (intent-länk), annars tar Pensla test över länken.
                                 ('index.html', '<button id="start-btn">BÖRJA PENSLA</button>',
                                  '<button id="start-btn">BÖRJA PENSLA</button>\n    <a href="galleri.html" '
                                  'onclick="if (/Android/.test(navigator.userAgent)) { event.preventDefault(); '
-                                 'location.href = \'intent://test.pensla.keiws.com/galleri#Intent;scheme=https;'
+                                 'location.href = \'intent://test.pensla.keiws.com/galleri.html#Intent;scheme=https;'
                                  'package=com.android.chrome;end\'; }" '
                                  'style="position: absolute; right: 24px; bottom: 24px; padding: 14px 28px; '
                                  'font: bold 22px sans-serif; color: #fff; background: #5b6b7b; '
