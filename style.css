@@ -149,6 +149,20 @@ body {
 .nav-btn {
     font-size: clamp(22px, 6vw, 44px);
 }
+/* Pilarna är SVG (tecknen ◀ ▶ blir blå emoji-rutor på Android): en mjukt
+   rundad triangel i knapptextens färg. */
+.nav-btn svg {
+    width: 1.3em;
+    height: 1.3em;
+    fill: currentColor;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+.nav-btn svg.vand {
+    transform: scaleX(-1);
+}
 @media (orientation: landscape) {
     .nav-btn {
         font-size: clamp(22px, 6vh, 44px);

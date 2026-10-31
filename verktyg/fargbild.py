@@ -62,6 +62,7 @@ FARGOMRADEN = {
     'brandbil6', 'tankbil', 'tankbil2', 'tankbil3', 'tankbil4', 'brandbil7', 'brandbil8',   # 2026-10-31
     'glassbil', 'glassbil2', 'glassbil3', 'glassbil4', 'glassbil5',
     'skordetroska2', 'skordetroska3', 'skordetroska4', 'skordetroska5',
+    'skordetroska6', 'skordetroska7', 'skordetroska8', 'skordetroska9', 'skordetroska10', 'skordetroska11',
 }
 MORK_HOG, MORK_LAG = 40, 14
 OMRADE_SKILLNAD = 22   # färgskillnad (Lab) som håller isär två områden
