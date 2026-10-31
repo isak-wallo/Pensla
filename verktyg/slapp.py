@@ -89,8 +89,7 @@ def bygg(nr):
                                 ('manifest.json', '"start_url": "."', '"start_url": "./index.html"'),
                                 ('manifest.json', '"scope": "."', '"scope": "./index.html"'),
                                 # Utan omdirigering finns ingen fil på /, så service workern sparar bara index.html
-                                ('sw.js', "  './',
-", ''),
+                                ('sw.js', "  './',\n", ''),
                                 ('index.html', '<title>Pensla</title>', '<title>Pensla test</title>'),
                                 # Knapp till galleriet på startskärmen. På Android öppnas det i
                                 # Chrome (intent-länk), annars tar Pensla test över länken.
