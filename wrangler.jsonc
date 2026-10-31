@@ -12,8 +12,10 @@
   "env": {
     "test": {
       // Ingen omdirigering av index.html och galleri.html: Pensla test har
-      // scope ./index.html och galleriet ./galleri (se slapp.py)
-      "assets": { "directory": "./webb", "html_handling": "none" },
+      // scope ./index.html och galleriet ./galleri (se slapp.py). Adressen /
+      // ger ändå appen (single-page-application).
+      "assets": { "directory": "./webb", "html_handling": "none",
+                  "not_found_handling": "single-page-application" },
       "routes": [
         { "pattern": "test.pensla.keiws.com", "custom_domain": true }
       ]
