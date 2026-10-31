@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // (eller fylla plattan med bilder) av misstag — utom att knappen en
     // stund (TIPS_MS) visar att man ska hålla inne.
     const HOLD_MS = 1000;
+    const FARGA_HOLD_MS = 1500;   // FÄRGLÄGG vill ha en lite längre hållning
     const ALLA_MS = 4000;
     const ALLA_HOLD_MS = 4000;
     const SAVE_MS = 5000;   // så länge SPARA väntar på andra hållningen
@@ -88,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (holdTimer) clearTimeout(holdTimer);
         holdBtn = btn;
         // Att nollställa alla bilder kräver en längre hållning
-        const ms = btn === restartBtn && clearState ? ALLA_HOLD_MS : HOLD_MS;
+        const ms = btn === restartBtn && clearState ? ALLA_HOLD_MS : btn === fillBtn ? FARGA_HOLD_MS : HOLD_MS;
         btn.style.setProperty('--hold-ms', ms + 'ms');
         // Väntar knappen på andra hållningen får tiden inte ta slut mitt i den
         if (vantar(btn) && clearTimer) { clearTimeout(clearTimer); clearTimer = null; }
@@ -347,12 +348,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // De ritas av sina klossar (KEIWS i keiws.js, origo i kroppens övre
     // vänstra hörn), så de blir skarpa i alla storlekar.
     const KEIWS_TRAFF = 40;     // så många målade pixlar på honom innan han poppar
-    const KEIWS_UPP_MS = 600;   // upp bakom kanten med en liten studs …
-    const KEIWS_VINKA = 700;    // … vinkar sedan (KEIWS.vinka) …
+    const KEIWS_UPP_MS = 720;   // upp bakom kanten med en liten studs …
+    const KEIWS_VINKA = 820;    // … vinkar sedan (KEIWS.vinka) …
     const KEIWS_VINKA_MS = KEIWS.vinka.reduce((t, b) => t + b.tid, 0);
     const KEIWS_BLINK = KEIWS_VINKA + KEIWS_VINKA_MS + 300;   // … och blinkar en gång
     const KEIWS_MS = KEIWS_BLINK + 400;
     const FEST_PAUS_MS = 300;   // från sista kompisens blink till festvinkningen
+    const VALKOMMEN_MS = 400;   // bläddrar man till en bild där alla är hittade vinkar de efter så här länge
     // Nyckeln i bilder.js och färgerna (samma nycklar som KEIWS.farger)
     const KOMPISAR = [
         ['keiws', KEIWS.farger],
@@ -519,6 +521,10 @@ document.addEventListener('DOMContentLoaded', () => {
         fCtx.putImageData(fillImage, 0, 0);
         dirty = null;
         aterstallKnappar();
+        // Alla redan hittade (bilden är färdigmålad): de vinkar en gång
+        if (kompisar.length && kompisar.every(k => k.hittad)) {
+            festTid = performance.now() + VALKOMMEN_MS;
+        }
         requestRender();
     }
 
@@ -638,7 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // FÄRGLÄGG — hela färgbilden trollas fram, svepande från vänster till
     // höger under FARGA_MS, och sedan poppar keIWs och kompisarna fram
     // (utan festvinkning: den får man när man målat fram dem själv).
-    const FARGA_MS = 1200;
+    const FARGA_MS = 1800;
     let fargaAnim = null;
 
     function fargaHela() {
