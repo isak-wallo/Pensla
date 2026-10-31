@@ -127,40 +127,24 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 8: Brandbil → `inkorg/brandbil6.png`
+## Bild 8: Glassbil → `inkorg/glassbil.png`
 
 ```
-A playful but slightly more realistic picture-book illustration for small children: a red fire truck driving out of a small fire station, seen from the side at a slight three-quarter angle. Realistic proportions: a long fire truck with a cab with a big windshield and side window, a ladder on the roof with only a few wide rungs, side lockers with roll-up doors drawn as plain panels, a hose reel, blue lights on the roof, three big wheels on each side, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole fire truck visible with free space all around.
+A playful but slightly more realistic picture-book illustration for small children: an ice cream van parked by a small park in a town on a sunny summer day, with its serving hatch open and a small awning above it, seen from the side at a slight three-quarter angle. Realistic proportions: a small delivery van with a big windshield and side window, a big serving hatch in the side with a striped awning, a big ice cream cone shape on the roof, four wheels, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole van visible with free space all around.
 
 Style rules (important):
-- Bold, clean, smooth outlines in near-black around EVERY shape, all the same thickness, in the foreground AND the background: the fire station, trees, the street, the curb, road markings, clouds, the sun and each sun ray all get the same bold outline. No thin, light or colored lines anywhere.
-- Every area must be fully closed by outlines, no gaps. Stripes along the truck are separate areas with their own outlines.
+- Bold, clean, smooth outlines in near-black around EVERY shape, all the same thickness, in the foreground AND the background: the park, trees, houses, the street, the curb, road markings, clouds, the sun and each sun ray all get the same bold outline. No thin, light or colored lines anywhere.
+- Every area must be fully closed by outlines, no gaps. The wide stripes on the awning (only four or five) and the colored band along the van are separate areas with their own outlines.
 - The street is one plain area with a few wide outlined markings, no paving tiles, no cobblestones, no grid of lines on the ground.
+- The ice cream cone on the roof is one simple shape: a cone with one big scoop, no sprinkles, no drips.
 - Only the outlines are black. All fill colors are lighter: tires and dark parts are medium gray, never black or dark navy.
 - Mostly flat colors: each area has one main color with at most a very soft, light highlight. No strong gradients, no shading bands, no dark shadows along outlines, no shadows on the ground under the vehicle.
-- A bit more detail than a toy (roof lights, side mirrors, headlights, a hose reel, steps), but no tiny enclosed areas. No grilles with many slots, no ribbed or accordion details, no panel lines, bolts or rivets, no tiny chain links.
-- Background: a small friendly fire station with a big open garage door, a few simple houses, a big rounded bush or tree, light blue sky with a few big puffy clouds and a sun. Keep background objects large and simple, no other vehicles.
+- A bit more detail than a toy (a roof cone, side mirrors, headlights, a small counter under the hatch), but no tiny enclosed areas. No grilles with many slots, no ribbed or accordion details, no panel lines, bolts or rivets, no tiny chain links.
+- Background: a small park with a big rounded tree and a bench, a few simple houses with big windows, light blue sky with a few big puffy clouds and a sun. Keep background objects large and simple, no other vehicles.
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 9: Liten tankbil → `inkorg/tankbil.png`
-
-```
-A playful but slightly more realistic picture-book illustration for small children: a small tanker truck driving along a street in a small town, seen from the side at a slight three-quarter angle. Realistic proportions: a short, small tanker truck with a cab with a big windshield and side window, one big rounded oval tank on the back with a small hatch on top, a hose rolled up at the back, two wheels on each side, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole tanker truck visible with free space all around.
-
-Style rules (important):
-- Bold, clean, smooth outlines in near-black around EVERY shape, all the same thickness, in the foreground AND the background: houses, trees, the street, the curb, road markings, clouds, the sun and each sun ray all get the same bold outline. No thin, light or colored lines anywhere.
-- Every area must be fully closed by outlines, no gaps. The colored stripe around the tank and the stripe along the cab are separate areas with their own outlines.
-- The street is one plain area with a few wide outlined markings, no paving tiles, no cobblestones, no grid of lines on the ground.
-- The tank is one smooth rounded shape with only one or two wide colored bands, no ribs, no rivets, no reflections.
-- Only the outlines are black. All fill colors are lighter: tires and dark parts are medium gray, never black or dark navy.
-- Mostly flat colors: each area has one main color with at most a very soft, light highlight. No strong gradients, no shading bands, no dark shadows along outlines, no shadows on the ground under the vehicle.
-- A bit more detail than a toy (a beacon on the cab roof, side mirrors, headlights, a step, a small ladder at the back of the tank), but no tiny enclosed areas. No grilles with many slots, no ribbed or accordion details, no panel lines, bolts or rivets, no tiny chain links.
-- Background: a few simple houses with big windows, a big rounded bush or tree near the truck, light blue sky with a few big puffy clouds and a sun. Keep background objects large and simple, no other vehicles.
-- No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
-```
-
-## Bild 10: Sopbil → `inkorg/sopbil8.png`
+## Bild 9: Sopbil → `inkorg/sopbil8.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a garbage truck stopping by two wheelie bins on a street in a small town, seen from the side at a slight three-quarter angle. Realistic proportions: a garbage truck with a cab with a big windshield and side window, a big rounded container body, a lifting arm at the back, three big wheels on each side, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole truck and the bins visible with free space all around.
@@ -176,7 +160,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 11: Postbil → `inkorg/postbil2.png`
+## Bild 10: Postbil → `inkorg/postbil2.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a small yellow mail van driving along a street in a small town, with a few parcels visible through the back window, seen from the side at a slight three-quarter angle. Realistic proportions: a small delivery van with a big windshield, a side window, a sliding side door, four wheels, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole van visible with free space all around.
@@ -192,7 +176,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 12: Buss → `inkorg/buss4.png`
+## Bild 11: Buss → `inkorg/buss4.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a city bus stopping at a bus stop on a street in a small town, seen from the side at a slight three-quarter angle. Realistic proportions: a long city bus with a big windshield, a row of four or five big side windows, two doors, four wheels, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole bus visible with free space all around.
@@ -208,7 +192,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 13: Tåg → `inkorg/tag3.png`
+## Bild 12: Tåg → `inkorg/tag3.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a modern passenger train with a locomotive and two carriages, driving along the tracks through the countryside, seen from the side at a slight three-quarter angle. Realistic proportions: a streamlined train with a big front windshield, a row of big side windows on each carriage, doors, wheels hidden under a skirt, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole train visible with free space all around.
@@ -224,7 +208,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 14: Litet flygplan → `inkorg/flygplan7.png`
+## Bild 13: Litet flygplan → `inkorg/flygplan7.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a small propeller airplane standing on a grass airfield, ready for takeoff, seen from the side at a slight three-quarter angle. Realistic proportions: a small high-wing airplane with a big cockpit windshield and side window, a propeller with two blades, a tail fin, three wheels, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole airplane visible with free space all around.
@@ -240,7 +224,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 15: Helikopter → `inkorg/helikopter4.png`
+## Bild 14: Helikopter → `inkorg/helikopter4.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a rescue helicopter flying low over a green meadow by a lake, seen from the side at a slight three-quarter angle. Realistic proportions: a helicopter with a big rounded cockpit windshield, a side window and a sliding door, a main rotor with four wide blades, a tail boom with a small tail rotor, two landing skids, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole helicopter and its rotor visible with free space all around.
@@ -257,7 +241,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 16: Raket → `inkorg/raket4.png`
+## Bild 15: Raket → `inkorg/raket4.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a big space rocket standing on its launch pad, ready to launch, seen at a slight three-quarter angle. Realistic proportions: a tall rocket with a pointed nose, a few round windows, two side boosters, big fins, standing on a simple launch tower, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole rocket and the launch tower visible with free space all around.
@@ -274,7 +258,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 17: Båt → `inkorg/bat3.png`
+## Bild 16: Båt → `inkorg/bat3.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a small motorboat with a cabin driving across a calm lake, seen from the side at a slight three-quarter angle. Realistic proportions: a small motorboat with a cabin with a big windshield and round side windows, a railing with only a few posts, a small flag, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole boat visible with free space all around.
@@ -290,7 +274,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 18: Segelbåt → `inkorg/segelbat3.png`
+## Bild 17: Segelbåt → `inkorg/segelbat3.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a sailboat sailing on a calm lake on a sunny day, seen from the side at a slight three-quarter angle. Realistic proportions: a sailboat with a big white main sail and a smaller front sail, a tall mast, a hull with a small cabin and round windows, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole boat and its sails visible with free space all around.
@@ -307,7 +291,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 19: Räddningsbåt → `inkorg/raddningsbat2.png`
+## Bild 18: Räddningsbåt → `inkorg/raddningsbat2.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a rescue boat speeding across the sea near the coast, seen from the side at a slight three-quarter angle. Realistic proportions: a rescue boat with a cabin with a big windshield and side windows, a short mast with a blue light, a railing with only a few posts, a life ring, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole boat visible with free space all around.
@@ -323,7 +307,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 20: Lastfartyg → `inkorg/lastfartyg2.png`
+## Bild 19: Lastfartyg → `inkorg/lastfartyg2.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a cargo ship loaded with colorful containers sailing on the sea near a harbor, seen from the side at a slight three-quarter angle. Realistic proportions: a cargo ship with a long hull, a tall white bridge with a row of big windows at the back, two rows of large containers (no more than about ten containers), a funnel, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole ship visible with free space all around.
