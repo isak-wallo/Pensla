@@ -114,7 +114,7 @@ versionsnummer v1, v2 ... i den släppta sw.js, tagg `slapp-N`). Utan
 ### Android-appen (APK, sedan v90)
 Samma upplägg som Kludda: Capacitor-projekt i `android/`,
 `python verktyg/bygg_apk.py` bygger i `%LOCALAPPDATA%\keiws-bygg\pensla`
-(aldrig i Dropbox) och lägger `Claude\keIWspk\Pensla-vNN.apk` (versionCode
+(aldrig i Dropbox) och lägger `Claude\keIWs\apk\Pensla-vNN.apk` (versionCode
 = numret i VERSION i sw.js). Signeras med keIWs nyckel utanför repot
 (keiwsNycklar i ~/.gradle/gradle.properties). I appen (`ANDROID_APP`) visas
 ingen startskärm, ingen dö-yta, ingen service worker; MainActivity döljer
