@@ -4,7 +4,8 @@ https://test.pensla.keiws.com är testmiljön och publiceras efter varje push
 med --test, med VERSION i sw.js som den är (v90, v91 ...), galleriet
 (galleri.html och alla bilder i banken, även inaktiva) och en robots.txt som
 stänger ute sökmotorerna. Testversionen heter "Pensla test", så att båda går
-att installera.
+att installera, och har en GALLERI-knapp på startskärmen (galleriet går inte
+att installera som egen app bredvid den).
 
 pensla.keiws.com byts bara när det här skriptet körs med --skarpt. Den skarpa
 sidan har egna versionsnummer: i den släppta sw.js byts VERSION mot
@@ -81,7 +82,14 @@ def bygg(nr):
         # Eget namn, så att testversionen och den skarpa går att skilja åt när båda är installerade
         for fil, fran, till in [('manifest.json', '"name": "Pensla"', '"name": "Pensla test"'),
                                 ('manifest.json', '"short_name": "Pensla"', '"short_name": "Pensla test"'),
-                                ('index.html', '<title>Pensla</title>', '<title>Pensla test</title>')]:
+                                ('index.html', '<title>Pensla</title>', '<title>Pensla test</title>'),
+                                # Galleriet går inte att installera bredvid Pensla test (samma
+                                # webbplats), så testversionen har en knapp till det på startskärmen
+                                ('index.html', '<button id="start-btn">BÖRJA PENSLA</button>',
+                                 '<button id="start-btn">BÖRJA PENSLA</button>\n    <a href="galleri.html" '
+                                 'style="position: absolute; right: 24px; bottom: 24px; padding: 14px 28px; '
+                                 'font: bold 22px sans-serif; color: #fff; background: #5b6b7b; '
+                                 'border-radius: 14px; text-decoration: none;">GALLERI</a>')]:
             with open(os.path.join(WEBB, fil), encoding='utf-8') as f:
                 text = f.read()
             if fran not in text:
