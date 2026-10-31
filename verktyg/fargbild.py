@@ -59,6 +59,7 @@ FARGOMRADEN = {
     'traktor7', 'lastfartyg', 'sopbil7', 'buss3', 'brandbil5', 'polisbil5', 'flygplan-stort6',
     'plogbil2', 'plogbil3', 'bargningsbil2', 'bargningsbil3',
     'traktor11', 'traktor12', 'traktor13', 'hjullastare', 'hjullastare2', 'hjullastare3', 'hjullastare4',
+    'brandbil6', 'tankbil', 'tankbil2', 'tankbil3', 'tankbil4', 'brandbil7', 'brandbil8',   # 2026-10-31
 }
 MORK_HOG, MORK_LAG = 40, 14
 OMRADE_SKILLNAD = 22   # färgskillnad (Lab) som håller isär två områden

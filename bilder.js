@@ -142,6 +142,13 @@ const ALLA_BILDER = [
     { nr: 122, namn: 'Hjullastare 2', fil: 'hjullastare2', keiws: { x: 608, y: 421, s: 0.5, ytor: [[608, 361]] }, gron: { x: 600, y: 282, s: 0.5, ytor: [[600, 220]] }, rod: { x: 809, y: 381, s: 0.5, ytor: [[809, 319]] } }, // i framrutan
     { nr: 123, namn: 'Hjullastare 3', fil: 'hjullastare3', keiws: { x: 551, y: 384, s: 0.4, ytor: [[551, 336]] }, gron: { x: 391, y: 271, s: 0.5, ytor: [[391, 209]] }, rod: { x: 765, y: 370, s: 0.5, ytor: [[765, 308]] } }, // i framrutan
     { nr: 124, namn: 'Hjullastare 4', fil: 'hjullastare4', keiws: { x: 763, y: 402, s: 0.5, ytor: [[763, 342]] }, gron: { x: 754, y: 279, s: 0.42, ytor: [[754, 226]] }, rod: { x: 534, y: 337, s: 0.5, ytor: [[534, 275]] } }, // i framrutan
+    { nr: 125, namn: 'Brandbil 6', fil: 'brandbil6', keiws: { x: 435, y: 524, s: 0.5, ytor: [[435, 462]] }, gron: { x: 765, y: 315, s: 0.5, ytor: [[765, 253]] }, rod: { x: 204, y: 271, s: 0.5, ytor: [[204, 209]] } }, // i framrutan
+    { nr: 126, namn: 'Tankbil', fil: 'tankbil', keiws: { x: 490, y: 535, s: 0.5, ytor: [[490, 473]] }, gron: { x: 545, y: 271, s: 0.5, ytor: [[545, 209]] }, rod: { x: 336, y: 348, s: 0.5, ytor: [[336, 286]] } }, // i framrutan
+    { nr: 127, namn: 'Tankbil 2', fil: 'tankbil2', keiws: { x: 400, y: 525, s: 0.4, ytor: [[400, 420]] }, gron: { x: 688, y: 359, s: 0.5, ytor: [[688, 297]] }, rod: { x: 1172, y: 315, s: 0.5, ytor: [[1172, 253]] } }, // i framrutan
+    { nr: 128, namn: 'Tankbil 3', fil: 'tankbil3', keiws: { x: 960, y: 538, s: 0.45, ytor: [[960, 440]] }, gron: { x: 435, y: 370, s: 0.5, ytor: [[435, 308]] }, rod: { x: 1172, y: 524, s: 0.5, ytor: [[1172, 462]] } }, // i framrutan
+    { nr: 129, namn: 'Tankbil 4', fil: 'tankbil4', keiws: { x: 970, y: 555, s: 0.45, ytor: [[970, 499]] }, gron: { x: 787, y: 326, s: 0.5, ytor: [[787, 264]] }, rod: { x: 1161, y: 315, s: 0.5, ytor: [[1161, 253]] } }, // i framrutan
+    { nr: 130, namn: 'Brandbil 7', fil: 'brandbil7', keiws: { x: 1007, y: 491, s: 0.5, ytor: [[1007, 429]] }, gron: { x: 754, y: 260, s: 0.5, ytor: [[754, 198]] }, rod: { x: 1260, y: 359, s: 0.5, ytor: [[1260, 297]] } }, // i framrutan
+    { nr: 131, namn: 'Brandbil 8', fil: 'brandbil8', keiws: { x: 1040, y: 545, s: 0.45, ytor: [[1040, 489]] }, gron: { x: 996, y: 348, s: 0.5, ytor: [[996, 286]] }, rod: { x: 358, y: 194, s: 0.5, ytor: [[358, 132]] } }, // i framrutan
 ];
 
 const BORTTAGNA = [1, 2, 3, 5, 24, 44, 45, 48, 49, 51, 53, 55, 56, 57, 58, 59, 60, 61, 62, 63, 65, 66, 67, 68, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 110, 112];
