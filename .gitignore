@@ -1,3 +1,10 @@
 granskning/
 scratch/
 inkorg/
+# Publiceringen (verktyg/slapp.py)
+webb/
+# Android-appen (verktyg/bygg_apk.py)
+node_modules/
+app-webb/
+.wrangler/
+__pycache__/

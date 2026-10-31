@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Pensla</string>
+    <string name="title_activity_main">Pensla</string>
+    <string name="package_name">com.keiws.pensla</string>
+    <string name="custom_url_scheme">com.keiws.pensla</string>
+</resources>

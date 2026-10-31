@@ -20,7 +20,8 @@ färger, inga ljud, inga poäng, inga val att göra.
   färgbilden sveps fram från vänster och keIWs poppar upp, `fargaHela`;
   BÖRJA OM ångrar), de lite mindre **SPARA** (håll 1 s → "HÅLL INNE IGEN
   FÖR ATT SPARA" i 5 s, håll 1 s igen → bilden laddas ner som PNG i
-  bildens storlek till plattans Hämtade filer, `sparaBild`; knappen visar
+  bildens storlek till plattans Hämtade filer, `sparaBild`; i Android-appen
+  i Bilder/Pensla via `SparaPlugin.java`; knappen visar
   SPARAD ✓ en stund) och **BÖRJA OM** (håll 1 s → bilden töms direkt; sedan
   står "HÅLL INNE LÄNGE FÖR ATT NOLLSTÄLLA ALLA BILDER" i 4 s, och håller
   man då i 4 s töms alla bilder, `pictureState`). Håll-logiken
@@ -75,8 +76,7 @@ färger, inga ljud, inga poäng, inga val att göra.
   till tillsammans (`festTid`). FÄRGLÄGG tar fram alla tre utan fest.
 - **Namn:** appen hette Färga fram till v49; repot döptes om till Pensla i
   v50 (den gamla Pages-adressen /Farga/ slutade då fungera). Den lokala
-  mappen heter `Pensla` sedan 2026-10-28 (förut `Farga`). Ingen pensla.keiws.com förrän ägaren
-  säger till.
+  mappen heter `Pensla` sedan 2026-10-28 (förut `Farga`).
 - Bilder (oktober 2026, ny uppsättning): traktor, grävare, sopbil från sidan,
   sopbil snett, traktor 2, två flygplan och två helikoptrar; i v52 kom två
   tåg, två båtar och två stora flygplan (lite mer 3D, se promptmallen); i v55
@@ -102,7 +102,25 @@ färger, inga ljud, inga poäng, inga val att göra.
   gamla bilderna, på himmelsblått. I `ikoner/` finns fler gamla ikoner
   (inte i `ASSETS`). Byts gärna mot något ur de nya bilderna.
 - Hostas via GitHub Pages: `https://isak-wallo.github.io/Pensla/`.
-  **Inget byggsteg** — commit + push är driftsättning.
+  **Inget byggsteg** — commit + push är driftsättning (för Pages).
+
+### pensla.keiws.com (sedan 2026-10-31)
+Den skarpa sidan https://pensla.keiws.com (Cloudflare Workers med statiska
+filer, `wrangler.jsonc`) byts bara när ägaren säger "släpp". Då:
+`python verktyg/slapp.py --skarpt` (tar ASSETS från origin/main, egna
+versionsnummer v1, v2 ... i den släppta sw.js, tagg `slapp-N`). Utan
+`--skarpt` visar skriptet vad som är släppt och vad som är nytt.
+
+### Android-appen (APK, sedan v90)
+Samma upplägg som Kludda: Capacitor-projekt i `android/`,
+`python verktyg/bygg_apk.py` bygger i `%LOCALAPPDATA%\keiws-bygg\pensla`
+(aldrig i Dropbox) och lägger `Claude\keIWspk\Pensla-vNN.apk` (versionCode
+= numret i VERSION i sw.js). Signeras med keIWs nyckel utanför repot
+(keiwsNycklar i ~/.gradle/gradle.properties). I appen (`ANDROID_APP`) visas
+ingen startskärm, ingen dö-yta, ingen service worker; MainActivity döljer
+systemfälten, låser vridningen, fäster appen och bakåt gör ingenting.
+SPARA går via `SparaPlugin.java` (`Capacitor.nativePromise('Spara', 'bild')`)
+till Bilder/Pensla.
 
 ### Arbetsflöde: bara `main`
 Jobba direkt på `main` (inga sidgrenar). Commit-meddelanden på svenska.
