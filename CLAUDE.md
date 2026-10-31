@@ -32,7 +32,7 @@ färger, inga ljud, inga poäng, inga val att göra.
   (ägaren vill ha runt 20 aktiva åt gången). Alla bilder, även inaktiva,
   får keIWs och testas när de läggs in, så vilken som helst kan aktiveras.
   Ägaren väljer på `galleri.html`
-  (https://isak-wallo.github.io/Pensla/galleri.html, inte i `ASSETS`):
+  (https://test.pensla.keiws.com/galleri.html, bara i testmiljön, inte i `ASSETS`):
   konturer och färgbild visas bredvid varandra, kryssa i de aktiva och
   skriv en kommentar vid bilder som behöver kontrolleras; ägaren skickar
   listan (AKTIVA + KONTROLLERA + TA BORT + TA TILLBAKA). Bilder under TA
@@ -101,15 +101,21 @@ färger, inga ljud, inga poäng, inga val att göra.
 - Ikonen (`icon-192.png`, `icon-512.png`, maskable) är dumpern ur en av de
   gamla bilderna, på himmelsblått. I `ikoner/` finns fler gamla ikoner
   (inte i `ASSETS`). Byts gärna mot något ur de nya bilderna.
-- Hostas via GitHub Pages: `https://isak-wallo.github.io/Pensla/`.
-  **Inget byggsteg** — commit + push är driftsättning (för Pages).
 
-### pensla.keiws.com (sedan 2026-10-31)
-Den skarpa sidan https://pensla.keiws.com (Cloudflare Workers med statiska
-filer, `wrangler.jsonc`) byts bara när ägaren säger "släpp". Då:
-`python verktyg/slapp.py --skarpt` (tar ASSETS från origin/main, egna
-versionsnummer v1, v2 ... i den släppta sw.js, tagg `slapp-N`). Utan
-`--skarpt` visar skriptet vad som är släppt och vad som är nytt.
+### Hosting (sedan 2026-10-31, som Flappy keIWs)
+Repot ligger kvar på GitHub, men GitHub Pages används inte längre.
+- **Test:** https://test.pensla.keiws.com (Cloudflare, env `test` i
+  `wrangler.jsonc`, utan sökmotorer). `python verktyg/slapp.py --test`
+  **efter varje push** (tar den pushade koden, VERSION som den står i
+  `sw.js`). Där ligger också galleriet
+  (https://test.pensla.keiws.com/galleri.html) med alla bilder i banken.
+  Testversionen heter "Pensla test" (`slapp.py` byter namnet i
+  manifest.json och index.html), så att båda går att installera.
+- **Skarpt:** https://pensla.keiws.com (`wrangler.jsonc`) byts bara när
+  ägaren säger "släpp": `python verktyg/slapp.py --skarpt` (ASSETS från
+  origin/main, egna versionsnummer v1, v2 ... i den släppta sw.js, tagg
+  `slapp-N`). Inget galleri där. Utan flagga visar skriptet vad som är
+  släppt och vad som är nytt.
 
 ### Android-appen (APK, sedan v90)
 Samma upplägg som Kludda: Capacitor-projekt i `android/`,
@@ -124,8 +130,10 @@ till Bilder/Pensla.
 
 ### Arbetsflöde: bara `main`
 Jobba direkt på `main` (inga sidgrenar). Commit-meddelanden på svenska.
-Ägaren testar från GitHub Pages och förväntar sig att nya versioner ligger
-ute.
+När en ändring är klar: bumpa VERSION, commit, `git push origin main` och
+`python verktyg/slapp.py --test` direkt; ägaren testar på
+https://test.pensla.keiws.com och förväntar sig att nya versioner ligger
+där. Ny APK (`verktyg/bygg_apk.py`) efter varje ny version.
 
 ### VIKTIGT vid uppdatering: bumpa SW-versionen
 `sw.js` har `const VERSION = 'vNN'`. Höj den varje gång filer ändras och

@@ -1,14 +1,21 @@
-"""Släpper Pensla på pensla.keiws.com.
+"""Släpper Pensla på pensla.keiws.com, eller testversionen.
 
-GitHub Pages (https://isak-wallo.github.io/Pensla/) uppdateras vid varje push,
-som förut. pensla.keiws.com byts bara när det här skriptet körs med --skarpt.
+https://test.pensla.keiws.com är testmiljön och publiceras efter varje push
+med --test, med VERSION i sw.js som den är (v90, v91 ...), galleriet
+(galleri.html och alla bilder i banken, även inaktiva) och en robots.txt som
+stänger ute sökmotorerna. Testversionen heter "Pensla test", så att båda går
+att installera.
+
+pensla.keiws.com byts bara när det här skriptet körs med --skarpt. Den skarpa
+sidan har egna versionsnummer: i den släppta sw.js byts VERSION mot
+släppnumret (v1, v2 ...), så installerade appar hämtar den nya versionen.
+Varje släpp märks med en tagg i git (slapp-1, slapp-2 ...).
+
 Skriptet tar appens filer (ASSETS i sw.js, plus sw.js) från den pushade koden
-(origin/main), inte från arbetskopian. Den skarpa sidan har egna versionsnummer:
-i den släppta sw.js byts VERSION mot släppnumret (v1, v2 ...), så installerade
-appar hämtar den nya versionen. Varje släpp märks med en tagg i git (slapp-1,
-slapp-2 ...).
+(origin/main), inte från arbetskopian. Inget annat i repot publiceras.
 
     python verktyg/slapp.py            # visar vad som är släppt och vad som är nytt
+    python verktyg/slapp.py --test     # publicerar testversionen (efter varje push)
     python verktyg/slapp.py --skarpt   # släpper origin/main
 
 Kräver Node och att man loggat in en gång med `npx wrangler login`.
@@ -42,7 +49,7 @@ def version(ref):
 def status():
     git('fetch', '-q', '--tags', 'origin')
     nr, tagg = slapp()
-    print('GitHub Pages:', version('origin/main'))
+    print('test.pensla.keiws.com:', version('origin/main'))
     if not tagg:
         print('pensla.keiws.com: inget släppt än')
         return
@@ -51,19 +58,36 @@ def status():
 
 
 def bygg(nr):
-    """webb/ med appens filer från origin/main och VERSION = vNR."""
+    """webb/ med appens filer från origin/main och VERSION = vNR (None: testversionen,
+    med galleriet, VERSION som den är och inga sökmotorer)."""
     shutil.rmtree(WEBB, ignore_errors=True)
     sw = git('show', 'origin/main:sw.js')
-    assets = re.findall(r"'\./([^']*)'", re.search(r'const ASSETS = \[(.*?)\];', sw, re.S).group(1))
-    for fil in [f for f in assets if f] + ['sw.js']:
+    filer = [f for f in re.findall(r"'\./([^']*)'", re.search(r'const ASSETS = \[(.*?)\];', sw, re.S).group(1)) if f]
+    filer.append('sw.js')
+    if nr is None:
+        filer += ['galleri.html'] + git('ls-tree', '-r', '--name-only', 'origin/main', 'bilder/').split('\n')
+    for fil in dict.fromkeys(filer):
         mal = os.path.join(WEBB, fil)
         os.makedirs(os.path.dirname(mal), exist_ok=True)
         data = subprocess.run(['git', 'show', 'origin/main:' + fil], cwd=ROT, check=True,
                               capture_output=True).stdout
-        if fil == 'sw.js':
+        if fil == 'sw.js' and nr is not None:
             data = re.sub(rb"const VERSION = '[^']*'", b"const VERSION = 'v%d'" % nr, data, count=1)
         with open(mal, 'wb') as f:
             f.write(data)
+    if nr is None:
+        with open(os.path.join(WEBB, 'robots.txt'), 'w', encoding='utf-8', newline='\n') as f:
+            f.write('User-agent: *\nDisallow: /\n')
+        # Eget namn, så att testversionen och den skarpa går att skilja åt när båda är installerade
+        for fil, fran, till in [('manifest.json', '"name": "Pensla"', '"name": "Pensla test"'),
+                                ('manifest.json', '"short_name": "Pensla"', '"short_name": "Pensla test"'),
+                                ('index.html', '<title>Pensla</title>', '<title>Pensla test</title>')]:
+            with open(os.path.join(WEBB, fil), encoding='utf-8') as f:
+                text = f.read()
+            if fran not in text:
+                sys.exit('Hittar inte %s i %s' % (fran, fil))
+            with open(os.path.join(WEBB, fil), 'w', encoding='utf-8', newline='') as f:
+                f.write(text.replace(fran, till, 1))
 
 
 def skarpt():
@@ -82,5 +106,17 @@ def skarpt():
     print('Släppt: v%d på https://pensla.keiws.com (%s, från %s)' % (nr, tagg, version('origin/main')))
 
 
+def test():
+    git('fetch', '-q', 'origin')
+    bygg(None)
+    try:
+        subprocess.run('npx -y wrangler@4 deploy --env test', shell=True, cwd=ROT, check=True)
+    finally:
+        shutil.rmtree(WEBB, ignore_errors=True)
+    print('Testversionen: %s på https://test.pensla.keiws.com (galleriet: '
+          'https://test.pensla.keiws.com/galleri.html)' % version('origin/main'))
+
+
 if __name__ == '__main__':
-    skarpt() if '--skarpt' in sys.argv else status()
+    sys.stdout.reconfigure(encoding='utf-8')
+    skarpt() if '--skarpt' in sys.argv else test() if '--test' in sys.argv else status()

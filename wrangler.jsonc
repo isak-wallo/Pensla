@@ -1,11 +1,20 @@
-// Pensla på pensla.keiws.com (Cloudflare Workers med statiska filer).
-// Publiceras med verktyg/slapp.py, som bygger webb/ med appens filer
-// (ASSETS i sw.js) från den pushade koden.
+// Skarpa versionen på pensla.keiws.com (Cloudflare Workers med statiska
+// filer), och testversionen med galleriet på test.pensla.keiws.com (env
+// test). Publiceras bara med verktyg/slapp.py, som bygger webb/ med appens
+// filer (ASSETS i sw.js) från den pushade koden.
 {
   "name": "pensla",
   "compatibility_date": "2026-10-01",
   "assets": { "directory": "./webb" },
   "routes": [
     { "pattern": "pensla.keiws.com", "custom_domain": true }
-  ]
+  ],
+  "env": {
+    "test": {
+      "assets": { "directory": "./webb" },
+      "routes": [
+        { "pattern": "test.pensla.keiws.com", "custom_domain": true }
+      ]
+    }
+  }
 }

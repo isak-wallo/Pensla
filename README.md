@@ -7,7 +7,7 @@ där man målar.
 Syskon-app till [Kludda](https://github.com/isak-wallo/Kludda) (fri ritning) och
 [Poppa](https://github.com/isak-wallo/Poppa).
 
-Öppna **https://isak-wallo.github.io/Pensla/** i Chrome på plattan och välj
+Öppna **https://pensla.keiws.com/** i Chrome på plattan och välj
 "Lägg till på hemskärm" för att installera den (fungerar sedan offline).
 
 Bilder: traktorer, grävare, sopbilar, flygplan, helikoptrar, tåg, båtar,
