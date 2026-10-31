@@ -103,7 +103,7 @@ färger, inga ljud, inga poäng, inga val att göra.
   (inte i `ASSETS`). Byts gärna mot något ur de nya bilderna.
 
 ### Hosting (sedan 2026-10-31, som Flappy keIWs)
-Repot ligger kvar på GitHub, men GitHub Pages används inte längre.
+Repot ligger kvar på GitHub, men GitHub Pages är avstängt (2026-10-31).
 - **Test:** https://test.pensla.keiws.com (Cloudflare, env `test` i
   `wrangler.jsonc`, utan sökmotorer). `python verktyg/slapp.py --test`
   **efter varje push** (tar den pushade koden, VERSION som den står i
