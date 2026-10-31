@@ -98,10 +98,20 @@
 <script src="bilder.js?farsk"></script>
 <script>
     // Öppnas galleriet från Pensla test (GALLERI-knappen) gäller appens
-    // landskapslås här också; släpp det så att plattan kan vridas.
-    if (screen.orientation && screen.orientation.lock) {
-        screen.orientation.lock('any').catch(() => {});
+    // landskapslås här också; släpp det så att plattan kan vridas. Nekas
+    // låset (kräver ibland helskärm) görs ett nytt försök i helskärm vid
+    // första trycket, bara i den installerade appen.
+    let vridbar = false;
+    function slappLas() {
+        if (!screen.orientation || !screen.orientation.lock) return Promise.resolve();
+        return screen.orientation.lock('any').then(() => { vridbar = true; });
     }
+    slappLas().catch(() => {});
+    window.addEventListener('touchend', () => {
+        const iApp = matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
+        if (vridbar || !iApp || !document.fullscreenEnabled || document.fullscreenElement) return;
+        document.documentElement.requestFullscreen().then(slappLas).catch(() => {});
+    }, { passive: true });
 
     // Galleri för att välja vilka bilder som ska vara aktiva i appen.
     // Alla bilder i ALLA_BILDER visas, i tre flikar efter hur de står i
