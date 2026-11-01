@@ -63,6 +63,9 @@ FARGOMRADEN = {
     'glassbil', 'glassbil2', 'glassbil3', 'glassbil4', 'glassbil5',
     'skordetroska2', 'skordetroska3', 'skordetroska4', 'skordetroska5',
     'skordetroska6', 'skordetroska7', 'skordetroska8', 'skordetroska9', 'skordetroska10', 'skordetroska11',
+    'tag3', 'tag4', 'tag5', 'tag6', 'tag7', 'tag8', 'tag9',   # 2026-11-01
+    'helikopter4', 'helikopter5', 'helikopter6', 'helikopter7', 'helikopter8', 'helikopter9', 'helikopter10',
+    'luftballong', 'luftballong2', 'luftballong3', 'luftballong4', 'luftballong5', 'luftballong6', 'luftballong7',
 }
 MORK_HOG, MORK_LAG = 40, 14
 OMRADE_SKILLNAD = 22   # färgskillnad (Lab) som håller isär två områden

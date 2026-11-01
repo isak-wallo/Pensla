@@ -158,15 +158,16 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 10: Tåg → `inkorg/tag3.png`
+## Bild 10: Tåg → `inkorg/tag10.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a modern passenger train with a locomotive and two carriages, driving along the tracks through the countryside, seen from the side at a slight three-quarter angle. Realistic proportions: a streamlined train with a big front windshield, a row of big side windows on each carriage, doors, wheels hidden under a skirt, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole train visible with free space all around.
 
 Style rules (important):
-- Bold, clean, smooth outlines in near-black around EVERY shape, all the same thickness, in the foreground AND the background: hills, trees, the track, the embankment, the signal, clouds, the sun and each sun ray all get the same bold outline. No thin, light or colored lines anywhere.
+- Bold, clean, smooth outlines in near-black around EVERY shape, all the same thickness, in the foreground AND the background: hills, trees, the track, the embankment, the signal, the overhead line and its masts, clouds, the sun and each sun ray all get the same bold outline. No thin, light or colored lines anywhere.
 - Every area must be fully closed by outlines, no gaps. Stripes along the train are separate areas with their own outlines.
 - The track is two bold rails on one plain gravel embankment with only a few wide sleepers, no single stones.
+- Above the track runs ONE bold overhead power line, held up by two or three simple masts beside the track, and the pantograph on the roof reaches up and touches that line.
 - Only the outlines are black. All fill colors are lighter: the wheels, the pantograph and dark parts are medium gray, never black or dark navy.
 - Mostly flat colors: each area has one main color with at most a very soft, light highlight. No strong gradients, no shading bands, no dark shadows along outlines, no shadows on the ground under the vehicle.
 - A bit more detail than a toy (headlights, a pantograph on the roof, door outlines, a colored stripe along the side), but no tiny enclosed areas. No grilles with many slots, no ribbed or accordion details, no panel lines, bolts or rivets, no tiny chain links.
@@ -190,42 +191,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 12: Helikopter → `inkorg/helikopter4.png`
-
-```
-A playful but slightly more realistic picture-book illustration for small children: a rescue helicopter flying low over a green meadow by a lake, seen from the side at a slight three-quarter angle. Realistic proportions: a helicopter with a big rounded cockpit windshield, a side window and a sliding door, a main rotor with four wide blades, a tail boom with a small tail rotor, two landing skids, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole helicopter and its rotor visible with free space all around.
-
-Style rules (important):
-- Bold, clean, smooth outlines in near-black around EVERY shape, all the same thickness, in the foreground AND the background: the meadow, the lake, hills, trees, clouds, the sun and each sun ray all get the same bold outline. No thin, light or colored lines anywhere.
-- Every area must be fully closed by outlines, no gaps. Stripes along the helicopter are separate areas with their own outlines.
-- The water is one large calm area in soft blue with a few bold outlined wave lines. No reflections, no foam, no splashes, no sparkles.
-- The rotor blades are solid shapes, no motion blur.
-- Only the outlines are black. All fill colors are lighter: the skids, rotor blades and dark parts are medium gray, never black or dark navy.
-- Mostly flat colors: each area has one main color with at most a very soft, light highlight. No strong gradients, no shading bands, no dark shadows along outlines, no shadows on the ground under the aircraft.
-- A bit more detail than a toy (a light under the body, a colored stripe along the body, a door handle), but no tiny enclosed areas. No grilles with many slots, no ribbed or accordion details, no panel lines, bolts or rivets, no tiny chain links.
-- Background: soft rolling green hills, a small lake, a big rounded tree, light blue sky with a few big puffy clouds and a sun. Keep background objects large and simple, no other vehicles.
-- No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
-```
-
-## Bild 13: Luftballong → `inkorg/luftballong.png`
-
-```
-A playful but slightly more realistic picture-book illustration for small children: a big hot air balloon floating gently over green hills and a small village on a sunny summer day, seen from slightly below. Realistic proportions: a round hot air balloon with a basket hanging under it on four ropes, a small burner between the ropes, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole balloon and its basket visible with free space all around.
-
-Style rules (important):
-- Bold, clean, smooth outlines in near-black around EVERY shape, all the same thickness, in the foreground AND the background: the hills, the village houses, trees, the river, clouds, the sun and each sun ray all get the same bold outline. No thin, light or colored lines anywhere.
-- Every area must be fully closed by outlines, no gaps. The six or seven wide vertical stripes on the balloon (each stripe its own area, in bright alternating colors) are separate areas with their own outlines.
-- The basket is one smooth box with a rounded rim, no woven pattern, no wicker texture.
-- The ropes are a few bold single lines, no net.
-- No flames, no fire, the burner is off.
-- Only the outlines are black. All fill colors are lighter: the burner and dark parts are medium gray, never black or dark navy.
-- Mostly flat colors: each area has one main color with at most a very soft, light highlight. No strong gradients, no shading bands, no dark shadows along outlines, no shadows on the ground under the balloon.
-- A bit more detail than a toy (a band around the bottom of the balloon, the ropes, a small flag on the basket), but no tiny enclosed areas. No grilles with many slots, no ribbed or accordion details, no panel lines, bolts or rivets, no tiny chain links.
-- Background: soft rolling green hills far below, a few small simple houses with red roofs, a winding river, big rounded trees, light blue sky with a few big puffy clouds and a sun. Keep background objects large and simple, no other vehicles.
-- No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
-```
-
-## Bild 14: Raket → `inkorg/raket4.png`
+## Bild 12: Raket → `inkorg/raket4.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a big space rocket standing on its launch pad, ready to launch, seen at a slight three-quarter angle. Realistic proportions: a tall rocket with a pointed nose, a few round windows, two side boosters, big fins, standing on a simple launch tower, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole rocket and the launch tower visible with free space all around.
@@ -242,7 +208,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 15: Båt → `inkorg/bat3.png`
+## Bild 13: Båt → `inkorg/bat3.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a small motorboat with a cabin driving across a calm lake, seen from the side at a slight three-quarter angle. Realistic proportions: a small motorboat with a cabin with a big windshield and round side windows, a railing with only a few posts, a small flag, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole boat visible with free space all around.
@@ -258,7 +224,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 16: Segelbåt → `inkorg/segelbat3.png`
+## Bild 14: Segelbåt → `inkorg/segelbat3.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a sailboat sailing on a calm lake on a sunny day, seen from the side at a slight three-quarter angle. Realistic proportions: a sailboat with a big white main sail and a smaller front sail, a tall mast, a hull with a small cabin and round windows, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole boat and its sails visible with free space all around.
@@ -275,7 +241,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 17: Räddningsbåt → `inkorg/raddningsbat2.png`
+## Bild 15: Räddningsbåt → `inkorg/raddningsbat2.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a rescue boat speeding across the sea near the coast, seen from the side at a slight three-quarter angle. Realistic proportions: a rescue boat with a cabin with a big windshield and side windows, a short mast with a blue light, a railing with only a few posts, a life ring, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole boat visible with free space all around.
@@ -291,7 +257,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 18: Lastfartyg → `inkorg/lastfartyg2.png`
+## Bild 16: Lastfartyg → `inkorg/lastfartyg2.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a cargo ship loaded with colorful containers sailing on the sea near a harbor, seen from the side at a slight three-quarter angle. Realistic proportions: a cargo ship with a long hull, a tall white bridge with a row of big windows at the back, two rows of large containers (no more than about ten containers), a funnel, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole ship visible with free space all around.
