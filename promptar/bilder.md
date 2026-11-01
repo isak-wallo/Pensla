@@ -78,26 +78,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 5: Skördetröska → `inkorg/skordetroska6.png`
-
-```
-A playful but slightly more realistic picture-book illustration for small children: a big green combine harvester harvesting a golden wheat field on a sunny summer day, seen from the side at a slight three-quarter angle. In front of the harvester the wheat is still standing, behind it the field is already cut. Realistic proportions: a combine harvester with a high cab with big windows on top of a big boxy body, a wide cutting header low in front, an unloading pipe folded along the side, big front wheels and smaller back wheels, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole combine harvester visible with free space all around.
-
-Style rules (important):
-- Bold, clean, smooth outlines in near-black around EVERY shape, all the same thickness, in the foreground AND the background: the edge of the standing wheat, the cut field, the hills, the tree, the barn, clouds, the sun and each sun ray all get the same bold outline. No thin, light or colored lines anywhere.
-- Every area must be fully closed by outlines, no gaps. Stripes on the harvester, the reel and the parts of the header are separate areas with their own outlines.
-- The standing wheat is ONE large smooth area of golden yellow with a smooth, gently wavy top edge, no lines inside it at all: no wave lines, no single straws, no ears of wheat, no rows.
-- The cut field behind the harvester is ONE large smooth area of pale beige, no stubble, no lines, no rows, no tracks.
-- No flying straw, chaff, dust or grain anywhere, nothing coming out of the harvester.
-- The header is one wide smooth box with a big reel above it drawn as a simple cylinder with only four wide flat paddles, no teeth, no thin bars, no spikes, no auger spiral.
-- Only the outlines are black. All fill colors are lighter: tires and dark parts are medium gray, never black or dark navy.
-- Mostly flat colors: each area has one main color with at most a very soft, light highlight. No strong gradients, no shading bands, no dark shadows along outlines, no shadows on the ground under the vehicle.
-- A bit more detail than a toy (a beacon on the cab roof, side mirrors, two headlights, a ladder up to the cab, one wide colored stripe along the body), but no tiny enclosed areas. No grilles with many slots, no ribbed or accordion details, no panel lines, bolts or rivets, no tiny chain links.
-- Background: soft rolling green hills, a red barn with a big door, one big rounded tree, light blue sky with a few big puffy clouds and a sun. Keep background objects large and simple, no other vehicles.
-- No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
-```
-
-## Bild 6: Polisbil → `inkorg/polisbil6.png`
+## Bild 5: Polisbil → `inkorg/polisbil6.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a police car driving along a street in a small town, seen from the side at a slight three-quarter angle. Realistic proportions: a station wagon police car with a big windshield and big side windows, a blue light bar on the roof, four wheels, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole car visible with free space all around.
@@ -113,7 +94,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 7: Ambulans → `inkorg/ambulans6.png`
+## Bild 6: Ambulans → `inkorg/ambulans6.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: an ambulance driving along a street in a small town on its way to a small hospital, seen from the side at a slight three-quarter angle. Realistic proportions: a van-shaped ambulance with a cab with a big windshield and side window, a tall box body with a back door and one big side window, blue lights on the roof, four wheels, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole ambulance visible with free space all around.
@@ -129,7 +110,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 8: Sopbil → `inkorg/sopbil8.png`
+## Bild 7: Sopbil → `inkorg/sopbil8.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a garbage truck stopping by two wheelie bins on a street in a small town, seen from the side at a slight three-quarter angle. Realistic proportions: a garbage truck with a cab with a big windshield and side window, a big rounded container body, a lifting arm at the back, three big wheels on each side, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole truck and the bins visible with free space all around.
@@ -145,7 +126,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 9: Postbil → `inkorg/postbil2.png`
+## Bild 8: Postbil → `inkorg/postbil2.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a small yellow mail van driving along a street in a small town, with a few parcels visible through the back window, seen from the side at a slight three-quarter angle. Realistic proportions: a small delivery van with a big windshield, a side window, a sliding side door, four wheels, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole van visible with free space all around.
@@ -161,7 +142,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 10: Buss → `inkorg/buss4.png`
+## Bild 9: Buss → `inkorg/buss4.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a city bus stopping at a bus stop on a street in a small town, seen from the side at a slight three-quarter angle. Realistic proportions: a long city bus with a big windshield, a row of four or five big side windows, two doors, four wheels, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole bus visible with free space all around.
@@ -177,7 +158,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 11: Tåg → `inkorg/tag3.png`
+## Bild 10: Tåg → `inkorg/tag3.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a modern passenger train with a locomotive and two carriages, driving along the tracks through the countryside, seen from the side at a slight three-quarter angle. Realistic proportions: a streamlined train with a big front windshield, a row of big side windows on each carriage, doors, wheels hidden under a skirt, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole train visible with free space all around.
@@ -193,7 +174,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 12: Litet flygplan → `inkorg/flygplan7.png`
+## Bild 11: Litet flygplan → `inkorg/flygplan7.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a small propeller airplane standing on a grass airfield, ready for takeoff, seen from the side at a slight three-quarter angle. Realistic proportions: a small high-wing airplane with a big cockpit windshield and side window, a propeller with two blades, a tail fin, three wheels, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole airplane visible with free space all around.
@@ -209,7 +190,7 @@ Style rules (important):
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
-## Bild 13: Helikopter → `inkorg/helikopter4.png`
+## Bild 12: Helikopter → `inkorg/helikopter4.png`
 
 ```
 A playful but slightly more realistic picture-book illustration for small children: a rescue helicopter flying low over a green meadow by a lake, seen from the side at a slight three-quarter angle. Realistic proportions: a helicopter with a big rounded cockpit windshield, a side window and a sliding door, a main rotor with four wide blades, a tail boom with a small tail rotor, two landing skids, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole helicopter and its rotor visible with free space all around.
@@ -223,6 +204,24 @@ Style rules (important):
 - Mostly flat colors: each area has one main color with at most a very soft, light highlight. No strong gradients, no shading bands, no dark shadows along outlines, no shadows on the ground under the aircraft.
 - A bit more detail than a toy (a light under the body, a colored stripe along the body, a door handle), but no tiny enclosed areas. No grilles with many slots, no ribbed or accordion details, no panel lines, bolts or rivets, no tiny chain links.
 - Background: soft rolling green hills, a small lake, a big rounded tree, light blue sky with a few big puffy clouds and a sun. Keep background objects large and simple, no other vehicles.
+- No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
+```
+
+## Bild 13: Luftballong → `inkorg/luftballong.png`
+
+```
+A playful but slightly more realistic picture-book illustration for small children: a big hot air balloon floating gently over green hills and a small village on a sunny summer day, seen from slightly below. Realistic proportions: a round hot air balloon with a basket hanging under it on four ropes, a small burner between the ropes, but still friendly and softly rounded, not a toy. Landscape format 3:2, wider than tall, the whole balloon and its basket visible with free space all around.
+
+Style rules (important):
+- Bold, clean, smooth outlines in near-black around EVERY shape, all the same thickness, in the foreground AND the background: the hills, the village houses, trees, the river, clouds, the sun and each sun ray all get the same bold outline. No thin, light or colored lines anywhere.
+- Every area must be fully closed by outlines, no gaps. The six or seven wide vertical stripes on the balloon (each stripe its own area, in bright alternating colors) are separate areas with their own outlines.
+- The basket is one smooth box with a rounded rim, no woven pattern, no wicker texture.
+- The ropes are a few bold single lines, no net.
+- No flames, no fire, the burner is off.
+- Only the outlines are black. All fill colors are lighter: the burner and dark parts are medium gray, never black or dark navy.
+- Mostly flat colors: each area has one main color with at most a very soft, light highlight. No strong gradients, no shading bands, no dark shadows along outlines, no shadows on the ground under the balloon.
+- A bit more detail than a toy (a band around the bottom of the balloon, the ropes, a small flag on the basket), but no tiny enclosed areas. No grilles with many slots, no ribbed or accordion details, no panel lines, bolts or rivets, no tiny chain links.
+- Background: soft rolling green hills far below, a few small simple houses with red roofs, a winding river, big rounded trees, light blue sky with a few big puffy clouds and a sun. Keep background objects large and simple, no other vehicles.
 - No people, no animals, no text, no letters, no numbers, no logos, no frame, no signature, no paper texture.
 ```
 
