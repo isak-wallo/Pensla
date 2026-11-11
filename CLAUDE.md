@@ -24,7 +24,7 @@ färger, inga ljud, inga poäng, inga val att göra.
   i Bilder/Pensla via `SparaPlugin.java`; knappen visar
   SPARAD ✓ en stund) och **BÖRJA OM** (håll 1 s → bilden töms direkt; sedan
   står "HÅLL INNE LÄNGE FÖR ATT NOLLSTÄLLA ALLA BILDER" i 4 s, och håller
-  man då i 4 s töms alla bilder, `pictureState`). Håll-logiken
+  man då i 4 s töms alla bilder, `glomAllt`). Håll-logiken
   (`startHold`/`holdEnd`) delas av de tre. Ett för kort tryck visar
   "HÅLL INNE FÖR ATT …" i 5 s, som i Kludda.
 - **Bildbanken:** alla bilder står med fast löpnummer i `bilder.js`
@@ -65,8 +65,27 @@ färger, inga ljud, inga poäng, inga val att göra.
   keIWs: ge då flera punkter inne i rutan.
 - Bildernas ordning blandas varje gång appen startar (v87, i `PICTURES`)
   men ligger fast medan den är igång, så ◀ ▶ går fram och tillbaka.
-- Varje bild minns det man målat så länge appen är öppen
-  (`pictureState`/`loadPicture`).
+- **Det målade sparas i plattan** (v104), även när appen stängs eller en
+  ny version laddas. Det målade är alltid färgbildens egna pixlar, så
+  varje bild minns bara VILKA pixlar som är målade: en bit per pixel
+  (`mask`, 135 kB per bild) och vilka kompisar som är hittade. Allt ligger
+  i `sparade` (nyckel = bildens fasta nr) och skrivs till IndexedDB
+  (databasen `pensla`, lagret `bilder`) en stund efter en ändring
+  (`sparaSnart`, inte mitt i ett penseldrag) och direkt när appen döljs
+  eller man byter bild (`sparaNu`). `loadPicture` lägger tillbaka det
+  sparade ur färgbilden. BÖRJA OM tar bort bildens minne, nollställ alla
+  tar bort allt (`glomAllt`). Appen börjar på bilden som visades sist om
+  den är målad (`pensla-senast` i localStorage), annars på en slumpad som
+  förut. Första bilden visas när det sparade är inläst (`lasSparat`,
+  väntar högst `DB_VANTA_MS`). Utan IndexedDB fungerar appen som förut
+  (minns så länge den är öppen). Gäller även Android-appen.
+- **Ny version** (v104, som i Kludda): appen letar efter en ny version när
+  man kommer tillbaka till den och var tionde minut (`UPPDATERA_VAR`), men
+  laddar inte om mitt i målandet utan när appen döljs eller startskärmen
+  visas, och sparar det målade först (`nyVersion`/`laddaOmOmNy`).
+  `sw.js` hämtar inte med `cache: 'reload'` vid installationen: Cloudflare
+  svarar med `max-age=0, must-revalidate`, så filerna kontrolleras ändå
+  mot servern, och med 168 bildfiler vore det dyrt att hämta om allt.
 - **keIWs** (den lilla blå klossfiguren) gömmer sig i varje bild, som krypet
   i Richard Scarrys böcker. Han syns inte från början; när man målat
   `KEIWS_TRAFF` pixlar där han är poppar han upp

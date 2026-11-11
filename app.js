@@ -418,6 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (k.hittad) return;
         k.hittad = true;
         k.start = performance.now();
+        sparaSnart();
         requestRender();
     }
 
@@ -481,10 +482,125 @@ document.addEventListener('DOMContentLoaded', () => {
         return ror;
     }
 
-    // Varje bild minns det man målat medan appen är öppen, så man kan
-    // bläddra fram och tillbaka utan att förlora något.
-    const pictureState = [];
+    // --- Det målade sparas i plattan ---
+    // Varje bild minns det man målat, även när appen stängs eller en ny
+    // version laddas (som teckningen i Kludda). Det målade är alltid
+    // färgbildens egna pixlar, så det räcker att minnas VILKA pixlar som är
+    // målade: en bit per pixel (`mask`, 135 kB för 1200 × 900) och vilka
+    // kompisar som är hittade. `sparade` har alla bilders minne (nyckel =
+    // bildens fasta nr) och skrivs till IndexedDB en stund efter en ändring
+    // (SPARA_EFTER_MS, men inte mitt i ett penseldrag) och direkt när appen
+    // döljs eller man byter bild. BÖRJA OM tömmer bildens minne.
+    const DB_NAMN = 'pensla';
+    const DB_LAGER = 'bilder';
+    const DB_VANTA_MS = 2000;                // längre än så väntar starten inte på det sparade
+    const SENAST_NYCKEL = 'pensla-senast';   // nr på bilden som visades sist (localStorage)
+    const SPARA_EFTER_MS = 1500;
+    const sparade = new Map();   // nr -> { nr, w, mask, hittade }
+    let db = null;
+    let andrad = false;          // bilden som visas är ändrad sedan den sparades
+    let minnsTimer = null;
+    let uppskjutet = 0;          // så många gånger sparandet väntat på att fingret ska lyftas
+    let skrivs = Promise.resolve();   // den senaste skrivningen till plattan
+    let startad = false;         // det sparade är inläst och första bilden visas
     let pictureLoaded = false;
+
+    // Läser in allt sparat. Svarar alltid (även utan IndexedDB, och senast
+    // efter DB_VANTA_MS), så att appen startar ändå.
+    function lasSparat() {
+        return new Promise(resolve => {
+            const vanta = setTimeout(resolve, DB_VANTA_MS);
+            const svara = () => { clearTimeout(vanta); resolve(); };
+            try {
+                const q = indexedDB.open(DB_NAMN, 1);
+                q.onupgradeneeded = () => q.result.createObjectStore(DB_LAGER, { keyPath: 'nr' });
+                q.onerror = q.onblocked = svara;
+                q.onsuccess = () => {
+                    db = q.result;
+                    const alla = db.transaction(DB_LAGER).objectStore(DB_LAGER).getAll();
+                    alla.onsuccess = () => {
+                        alla.result.forEach(p => { if (!sparade.has(p.nr)) sparade.set(p.nr, p); });
+                        svara();
+                    };
+                    alla.onerror = svara;
+                };
+            } catch (e) { svara(); }
+        });
+    }
+
+    // För över bilden som visas till `sparade` (en omålad bild utan hittade
+    // kompisar tas bort därifrån). Returnerar bildens nr.
+    function minns() {
+        const nr = PICTURES[currentPicture].nr;
+        const n = PAPER_W * PAPER_H;
+        const mask = new Uint8Array((n + 7) >> 3);
+        let malat = false;
+        for (let i = 0; i < n; i++) {
+            if (fillPx[i] !== PAPER) { mask[i >> 3] |= 1 << (i & 7); malat = true; }
+        }
+        const hittade = kompisar.map(k => k.hittad);
+        if (malat || hittade.some(h => h)) sparade.set(nr, { nr, w: PAPER_W, mask, hittade });
+        else sparade.delete(nr);
+        return nr;
+    }
+
+    // Skriver bildens minne till plattan (eller tar bort det).
+    function skriv(nr) {
+        return new Promise(resolve => {
+            if (!db) { resolve(); return; }
+            try {
+                const tx = db.transaction(DB_LAGER, 'readwrite');
+                const p = sparade.get(nr);
+                if (p) tx.objectStore(DB_LAGER).put(p);
+                else tx.objectStore(DB_LAGER).delete(nr);
+                tx.oncomplete = tx.onerror = tx.onabort = () => resolve();
+            } catch (e) { resolve(); }
+        });
+    }
+
+    // Direkt (när appen döljs, man byter bild eller en ny version ska
+    // laddas). Löftet är klart när det som sparats sist är skrivet.
+    function sparaNu() {
+        if (minnsTimer) { clearTimeout(minnsTimer); minnsTimer = null; }
+        uppskjutet = 0;
+        if (andrad && pictureLoaded) {
+            andrad = false;
+            skrivs = skriv(minns());
+        }
+        return skrivs;
+    }
+
+    // En stund efter en ändring. Mitt i ett penseldrag (eller FÄRGLÄGG)
+    // väntar det lite till, så att det inte hackar på en gammal platta —
+    // men inte hur länge som helst.
+    function sparaSnart() {
+        andrad = true;
+        if (minnsTimer) return;
+        minnsTimer = setTimeout(() => {
+            minnsTimer = null;
+            if ((fingers.size || mouseLast || fargaAnim) && ++uppskjutet < 6) sparaSnart();
+            else sparaNu();
+        }, SPARA_EFTER_MS);
+    }
+
+    // NOLLSTÄLL ALLA: allt sparat tas bort.
+    function glomAllt() {
+        sparade.clear();
+        andrad = false;
+        if (!db) return;
+        try { db.transaction(DB_LAGER, 'readwrite').objectStore(DB_LAGER).clear(); } catch (e) { /* utan lagring */ }
+    }
+
+    // En ny version (service workern längst ner) laddas inte mitt i
+    // målandet utan när appen döljs eller startskärmen visas, och det
+    // målade sparas först (som i Kludda).
+    let nyVersion = false;
+
+    function laddaOmOmNy() {
+        if (!nyVersion) return;
+        nyVersion = false;
+        sparaNu().then(() => window.location.reload());
+    }
 
     function loadPicture(index) {
         const pic = PICTURES[index];
@@ -497,11 +613,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         vantarPaBild = -1;
         stoppaFarga();
-        if (pictureLoaded) {
-            pictureState[currentPicture] = { fill: fillPx.slice(), hittade: kompisar.map(k => k.hittad) };
-        }
+        if (pictureLoaded) sparaNu();
         pictureLoaded = true;
         currentPicture = index;
+        try { localStorage.setItem(SENAST_NYCKEL, pic.nr); } catch (e) { /* utan lagring */ }
         setPaperSize(Math.round(PAPER_H * pic.fimg.naturalWidth / pic.fimg.naturalHeight));
         lCtx.setTransform(1, 0, 0, 1, 0, 0);
         lCtx.clearRect(0, 0, PAPER_W, PAPER_H);
@@ -511,10 +626,15 @@ document.addEventListener('DOMContentLoaded', () => {
         cCtx.drawImage(pic.fimg, 0, 0, PAPER_W, PAPER_H);
         labelRegions();
         franFargbild();
-        const saved = pictureState[index];
-        prepKeiws(PICTURES[index], saved && saved.hittade);
+        // Det sparade gäller bara om bilden har samma bredd som då
+        let saved = sparade.get(pic.nr);
+        if (saved && saved.w !== PAPER_W) saved = null;
+        prepKeiws(pic, saved && saved.hittade);
         if (saved) {
-            fillPx.set(saved.fill);
+            const mask = saved.mask;
+            for (let i = 0, n = PAPER_W * PAPER_H; i < n; i++) {
+                fillPx[i] = (mask[i >> 3] >> (i & 7)) & 1 ? facitPx[i] : PAPER;
+            }
         } else {
             fillPx.fill(PAPER);
         }
@@ -529,6 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function changePicture(step) {
+        if (!startad) return;
         const bas = vantarPaBild >= 0 ? vantarPaBild : currentPicture;
         loadPicture((bas + step + PICTURES.length) % PICTURES.length);
     }
@@ -650,6 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function fargaHela() {
         stoppaFarga();
         if (clearState || saveState) aterstallKnappar();
+        sparaSnart();
         const start = performance.now();
         let x = 0;
         const steg = now => {
@@ -685,6 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Efter varje penseldrag: har han målats fram?
     function checkTouched() {
+        sparaSnart();
         kollaKompisar();
         if (clearState || saveState) aterstallKnappar();
         requestRender();
@@ -796,7 +919,7 @@ document.addEventListener('DOMContentLoaded', () => {
             restartBtn.classList.add('confirm', 'lang');
             clearTimer = setTimeout(aterstallKnappar, ALLA_MS);
         } else {
-            pictureState.length = 0;
+            glomAllt();
             tomBild();
             aterstallKnappar();
             restartBtn.textContent = 'ALLA NOLLSTÄLLDA ✓';
@@ -812,6 +935,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fillPx.fill(PAPER);
         fCtx.putImageData(fillImage, 0, 0);
         dirty = null;
+        sparaSnart();
         requestRender();
     }
 
@@ -860,6 +984,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function showStartOverlay() {
         startOverlay.style.display = 'flex';
         aterstallKnappar();
+        laddaOmOmNy();
     }
 
     // --- Händelsebindningar (tidigare inline i HTML) ---
@@ -1057,26 +1182,49 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', debouncedLayout);
     window.addEventListener('orientationchange', debouncedLayout);
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden) aterstallKnappar();
+        if (!document.hidden) return;
+        aterstallKnappar();
+        sparaNu();
+        laddaOmOmNy();
     });
+    window.addEventListener('pagehide', sparaNu);
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', debouncedLayout);
         window.visualViewport.addEventListener('scroll', debouncedLayout);
     }
 
-    loadPicture(0);
     applyLayout();
     setTimeout(applyLayout, 50);
 
-    // Registrera service worker
+    // Första bilden visas när det sparade är inläst. Var bilden som visades
+    // sist målad börjar appen på den (resten ligger kvar i blandad ordning).
+    lasSparat().then(() => {
+        let senast = 0;
+        try { senast = +localStorage.getItem(SENAST_NYCKEL); } catch (e) { /* utan lagring */ }
+        const i = PICTURES.findIndex(p => p.nr === senast);
+        if (i > 0 && sparade.has(senast)) PICTURES.unshift(PICTURES.splice(i, 1)[0]);
+        startad = true;
+        loadPicture(0);
+    });
+
+    // Service worker. Webbläsaren letar själv efter en ny version bara när
+    // appen startas, så den letar också när man kommer tillbaka till appen
+    // och var UPPDATERA_VAR medan den är öppen (ny version: laddaOmOmNy).
+    const UPPDATERA_VAR = 10 * 60 * 1000;
     if ('serviceWorker' in navigator && !ANDROID_APP) {
         navigator.serviceWorker.register('sw.js').then(reg => {
+            const leta = () => reg.update().catch(() => {});
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') leta();
+            });
+            setInterval(leta, UPPDATERA_VAR);
             reg.addEventListener('updatefound', () => {
                 const nw = reg.installing;
                 if (!nw) return;
                 nw.addEventListener('statechange', () => {
                     if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-                        window.location.reload();
+                        nyVersion = true;
+                        if (document.hidden || startOverlay.style.display !== 'none') laddaOmOmNy();
                     }
                 });
             });
