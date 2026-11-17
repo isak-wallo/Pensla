@@ -18,11 +18,7 @@ färger, inga ljud, inga poäng, inga val att göra.
   i stående): **◀** föregående bild, **▶** nästa bild (agerar direkt på
   `touchstart` med `stopPropagation`), **FÄRGLÄGG** (håll 1 s → hela
   färgbilden sveps fram från vänster och keIWs poppar upp, `fargaHela`;
-  BÖRJA OM ångrar), de lite mindre **SPARA** (håll 1 s → "HÅLL INNE IGEN
-  FÖR ATT SPARA" i 5 s, håll 1 s igen → bilden laddas ner som PNG i
-  bildens storlek till plattans Hämtade filer, `sparaBild`; i Android-appen
-  i Bilder/Pensla via `SparaPlugin.java`; knappen visar
-  SPARAD ✓ en stund) och **BÖRJA OM** (håll 1 s → bilden töms direkt; sedan
+  BÖRJA OM ångrar) och den lite mindre **BÖRJA OM** (håll 1 s → bilden töms direkt; sedan
   står "HÅLL INNE LÄNGE FÖR ATT NOLLSTÄLLA ALLA BILDER" i 4 s, och håller
   man då i 4 s töms alla bilder, `glomAllt`). Håll-logiken
   (`startHold`/`holdEnd`) delas av de tre. Ett för kort tryck visar
@@ -145,8 +141,9 @@ Samma upplägg som Kludda: Capacitor-projekt i `android/`,
 (keiwsNycklar i ~/.gradle/gradle.properties). I appen (`ANDROID_APP`) visas
 ingen startskärm, ingen dö-yta, ingen service worker; MainActivity döljer
 systemfälten, låser vridningen, fäster appen och bakåt gör ingenting.
-SPARA går via `SparaPlugin.java` (`Capacitor.nativePromise('Spara', 'bild')`)
-till Bilder/Pensla.
+SPARA-knappen togs bort i v105 (Isak 2026-11-17): det målade sparas ändå i
+plattan, och knappen gjorde inget i en vanlig WebView. `SparaPlugin.java` ligger
+kvar i android/ men används inte.
 
 ### Arbetsflöde: bara `main`
 Jobba direkt på `main` (inga sidgrenar). Commit-meddelanden på svenska.
