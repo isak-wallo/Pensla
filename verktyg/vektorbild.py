@@ -21,6 +21,7 @@ med en liten tolk:
                 { "d": "M.. Z", "f": ["#rrggbb", "#rrggbb"],        // eller toning
                   "g": [x0, y0, x1, y1] } ],                         // från (x0,y0) till (x1,y1)
       "linje": { "f": "#3a3a44", "d": "M.. Z" },                     // konturerna som fylld bana (evenodd)
+      "beskar": [x0, x1],                                            // bara om färgbilden beskurits (BESKAR)
       "figurer": { "keiws": { "x": 700, "y": 480, "s": 0.4,          // mitt under fötterna, skala
                               "klipp": "M.. Z" },                    // ytan han syns i
                    "gron": {...}, "rod": {...} } }
@@ -128,13 +129,33 @@ DE_YTA_MAX = 10.0      # högsta medel-ΔE i en sådan yta
 # mitt under fötterna. Väljs bland kandidaterna (--kandidater) och skrivs
 # här för hand; en egen plats går också bra.
 GOMSTALLEN = {
-    'sopbil-snett': {'keiws': (760, 512, 0.33), 'gron': (97, 306, 0.3), 'rod': (780, 385, 0.3)},
-    'flygplan-stort': {'keiws': (118, 212, 0.33), 'gron': (230, 424, 0.35), 'rod': (950, 268, 0.28)},
-    'raket': {'keiws': (110, 491, 0.4), 'gron': (870, 598, 0.3), 'rod': (1130, 545, 0.3)},
-    'segelbat': {'keiws': (880, 382, 0.3), 'gron': (860, 578, 0.3), 'rod': (300, 392, 0.3)},
-    'tankbil3': {'keiws': (598, 342, 0.35), 'gron': (725, 292, 0.28), 'rod': (1300, 190, 0.3)},
-    'skordetroska6': {'keiws': (150, 318, 0.35), 'gron': (1300, 258, 0.3), 'rod': (265, 345, 0.3)},
+    # v4 (2026-11-19): kroppen ska skymmas en bit av det den står bakom
+    # (ca 65–80 % synligt, matt_figurer.py), annars ser den ut att sitta
+    # ovanpå eller sväva, och den vinkande armen ska synas (inga små fönster).
+    'sopbil-snett': {'keiws': (760, 530, 0.33), 'gron': (97, 314, 0.3), 'rod': (780, 385, 0.3)},
+    'flygplan-stort': {'keiws': (452, 170, 0.33), 'gron': (225, 432, 0.28), 'rod': (544, 287, 0.3)},
+    'raket': {'keiws': (110, 509, 0.4), 'gron': (385, 347, 0.3), 'rod': (1130, 557, 0.3)},
+    'segelbat': {'keiws': (865, 391, 0.3), 'gron': (860, 588, 0.3), 'rod': (300, 404, 0.3)},
+    'tankbil3': {'keiws': (598, 356, 0.35), 'gron': (1080, 262, 0.28), 'rod': (1300, 198, 0.3)},
+    'skordetroska6': {'keiws': (700, 170, 0.33), 'gron': (1115, 267, 0.3), 'rod': (70, 358, 0.3)},
 }
+
+# Bilder vars format avviker mycket från plattans rityta (ca 1,38:1) beskärs
+# till 4:3 här: (x0, x1) i färgbildens pixlar vid 900 px höjd. Appen passar
+# in bilden utan beskärning, så en 16:9-bild får annars breda tomma kanter
+# upptill och nedtill.
+BESKAR = {
+    'skordetroska6': (200, 1400),   # 1612 x 900 (16:9) -> 1200 x 900
+}
+
+
+def las_bild(r, fil, hojd):
+    """Som ba.las_bild, beskuren enligt BESKAR."""
+    alfa, rgb = ba.las_bild(r, fil, hojd)
+    if fil in BESKAR:
+        x0, x1 = (round(v * hojd / ba.PAPER_H) for v in BESKAR[fil])
+        alfa, rgb = np.ascontiguousarray(alfa[:, x0:x1]), np.ascontiguousarray(rgb[:, x0:x1])
+    return alfa, rgb
 
 
 # ------------------------------------------------------------------ banor
@@ -777,7 +798,7 @@ def figurer(data):
 def gor(fil, ut, bild):
     logg = []
     with ba.Ritare() as r:
-        alfa2, rgb2 = ba.las_bild(r, fil, ba.PAPER_H * F)
+        alfa2, rgb2 = las_bild(r, fil, ba.PAPER_H * F)
     sk = linjeskelett(alfa2, logg)
     tjock = cv2.dilate(sk.astype(np.uint8), skiva(round(LINJE_BREDD * F / 2)))
     yta, okand, _ = fargytor(sk, rgb2, alfa2, logg)
@@ -787,6 +808,8 @@ def gor(fil, ut, bild):
         'ytor': ytor(yta, rgb2, okand),
         'linje': {'f': LINJEFARG, 'd': potracebana(tjock.astype(bool), 1 / F)},
     }
+    if fil in BESKAR:
+        data['beskar'] = list(BESKAR[fil])   # (x0, x1) i färgbilden, för granskningen
     del yta, okand, alfa2, rgb2
     data['figurer'] = figurer(data)
     os.makedirs(ut, exist_ok=True)
@@ -807,7 +830,7 @@ def satt_figurer(fil, ut):
 def original(fil, b):
     """Originalfärgbilden (b × 900) och dess konturer (alfa) i Chrome."""
     with ba.Ritare() as r:
-        alfa, rgb = ba.las_bild(r, fil, ba.PAPER_H)
+        alfa, rgb = las_bild(r, fil, ba.PAPER_H)
     return rgb, alfa
 
 
