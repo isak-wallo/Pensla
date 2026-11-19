@@ -1,6 +1,8 @@
 """Granskningsark för Pensla: native-vektorbilder och webbens bilder.
 
-python verktyg/granska_figurer.py native            -> granskning/granskare/native-NAMN.png
+python verktyg/granska_figurer.py native [MAPP [PREFIX]]
+                                     -> granskning/granskare/PREFIXnative-NAMN.png
+                                        (MAPP: vektorbilderna, förval pensla-native)
 python verktyg/granska_figurer.py webb [NR...]      -> granskning/granskare/webb/NR-NAMN.png
 python verktyg/granska_figurer.py forslag FIL.json  -> ark med föreslagna platser (native/webb)
 
@@ -85,6 +87,7 @@ async ([data, jpg, figurer, titel]) => {
   for (const n of ['keiws', 'gron', 'rod']) {
     const k = fig[n]; if (!k) continue;
     f.save(); f.beginPath(); f.rect(k.x - 200 * k.s, k.y - 400 * k.s, 450 * k.s, 400 * k.s); f.clip();
+    if (k.klipp && !figurer) f.clip(new Path2D(k.klipp), 'evenodd');  // som PenslaVy (native-v3)
     ritaFig(f, k.x, k.y, k.s, NFARG[n]); f.restore();
   }
   f.fillStyle = data.linje.f; f.fill(linje, 'evenodd');
@@ -183,12 +186,14 @@ def main():
         sida.set_content('<html><body></body></html>')
         sida.add_script_tag(content=JS_FELLES)
         if arg[0] == 'native':
-            for fn in sorted(os.listdir(NATIVE)):
-                data = json.load(open(os.path.join(NATIVE, fn), encoding='utf-8'))
+            mapp = arg[1] if len(arg) > 1 else NATIVE
+            prefix = arg[2] if len(arg) > 2 else ''
+            for fn in sorted(f for f in os.listdir(mapp) if f.endswith('.json')):
+                data = json.load(open(os.path.join(mapp, fn), encoding='utf-8'))
                 jpg = 'data:image/jpeg;base64,' + b64(os.path.join(P, 'bilder', 'farg', data['fil'] + '.jpg'))
                 url = sida.evaluate(JS_NATIVE, [data, jpg, None, '%s (nr %d)' % (data['namn'], data['nr'])])
-                spara(url, os.path.join(UT, 'native-%s.png' % data['fil']))
-                print(fn, data['figurer'])
+                spara(url, os.path.join(UT, prefix + 'native-%s.png' % data['fil']))
+                print(fn, {k: (v['x'], v['y'], v['s'], 'klipp' in v) for k, v in data['figurer'].items()})
         elif arg[0] == 'webb':
             alla, aktiva = webbilder(sida)
             nr = {int(a) for a in arg[1:]}
