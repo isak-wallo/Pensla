@@ -202,6 +202,15 @@ pushas, annars fastnar plattan på gammal cache.
   3. `python verktyg/gomstallen.py --rita NR...` ger förhandsbilder i
      `granskning/kompisar/FIL.png`. Granska dem innan push.
   Gör det för varje ny bild. Alla 62 aktiva gicks igenom för hand i v89.
+  Skriptet serverar repots filer direkt till Chrome (ingen http-server).
+  `python verktyg/granska_figurer.py webb NR...` ritar granskningsark i
+  `granskning/granskare/webb/` (svartvitt | maskat | original) och skriver
+  hur stor del av varje figur som syns. Kontrollera att saken framför är en
+  egen yta: har busken, trädet eller molnet ett glapp i konturen hänger den
+  ihop med himlen och fötterna syns rakt igenom (96–100 % synligt). Moln
+  och tak är oftast säkra. v106: 25 figurer flyttades efter granskningen
+  i `docs/utredningar/granskning_figurer.md` (hytt bakom ratten, grön på
+  grönt, framför motivet).
 
 ## Lägga till en ny bild (`verktyg/fargbild.py`)
 1. Be Gemini om en tecknad, lekfull färgbild (4:3, wider than tall) med

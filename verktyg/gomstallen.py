@@ -28,8 +28,8 @@ två steg:
     python verktyg/gomstallen.py --rita 114 115
         Förhandsbild av det som står i bilder.js (granskning/kompisar/NAMN.png).
 
-Utan nummer gäller det alla bilder som inte är borttagna. Kräver att
-`python -m http.server 8765` körs i repots rot.
+Utan nummer gäller det alla bilder som inte är borttagna. Repots filer
+serveras direkt till Chrome (page.route), så ingen http-server behövs.
 """
 import base64
 import json
@@ -47,7 +47,7 @@ UT = os.path.join(ROT, 'granskning', 'kompisar')
 KANDIDATFIL = os.path.join(UT, 'kandidater.json')
 PAPER_H = 900
 LINE_ALPHA = 200
-URL = 'http://localhost:8765/'
+URL = 'http://pensla.lokal/'
 SKALOR = (0.3, 0.36, 0.42, 0.5)
 KROPP_MIN = 0.85    # så stor del av kroppen som ska ligga i ytan
 FOTTER_MAX = 0.25   # högst så stor del av fötterna får synas
@@ -261,6 +261,7 @@ def main():
     with sync_playwright() as pw:
         b = pw.chromium.launch()
         SIDA = b.new_page()
+        SIDA.route(URL + '**', lambda r: r.fulfill(path=os.path.join(ROT, r.request.url[len(URL):].split('?')[0])))
         SIDA.goto(URL + 'galleri.html')
         alla, aktiva, borttagna = bilder()
         kand = json.load(open(KANDIDATFIL, encoding='utf-8')) if os.path.exists(KANDIDATFIL) else {}
