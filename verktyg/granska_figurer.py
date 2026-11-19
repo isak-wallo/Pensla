@@ -114,7 +114,11 @@ async ([data, jpg, figurer, titel]) => {
     if (figurer) etikett(f, n + ' ' + Math.round(k.x) + ',' + Math.round(k.y) + ',' + k.s, k.x + 70 * k.s, k.y - 250 * k.s - 34);
   }
   const org = await ladda(jpg);
-  const o = mk(); o.getContext('2d').drawImage(org, 0, 0, W, H);
+  const o = mk();
+  if (data.beskar) {  // beskuren färgbild (vektorbild.py BESKAR): x0..x1 vid 900 px höjd
+    const k = org.height / H, [x0, x1] = data.beskar;
+    o.getContext('2d').drawImage(org, x0 * k, 0, (x1 - x0) * k, org.height, 0, 0, W, H);
+  } else o.getContext('2d').drawImage(org, 0, 0, W, H);
   if (figurer) return ark([fl, mk2, o], ['Förslag, så som native ritar i dag', 'Förslag med ytmask (som webben)', 'Original'], titel);
   return ark([sv, fl, o], ['Svartvitt (native)', 'Färglagd + figurer (native)', 'Original'], titel);
 }
