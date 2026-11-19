@@ -186,6 +186,12 @@ pushas, annars fastnar plattan på gammal cache.
   titta fram bakom det. Stora hyttfönster är bra gömställen, men i små
   fönster (tornfönster, runda ventiler, små hytter) syns han för dåligt —
   flytta då ut honom.
+- Vinkarmen (uppe till höger om kroppen, topp på y − 252s) maskas som
+  kroppen, så den får inte hamna bakom karm, moln eller tak. Kolla med
+  `python verktyg/vinkarm.py [NR...]` (KLIPPS = under 90 % syns);
+  `--forslag` föreslår mindre `s`/liten flytt, `--ark FIL.json` ritar
+  före/efter-ark i `granskning/granskare/vinka/`. Kroppen ska ändå skymmas
+  en bit (ca 65–80 % synlig), annars ser figuren ut att sväva.
 - Kompisarna står i `gron` och `rod` med samma mått (saknas de har bilden
   bara keIWs). De ska titta fram *bakom något*: kroppen i en bakgrundsyta
   (himmel, ruta, kulle, vägg) och fötterna bakom ett riktigt föremål med
