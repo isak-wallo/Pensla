@@ -19,6 +19,7 @@ Skriptet tar appens filer (ASSETS i sw.js, plus sw.js) från den pushade koden
     python verktyg/slapp.py            # visar vad som är släppt och vad som är nytt
     python verktyg/slapp.py --test     # publicerar testversionen (efter varje push)
     python verktyg/slapp.py --skarpt   # släpper origin/main
+    python verktyg/slapp.py --test --torr  # bygger webb/ som för --test, publicerar inget
 
 Kräver Node och att man loggat in en gång med `npx wrangler login`.
 """
@@ -59,6 +60,24 @@ def status():
     print('Nytt sedan dess:\n' + (git('log', '--oneline', tagg + '..origin/main') or '  inget'))
 
 
+def hamta(ref, filer):
+    """{fil: innehåll} för filerna i ref, med ett enda git cat-file --batch (en git show
+    per fil tog flera sekunder styck). Bytevis som git show, utan radslutsbyten."""
+    filer = list(filer)
+    ut = subprocess.run(['git', 'cat-file', '--batch'], cwd=ROT, check=True, capture_output=True,
+                        input=''.join('%s:%s\n' % (ref, fil) for fil in filer).encode('utf-8')).stdout
+    data, pos = {}, 0
+    for fil in filer:
+        slut = ut.index(b'\n', pos)
+        huvud = ut[pos:slut].decode('utf-8').split()
+        if len(huvud) != 3 or huvud[1] != 'blob':
+            sys.exit('Hittar inte %s:%s (%s)' % (ref, fil, ' '.join(huvud)))
+        storlek = int(huvud[2])
+        data[fil] = ut[slut + 1:slut + 1 + storlek]
+        pos = slut + 1 + storlek + 1
+    return data
+
+
 def bygg(nr):
     """webb/ med appens filer från origin/main och VERSION = vNR (None: testversionen,
     med galleriet, VERSION som den är och inga sökmotorer)."""
@@ -68,11 +87,9 @@ def bygg(nr):
     filer.append('sw.js')
     if nr is None:
         filer += ['galleri.html', 'galleri.json'] + git('ls-tree', '-r', '--name-only', 'origin/main', 'bilder/').split('\n')
-    for fil in dict.fromkeys(filer):
+    for fil, data in hamta('origin/main', dict.fromkeys(filer)).items():
         mal = os.path.join(WEBB, fil)
         os.makedirs(os.path.dirname(mal), exist_ok=True)
-        data = subprocess.run(['git', 'show', 'origin/main:' + fil], cwd=ROT, check=True,
-                              capture_output=True).stdout
         if fil == 'sw.js' and nr is not None:
             data = re.sub(rb"const VERSION = '[^']*'", b"const VERSION = 'v%d'" % nr, data, count=1)
         with open(mal, 'wb') as f:
@@ -128,6 +145,9 @@ def skarpt():
 def test():
     git('fetch', '-q', 'origin')
     bygg(None)
+    if '--torr' in sys.argv:
+        print('Torrkörning: testversionen (%s) byggd i %s, inget publicerat' % (version('origin/main'), WEBB))
+        return
     try:
         subprocess.run('npx -y wrangler@4 deploy --env test', shell=True, cwd=ROT, check=True)
     finally:
@@ -138,4 +158,6 @@ def test():
 
 if __name__ == '__main__':
     sys.stdout.reconfigure(encoding='utf-8')
+    if '--torr' in sys.argv and '--test' not in sys.argv:
+        sys.exit('--torr går bara med --test.')
     skarpt() if '--skarpt' in sys.argv else test() if '--test' in sys.argv else status()
