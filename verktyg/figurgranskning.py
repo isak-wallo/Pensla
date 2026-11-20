@@ -17,19 +17,19 @@ vinkande armen som syns.
 Varje ark: hela bilden med figurerna stilla (vänster) och vinkande (mitten),
 och till höger en rad per figur: utsnitt stilla | utsnitt vinkande med
 andelen synlig kropp, arm och
-fötter (fötter nära 100 % = figuren står fritt, kan se ut att sväva). Mätvärdena skrivs också till matt.json i
-samma mapp. Chromium: sätt PENSLA_CHROME om Playwrights egen inte hittas.
+fötter. Varningar (röd text i arket, och i utskriften): KLIPPS = under ARM_MIN
+av armen syns, SVÄVAR = över FOT_MAX av fötterna syns (inget står framför
+dem, figuren ser ut att hänga fritt). Mätvärdena skrivs också till matt.json i
+samma mapp, och sist skrivs en lista över alla varningar. Chromium: sätt PENSLA_CHROME om Playwrights egen inte hittas.
 """
-import base64, glob, io, json, os, sys
+import base64, io, json, os, sys
 from playwright.sync_api import sync_playwright
 from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from vinkarm import JS, P, b64   # samma mask och mätning som vinkarm.py
+from vinkarm import JS, P, b64, chromium, ARM_MIN, FOT_MAX   # samma mask och mätning som vinkarm.py
 
 JS_ARK = r"""
-// Fötterna = stilla-klossarna under kroppen (y >= 160)
-window.fot = k => syns(k, KEIWS.stilla.filter(r => r[1] >= 160));
 window.helbild = (fig, rekt) => rita(fig, rekt).toDataURL('image/png');
 // Utsnitt runt figuren k (stilla och vinkande), Z × Z px
 window.utsnitt = (fig, n, Z) => {
@@ -45,15 +45,14 @@ window.utsnitt = (fig, n, Z) => {
 """
 
 
-def chromium(pw):
-    exe = os.environ.get('PENSLA_CHROME')
-    if not exe:
-        for m in sorted(glob.glob('/opt/pw-browsers/chromium-*/chrome-linux64/chrome')):
-            exe = m
-    try:
-        return pw.chromium.launch()
-    except Exception:
-        return pw.chromium.launch(executable_path=exe)
+def varningar(m):
+    """KLIPPS = armen syns för lite, SVÄVAR = fötterna syns för mycket."""
+    v = []
+    if m['arm'] < ARM_MIN:
+        v.append('KLIPPS')
+    if m['fot'] > FOT_MAX:
+        v.append('SVÄVAR')
+    return v
 
 
 def bild_av(url):
@@ -82,6 +81,7 @@ def main():
     except OSError:
         font = stor = ImageFont.load_default()
     matt_ut = {}
+    alla_varn = []
     ark = []
     with sync_playwright() as pw:
         b = chromium(pw)
@@ -110,15 +110,20 @@ def main():
             Z = 200
             rader = []
             for n in fig:
-                m = sida.evaluate('k => Object.assign(matt(k), { fot: fot(k) })', fig[n])
+                m = sida.evaluate('k => matt(k)', fig[n])
                 s_, v_ = sida.evaluate('([f, n, Z]) => utsnitt(f, n, Z)', [fig, n, Z])
                 rader.append((n, m, bild_av(s_), bild_av(v_)))
                 k = fig[n]
                 matt_ut.setdefault(str(bild['nr']), {})[n] = {
                     'x': k['x'], 'y': k['y'], 's': k['s'],
                     'kropp': round(100 * m['kropp']), 'arm': round(100 * m['arm']), 'fot': round(100 * m['fot'])}
-                print('%3d %-22s %-5s (%4d, %3d, %.3f)  kropp %3.0f %%  arm %3.0f %%  fot %3.0f %%' % (
-                    bild['nr'], fil, n, k['x'], k['y'], k['s'], 100 * m['kropp'], 100 * m['arm'], 100 * m['fot']), flush=True)
+                varn = varningar(m)
+                if varn:
+                    matt_ut[str(bild['nr'])][n]['varning'] = varn
+                    alla_varn.append('%3d %-22s %-5s %s' % (bild['nr'], fil, n, ' '.join(varn)))
+                print('%3d %-22s %-5s (%4d, %3d, %.3f)  kropp %3.0f %%  arm %3.0f %%  fot %3.0f %%%s' % (
+                    bild['nr'], fil, n, k['x'], k['y'], k['s'], 100 * m['kropp'], 100 * m['arm'], 100 * m['fot'],
+                    ''.join('  ' + v for v in varn)), flush=True)
             top = 30
             hojd = max(hh, len(rader) * (Z + 22)) + top + 8
             c = Image.new('RGB', (2 * HB + 2 * Z + 40, hojd), (221, 221, 221))
@@ -131,9 +136,11 @@ def main():
             for i, (n, m, im_s, im_v) in enumerate(rader):
                 y = top + i * (Z + 22)
                 k = fig[n]
-                d.text((x0, y), '%s %d,%d,%g  kr %d%% arm %d%% fot %d%%' % (
-                    n, k['x'], k['y'], k['s'], round(100 * m['kropp']), round(100 * m['arm']), round(100 * m['fot'])),
-                    fill=(170, 0, 0) if m['arm'] < 0.9 else (0, 0, 0), font=font)
+                varn = varningar(m)
+                d.text((x0, y), '%s %d,%d,%g  kr %d%% arm %d%% fot %d%%%s' % (
+                    n, k['x'], k['y'], k['s'], round(100 * m['kropp']), round(100 * m['arm']), round(100 * m['fot']),
+                    ''.join(' ' + v for v in varn)),
+                    fill=(170, 0, 0) if varn else (0, 0, 0), font=font)
                 c.paste(im_s, (x0, y + 18))
                 c.paste(im_v, (x0 + Z + 8, y + 18))
             ark.append((bild['nr'], fil, c))
@@ -152,6 +159,9 @@ def main():
             im.save(os.path.join(ut, '%s%03d-%s.jpg' % (namn, n, fil)), quality=kval, optimize=True)
     json.dump(matt_ut, open(os.path.join(ut, namn + 'matt.json'), 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
     print('ark i', ut)
+    print('%d varningar%s' % (len(alla_varn), ':' if alla_varn else ''))
+    for r in alla_varn:
+        print('  ' + r)
 
 
 if __name__ == '__main__':

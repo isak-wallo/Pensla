@@ -42,6 +42,9 @@ from PIL import Image, ImageDraw, ImageFont
 from playwright.sync_api import sync_playwright
 from scipy import ndimage as nd
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from vinkarm import chromium
+
 ROT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 UT = os.path.join(ROT, 'granskning', 'kompisar')
 KANDIDATFIL = os.path.join(UT, 'kandidater.json')
@@ -185,6 +188,16 @@ def kandidater(lab, rgb):
     return valda
 
 
+def typsnitt(storlek):
+    """Segoe UI Bold (Windows), annars DejaVu Sans Bold (Linux)."""
+    for f in ('C:/Windows/Fonts/segoeuib.ttf', 'DejaVuSans-Bold.ttf'):
+        try:
+            return ImageFont.truetype(f, storlek)
+        except OSError:
+            pass
+    return ImageFont.load_default()
+
+
 def rita_figur(im, lab, c, farg, nummer=None):
     """Ritar figuren maskad till sina ytor (som i appen) och ev. ett nummer bredvid."""
     s, x, y = c['s'], c['x'], c['y']
@@ -199,7 +212,7 @@ def rita_figur(im, lab, c, farg, nummer=None):
     a[..., 3] = np.where(mask, a[..., 3], 0)
     im.paste(Image.fromarray(a), (0, 0), Image.fromarray(a))
     if nummer is not None:
-        font = ImageFont.truetype('C:/Windows/Fonts/segoeuib.ttf', 30)
+        font = typsnitt(30)
         dd = ImageDraw.Draw(im)
         tx, ty = X(160) + 4, Y(0) - 6
         dd.rectangle([tx - 3, ty, tx + 22 * len(str(nummer)) + 3, ty + 36], fill='white', outline='black')
@@ -259,7 +272,7 @@ def main():
         return
     nummer = {int(a) for a in arg if a.isdigit()}
     with sync_playwright() as pw:
-        b = pw.chromium.launch()
+        b = chromium(pw)
         SIDA = b.new_page()
         SIDA.route(URL + '**', lambda r: r.fulfill(path=os.path.join(ROT, r.request.url[len(URL):].split('?')[0])))
         SIDA.goto(URL + 'galleri.html')

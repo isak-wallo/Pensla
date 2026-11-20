@@ -7,7 +7,9 @@ uppe) som syns för keIWs och kompisarna i de aktiva bilderna.
     python verktyg/vinkarm.py --ark FIL.json     # före/efter-ark för ändringarna i FIL.json
                                                  #   {"NR": {"keiws": {"x", "y", "s", "ytor"?}, ...}}
 
-Armen räknas som klippt när mindre än ARM_MIN av den syns. Förslaget är
+Armen räknas som klippt när mindre än ARM_MIN av den syns (KLIPPS), och
+figuren räknas som svävande när mer än FOT_MAX av fötterna syns (SVÄVAR:
+inget står framför fötterna, så den ser ut att hänga fritt i ytan). Förslaget är
 den minsta ändringen som får armen att synas: s krymps högst KRYMP_MAX och
 figuren flyttas högst 0,15 kroppsbredd, och kroppen ska synas nästan lika
 mycket som förut; räcker inte det står "ny plats" och platsen får väljas
@@ -15,14 +17,27 @@ för hand (gomstallen.py). Förslagen sparas i granskning/granskare/vinka/forsla
 Arken hamnar i granskning/granskare/vinka/ (före stilla | före vinkar |
 efter stilla | efter vinkar för varje ändrad figur, och hela bilden efter).
 """
-import base64, json, os, re, sys
+import base64, glob, json, os, re, sys
 from playwright.sync_api import sync_playwright
 
 P = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UT = os.path.join(P, 'granskning', 'granskare', 'vinka')
 ARM_MIN = 0.9
+FOT_MAX = 0.5    # fötter synliga över så stor andel = svävar
 KRYMP_MAX = 0.2
 FLYTT = 0.15   # högst så stor flytt (andel av kroppens bredd); --langt: 0.6
+
+def chromium(pw):
+    """Playwrights egen Chromium, annars PENSLA_CHROME eller den förinstallerade i /opt/pw-browsers."""
+    exe = os.environ.get('PENSLA_CHROME')
+    if not exe:
+        for m in sorted(glob.glob('/opt/pw-browsers/chromium-*/chrome-linux64/chrome')):
+            exe = m
+    try:
+        return pw.chromium.launch()
+    except Exception:
+        return pw.chromium.launch(executable_path=exe)
+
 
 def b64(p):
     return base64.b64encode(open(p, 'rb').read()).decode()
@@ -82,7 +97,9 @@ window.armRutor = () => {
   for (const r of ARMBILDER) for (const a of r) if (a[0] >= 160 && a[1] < 64 && !ut.some(b => b[0] === a[0] && b[1] === a[1])) ut.push(a);
   return ut;
 };
-window.matt = k => ({ arm: syns(k, armRutor()), kropp: syns(k, [[0, 0, 160, 160]]) });
+// Fötterna = stilla-klossarna under kroppen (y >= 160)
+window.fotRutor = () => KEIWS.stilla.filter(r => r[1] >= 160);
+window.matt = k => ({ arm: syns(k, armRutor()), kropp: syns(k, [[0, 0, 160, 160]]), fot: syns(k, fotRutor()) });
 // Minsta ändring (krymp högst kmax, flytta högst 0,15 kroppsbredd) där armen
 // syns (armMin) och kroppen syns nästan lika mycket som förut.
 window.sok = (k, armMin, kmax, flytt) => {
@@ -134,7 +151,7 @@ window.ark = (fore, efter, titel) => {
   let y = top;
   for (const n of andrade) {
     const a = fore[n], b = efter[n], ma = matt(a), mb = matt(b);
-    x.fillText(`${n}: före ${Math.round(a.x)},${Math.round(a.y)},${a.s} (arm ${Math.round(100 * ma.arm)} %, kropp ${Math.round(100 * ma.kropp)} %)  ->  efter ${Math.round(b.x)},${Math.round(b.y)},${b.s} (arm ${Math.round(100 * mb.arm)} %, kropp ${Math.round(100 * mb.kropp)} %)`, g, y + 20);
+    x.fillText(`${n}: före ${Math.round(a.x)},${Math.round(a.y)},${a.s} (arm ${Math.round(100 * ma.arm)} %, kropp ${Math.round(100 * ma.kropp)} %, fot ${Math.round(100 * ma.fot)} %)  ->  efter ${Math.round(b.x)},${Math.round(b.y)},${b.s} (arm ${Math.round(100 * mb.arm)} %, kropp ${Math.round(100 * mb.kropp)} %, fot ${Math.round(100 * mb.fot)} %)`, g, y + 20);
     // samma utsnitt före/efter vid små flyttar, annars var sitt
     const r = Math.max(a.s, b.s) * 440, langt = Math.hypot(a.x - b.x, a.y - b.y) > r / 4;
     const ruta = k => [k.x + 10 * Math.max(a.s, b.s) - r / 2, k.y - 130 * Math.max(a.s, b.s) - r / 2, r, r];
@@ -165,7 +182,7 @@ def main():
     nr = {int(v) for v in a if v.isdigit()}
     andringar = json.load(open(arkfil, encoding='utf-8')) if arkfil else {}
     with sync_playwright() as pw:
-        b = pw.chromium.launch()
+        b = chromium(pw)
         sida = b.new_page()
         sida.set_content('<html><body></body></html>')
         sida.add_script_tag(content=JS)
@@ -191,14 +208,17 @@ def main():
                 spara(url, os.path.join(UT, '%03d-%s.png' % (bild['nr'], fil)))
                 for n in andringar[str(bild['nr'])]:
                     m = sida.evaluate('k => matt(k)', efter[n])
-                    print('ark %3d %-22s %-5s (%4d, %3d, %.3f)  arm %3.0f %%  kropp %3.0f %%' % (
+                    print('ark %3d %-22s %-5s (%4d, %3d, %.3f)  arm %3.0f %%  kropp %3.0f %%  fot %3.0f %%%s' % (
                         bild['nr'], fil, n, efter[n]['x'], efter[n]['y'], efter[n]['s'],
-                        100 * m['arm'], 100 * m['kropp']), flush=True)
+                        100 * m['arm'], 100 * m['kropp'], 100 * m['fot'],
+                        '  SVÄVAR' if m['fot'] > FOT_MAX else ''), flush=True)
                 continue
             for n, k in fore.items():
                 m = sida.evaluate('k => matt(k)', k)
-                rad = '%3d %-22s %-5s (%4d, %3d, %.2f)  arm %3.0f %%  kropp %3.0f %%' % (
-                    bild['nr'], fil, n, k['x'], k['y'], k['s'], 100 * m['arm'], 100 * m['kropp'])
+                rad = '%3d %-22s %-5s (%4d, %3d, %.2f)  arm %3.0f %%  kropp %3.0f %%  fot %3.0f %%' % (
+                    bild['nr'], fil, n, k['x'], k['y'], k['s'], 100 * m['arm'], 100 * m['kropp'], 100 * m['fot'])
+                if m['fot'] > FOT_MAX:
+                    rad += '  SVÄVAR'
                 if m['arm'] < ARM_MIN:
                     rad += '  KLIPPS'
                     if forslag:
