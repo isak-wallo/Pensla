@@ -54,15 +54,20 @@ Så görs en bild (--gor):
  5. Varje yta blir en polygon med en färg ur färgbilden: en linjär toning
     om ytan har en tydlig ljusskiftning inom samma kulör (TONING_KULOR),
     annars platt (medianfärgen).
- 6. Figurernas platser står i GOMSTALLEN nedan (väljs med --kandidater),
-    och var och en får sin klippbana.
+ 6. Figurernas platser: GOMSTALLEN nedan (för hand, --kandidater) eller
+    annars webbens platser ur bilder.js. justera flyttar dem (upp/ner, lite
+    åt sidan, krymper högst 20 %) tills kroppen syns till KROPP_MAL och
+    armen till ARM_MIN, och var och en får sin klippbana.
+ BILDINST: egna inställningar per bild (gäller --gor och --kontroll).
 
 Kontrollen (--kontroll) ritar JSON-filen och säger till om något av detta
-inte stämmer: inga fria ändar i linjerna (alla konturer slutna), inga
+inte stämmer: inga fria ändar i linjerna (alla konturer slutna; sporrar
+kortare än två linjebredder och ändar inne i en fylld klump räknas inte), inga
 omålade luckor mellan ytorna, trohet mot originalfärgbilden (ΔE i Lab,
 utanför linjerna: medel högst DE_MEDEL_MAX, högst DE_STOR_ANDEL av pixlarna
 med ΔE över DE_STOR, och ingen yta över DE_YTA_MIN px med medel över
-DE_YTA_MAX), varje figur har en klippbana där kroppen syns (KROPP_SYNS),
+DE_YTA_MAX), varje figur har en klippbana där kroppen syns (KROPP_SYNS)
+och den vinkande armen syns (ARM_MIN),
 inne i bilden, figurerna överlappar inte varandra, och de syns mot sin
 bakgrund (KONTRAST_MIN). Fel gör att skriptet slutar med kod 1.
 """
