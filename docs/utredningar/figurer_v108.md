@@ -103,3 +103,12 @@ I bilder.js har kommentarerna för 12, 114–117, 128, 140, 145 och 146 bytts ut
   - arm < 90 %: 0 → 0
   - arm ≥ 99 %: 139 → 157
 - Inga andra tester finns i `verktyg/`. Dessutom kontrollerades syntaxen i `bilder.js` och `sw.js` med node, och `aktiva.py` gav samma `ASSETS`.
+
+## Senare i samma version (gömställen i texten)
+
+När Flygplan 6, Stort flygplan 5, Skördetröska och Traktor 7 fick hela sitt format (se `bilder_v108.md`) flyttades alla deras figurer 75 px åt höger. I Skördetröska hade linjerna mot himlen ändrats lite, och därför flyttades två figurer:
+
+- keiws flyttades till 1000,223,0.47 (arm 36 → 100 %);
+- rod flyttades till 374,227,0.4 (arm 89 → 100 %).
+
+I Traktor 7 syns keiws kropp nu till 62 % (förut 70 %), men fötterna syns inte längre (förut 20 %). Platsen lämnades som den är.

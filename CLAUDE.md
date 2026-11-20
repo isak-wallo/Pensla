@@ -204,6 +204,10 @@ pushas, annars fastnar plattan på gammal cache.
   `figurer_v108.md` (v108: 27 figurer flyttade, en SVÄVAR kvar).
   Skripten hittar Chromium själva (`chromium()` i vinkarm.py: Playwrights
   egen, annars `PENSLA_CHROME` eller /opt/pw-browsers) och går på Linux.
+- Bildöversynen: `python verktyg/bildoversyn.py [NR...]` räknar glapp,
+  lösa streck, små ytor (under 60 px), remsor (dubbla/fransiga konturer)
+  och linjeandel per bild och ritar `granskning/oversyn/NAMN.png`
+  (`docs/utredningar/bildoversyn.md`, `bilder_v108.md`).
 - Kompisarna står i `gron` och `rod` med samma mått (saknas de har bilden
   bara keIWs). De ska titta fram *bakom något*: kroppen i en bakgrundsyta
   (himmel, ruta, kulle, vägg) och fötterna bakom ett riktigt föremål med
@@ -248,7 +252,11 @@ pushas, annars fastnar plattan på gammal cache.
      (900 px hög). Från v69 behåller bilden sitt format, t.ex. 16:10 ->
      1440 × 900, och appen tar bredden ur färgbilden. Nästan 4:3 (Geminis
      2400 × 1792) och de äldre 3:2-bilderna i `BESKAR_4_3` beskärs mitt på
-     till 4:3 = 1200 × 900, så att deras keIWs-mått stämmer.
+     till 4:3 = 1200 × 900, så att deras keIWs-mått stämmer. Klipper
+     beskärningen av fordonet: ta bilden ur `BESKAR_4_3`, kör om
+     `fargbild.py` (samma förlaga ger samma SVG) och flytta figurerna
+     (3:2 → +75 px i x), som för flygplan6, flygplan-stort5, skordetroska
+     och traktor7 i v108.
    - Glapp i konturerna gör inget (färgen tas ändå ur färgbilden).
    - Bilder där viktiga former saknar mörk kontur (båten, traktor8–10,
      betongbil4–5, ambulans4–5) står i `FARGKANTER`: där läggs färgkanter
