@@ -192,6 +192,18 @@ pushas, annars fastnar plattan på gammal cache.
   `--forslag` föreslår mindre `s`/liten flytt, `--ark FIL.json` ritar
   före/efter-ark i `granskning/granskare/vinka/`. Kroppen ska ändå skymmas
   en bit (ca 65–80 % synlig), annars ser figuren ut att sväva.
+- Fötterna: `vinkarm.py` och `verktyg/figurgranskning.py` mäter också hur
+  stor del av fötterna som syns och varnar SVÄVAR över 50 % (`FOT_MAX`):
+  då står inget framför fötterna och figuren hänger fritt, t.ex. mitt i en
+  framruta. Sänk den då så att fönsterkanten, instrumentbrädan eller taket
+  döljer fötterna, eller flytta ut den. `python verktyg/figurgranskning.py
+  --par` ritar alla aktiva bilder (stilla och vinkande, mått per figur i
+  `matt.json`) och listar alla varningar (KLIPPS och SVÄVAR) sist;
+  `--forslag FIL.json` ritar föreslagna platser utan att ändra bilder.js.
+  Granskningarna: `docs/utredningar/figurgranskning_v107.md` och
+  `figurer_v108.md` (v108: 27 figurer flyttade, en SVÄVAR kvar).
+  Skripten hittar Chromium själva (`chromium()` i vinkarm.py: Playwrights
+  egen, annars `PENSLA_CHROME` eller /opt/pw-browsers) och går på Linux.
 - Kompisarna står i `gron` och `rod` med samma mått (saknas de har bilden
   bara keIWs). De ska titta fram *bakom något*: kroppen i en bakgrundsyta
   (himmel, ruta, kulle, vägg) och fötterna bakom ett riktigt föremål med
@@ -274,7 +286,7 @@ pushas, annars fastnar plattan på gammal cache.
    löpnummer: `{ nr, namn, fil: 'NAMN', keiws: {...} }`. Numren är fasta och
    återanvänds aldrig. Lägg numret i `AKTIVA` om bilden ska synas och kör
    `python verktyg/aktiva.py` (skriver de aktiva bildernas filer i `ASSETS`
-   i `sw.js` och bumpar `VERSION`).
+   i `sw.js` och bumpar `VERSION`; en ändelse behålls: v108-test → v109-test).
 5. Granska: `granskning/` (inte i git) har ett par per bild, konturer och
    färgbild bredvid varandra, så ägaren kan markera det som ska justeras.
 6. Testa: måla över bilden i sicksack med Playwright (▶ med `click`, inte

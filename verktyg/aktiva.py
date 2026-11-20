@@ -42,8 +42,10 @@ def main():
     rader = [f"  '{f}'," for f in fasta] + filer + [f"  '{f}'," for f in slut]
     rader[-1] = rader[-1].rstrip(',')
     sw = re.sub(r'const ASSETS = \[.*?\n\];', 'const ASSETS = [\n' + '\n'.join(rader) + '\n];', sw, flags=re.S)
-    v = int(re.search(r"const VERSION = 'v(\d+)'", sw).group(1)) + 1
-    sw = re.sub(r"const VERSION = 'v\d+'", f"const VERSION = 'v{v}'", sw)
+    # 'v107' -> 'v108', 'v108-test' -> 'v109-test' (ändelsen behålls)
+    m = re.search(r"const VERSION = 'v(\d+)([^']*)'", sw)
+    v = f'{int(m.group(1)) + 1}{m.group(2)}'
+    sw = re.sub(r"const VERSION = '[^']*'", f"const VERSION = 'v{v}'", sw, count=1)
     open(os.path.join(ROT, 'sw.js'), 'w', encoding='utf-8', newline='\n').write(sw)
     print(f'{len(aktiva)} aktiva av {len(alla)} bilder, sw.js -> v{v}')
 
