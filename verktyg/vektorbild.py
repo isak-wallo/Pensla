@@ -141,6 +141,21 @@ GOMSTALLEN = {
     'skordetroska6': {'keiws': (700, 170, 0.33), 'gron': (1115, 267, 0.3), 'rod': (70, 358, 0.3)},
 }
 
+# Egna inställningar för bilder där förvalen ger fel färg i någon yta
+# (--kontroll: ΔE). Namnen är konstanterna ovan.
+# Gäller både --gor och --kontroll (main sätter dem för varje bild).
+BILDINST = {
+    # hyttens gula toning går mot orange i skuggan: tillåt toning över mer kulör
+    'dumper': {'TONING_KULOR': 45},
+    # vetet har många nyanser i små strån; ytorna blir rätt i stort men
+    # strån för sig kan inte bli egna ytor utan tusentals ytor
+    'skordetroska': {'KVANT': 48, 'DE_STOR_ANDEL': 0.04},
+    # ett litet träd bakom kullen och ett hjulnav där stammen/navet blir en
+    # del av den större ytan (ΔE 11–14 i en liten yta)
+    'traktor6': {'DE_YTA_MAX': 15.0},
+    'traktor7': {'DE_YTA_MAX': 15.0},
+}
+
 # Bilder vars format avviker mycket från plattans rityta (ca 1,38:1) beskärs
 # till 4:3 här: (x0, x1) i färgbildens pixlar vid 900 px höjd. Appen passar
 # in bilden utan beskärning, så en 16:9-bild får annars breda tomma kanter
@@ -840,38 +855,94 @@ def fran_bilder(bild, fil):
 
 
 def justera(linjeyta, linje, c, punkter):
-    """Flyttar figuren upp eller ner (högst JUSTERA_MAX px, samma yta) tills
-    kroppen syns till KROPP_MAL och armen till ARM_MIN. Returnerar (c, mått)."""
-    H, W = linje.shape[0] / F, linje.shape[1] / F
+    """Flyttar figuren (upp/ner högst JUSTERA_MAX px, åt sidan högst en
+    femtedel av kroppen, och krymper den högst 20 %) tills den ligger inne i
+    bilden, armen syns till ARM_MIN och kroppen till KROPP_MAL, med så liten
+    ändring som möjligt. Först i webbens yta (punkter); räcker inte det, i
+    den yta där kroppen hamnar (som på webben: ytan vid kroppens mitt).
+    Returnerar (c, mått, punkter)."""
+    H, W = linje.shape
     lag, hog = KROPP_MAL
+    rutor = {'kropp': [[0, 0, 160, 160, 'bla']], 'fotter': [[0, 168, 160, 204, 'bla']], 'arm': ARMRUTOR}
+    integral = {}
 
-    def mat(c):
-        m = figurmatt(linjeyta, linje, c, punkter)
-        if m is not None:
-            m['utanfor'] = any(x0 < 0 or y0 < 0 or x1 > W or y1 > H for x0, y0, x1, y1 in ram(c))
+    def yta_vid(px, py):
+        x, y = int(round(px * F)), int(round(py * F))
+        for r in range(0, 12):
+            del_ = linjeyta[max(0, y - r):y + r + 1, max(0, x - r):x + r + 1]
+            v = del_[del_ > 0]
+            if len(v):
+                return int(np.bincount(v).argmax())
+        return 0
+
+    def ii_for(ids):
+        if ids not in integral:
+            k = np.isin(linjeyta, list(ids)) & ~linje
+            integral[ids] = np.pad(k.astype(np.int32), ((1, 0), (1, 0))).cumsum(0).cumsum(1)
+        return integral[ids]
+
+    def mat(c, ids):
+        ii = ii_for(ids)
+        cc = skalad(c, F)
+        fot = int(round(cc['y']))
+        m = {'utanfor': any(x0 < 0 or y0 < 0 or x1 > W or y1 > H for x0, y0, x1, y1 in ram(cc))}
+        for namn, rekt in rutor.items():
+            ja = tot = 0
+            for x0, y0, x1, y1, _ in ba.rektanglar(cc, rekt):
+                x0, x1 = max(0, min(W, x0)), max(0, min(W, x1))
+                y1c = max(0, min(H, y1, fot))
+                y0c = max(0, min(y0, y1c))
+                tot += max(0, x1 - x0) * max(0, y1 - y0)
+                ja += ii[y1c, x1] - ii[y0c, x1] - ii[y1c, x0] + ii[y0c, x0]
+            m[namn] = ja / max(1, tot)
         return m
 
-    def kost(m):
-        # innanför bilden, armen synlig, kroppen i målet, fötterna dolda
-        return (m['utanfor'], m['arm'] < ARM_MIN, round(max(0, lag - m['kropp'], m['kropp'] - hog), 2), m['fotter'])
-    m0 = mat(c)
-    if m0 is None:
-        return c, None
-    bast = (c, m0)
-    if kost(m0)[:3] == (False, False, 0):
+    def kost(m, c2):
+        andring = abs(c2['y'] - c['y']) / 40 + abs(c2['x'] - c['x']) / 30 + (1 - c2['s'] / c['s']) * 3
+        # marginal: kontrollen mäter i den spårade klippbanan, som avrundas lite annorlunda
+        return (m['utanfor'], m['arm'] < ARM_MIN + 0.05, round(max(0, lag - m['kropp'], m['kropp'] - hog), 2),
+                m['fotter'] > FOTTER_SYNS, andring)
+
+    def bra(m, c2):
+        return kost(m, c2)[:4] == (False, False, 0, False)
+
+    def kandidater():
+        for f in (1.0, 0.9, 0.8):
+            s2 = round(c['s'] * f, 3)
+            dxmax = round(32 * c['s'])
+            for dx in range(-dxmax, dxmax + 1, 4):
+                for dy in range(-JUSTERA_MAX, JUSTERA_MAX + 1, 2):
+                    yield {'x': c['x'] + dx, 'y': c['y'] + dy, 's': s2}
+
+    pkt = punkter or [(c['x'], c['y'] - 124 * c['s'])]
+    ids0 = frozenset(yta_vid(px, py) for px, py in pkt) - {0}
+    if not ids0:
+        return c, None, punkter
+    bast = (c, mat(c, ids0), punkter)
+    if bra(bast[1], c):
         return bast
-    for dy in list(range(2, JUSTERA_MAX + 1, 2)) + list(range(-2, -JUSTERA_MAX - 1, -2)):
-        c2 = dict(c, y=c['y'] + dy)
-        m = mat(c2)
-        if m and kost(m) < kost(bast[1]):
-            bast = (c2, m)
+    for c2 in kandidater():
+        m = mat(c2, ids0)
+        if kost(m, c2) < kost(bast[1], bast[0]):
+            bast = (c2, m, punkter)
+    if bra(bast[1], bast[0]):
+        return bast
+    # andra försöket: ytan vid kroppens mitt där figuren hamnar
+    for c2 in kandidater():
+        mitt = (c2['x'], c2['y'] - 124 * c2['s'])
+        i = yta_vid(*mitt)
+        if not i:
+            continue
+        m = mat(c2, frozenset([i]))
+        if kost(m, c2) < kost(bast[1], bast[0]):
+            bast = (c2, m, [(round(mitt[0]), round(mitt[1]))])
     return bast
 
 
 def figurer(data, bild=None):
     """Figurerna med klippbanor (linjeytan där kroppen står): ur GOMSTALLEN
-    (valda för hand) eller annars ur bilder.js (bild), justerade upp eller
-    ner så att kroppen syns till KROPP_MAL och armen syns (justera)."""
+    (valda för hand) eller annars ur bilder.js (bild), justerade (justera)
+    så att kroppen syns till KROPP_MAL och armen syns."""
     linje = fyll_bana(data['linje']['d'], (data['h'] * F, data['b'] * F), F)
     linjeyta, _ = nd.label(~linje)
     ut = {}
@@ -880,8 +951,7 @@ def figurer(data, bild=None):
     for k, v in platser.items():
         c = {'x': v[0], 'y': v[1], 's': v[2]}
         punkter = v[3] if len(v) > 3 else None
-        if hand is None:
-            c, _ = justera(linjeyta, linje, c, punkter)
+        c, _, punkter = justera(linjeyta, linje, c, punkter)
         klipp = klippbana(linjeyta, c, punkter)
         if klipp:
             c['klipp'] = klipp
@@ -992,7 +1062,16 @@ def kontroll(data, org=None):
     ys, xs = np.nonzero(e)
     # en ände som når en korsning inom `sporre` px är en knöl (en stump kvar
     # efter en borttagen sporre), inte ett öppet streck
-    fria = [(y, x) for y, x in zip(ys, xs) if not gren_bakat(sk, (y, x), sporre)[1]]
+    # en ände inne i en fylld klump (en prick på en antenn, en mörk yta som
+    # blivit linje) är inget öppet streck: där är linjen mycket bredare än
+    # LINJE_BREDD
+    bredd = nd.distance_transform_edt(linje)
+    r = sporre
+
+    def i_klump(y, x):
+        return bredd[max(0, y - r):y + r + 1, max(0, x - r):x + r + 1].max() > 0.75 * LINJE_BREDD * F
+
+    fria = [(y, x) for y, x in zip(ys, xs) if not gren_bakat(sk, (y, x), sporre)[1] and not i_klump(y, x)]
     ys, xs = [p[0] for p in fria], [p[1] for p in fria]
     if len(ys):
         fel.append('%d fria ändar i linjerna, t.ex. vid %s' % (len(ys), ', '.join('(%d, %d)' % (x // F, y // F) for y, x in list(zip(ys, xs))[:5])))
@@ -1034,7 +1113,11 @@ def main():
     alla = {b['fil']: b for b in ba.bilder()[0]}
     namn = a.namn or sorted(f[:-5] for f in os.listdir(a.ut) if f.endswith('.json'))
     fel_totalt = 0
+    g = globals()
+    forval = {k: g[k] for inst in BILDINST.values() for k in inst}
     for fil in namn:
+        g.update(forval)
+        g.update(BILDINST.get(fil, {}))
         if a.gor:
             data = gor(fil, a.ut, alla[fil])
         elif a.figurer:
