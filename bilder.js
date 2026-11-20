@@ -63,9 +63,9 @@ const ALLA_BILDER = [
     { nr: 47, namn: 'Raket 3', fil: 'raket3', keiws: { x: 140, y: 455, s: 0.5, ytor: [[140, 393]] }, gron: { x: 622, y: 139, s: 0.5, ytor: [[622, 77]] }, rod: { x: 1040, y: 370, s: 0.36, ytor: [[1040, 325]] } },
     { nr: 48, namn: 'Grävare 5', fil: 'gravare5', keiws: { x: 830, y: 475, s: 0.3, ytor: [[840, 330], [830, 445], [830, 410]] } }, // i hyttfönstret
     { nr: 49, namn: 'Traktor 5', fil: 'traktor5', keiws: { x: 420, y: 330, s: 0.28, ytor: [[420, 260], [420, 310]] } }, // i hyttfönstret
-    { nr: 50, namn: 'Flygplan 6', fil: 'flygplan6', keiws: { x: 732, y: 458, s: 0.5, ytor: [[732, 396]] }, gron: { x: 292, y: 205, s: 0.5, ytor: [[292, 143]] }, rod: { x: 622, y: 297, s: 0.5, ytor: [[622, 235]] } }, // i cockpit
+    { nr: 50, namn: 'Flygplan 6', fil: 'flygplan6', keiws: { x: 807, y: 458, s: 0.5, ytor: [[807, 396]] }, gron: { x: 367, y: 205, s: 0.5, ytor: [[367, 143]] }, rod: { x: 697, y: 297, s: 0.5, ytor: [[697, 235]] } }, // i cockpit
     { nr: 51, namn: 'Sopbil 5', fil: 'sopbil5', keiws: { x: 375, y: 480, s: 0.28, ytor: [[375, 400]] } }, // i sidorutan
-    { nr: 52, namn: 'Stort flygplan 5', fil: 'flygplan-stort5', keiws: { x: 809, y: 114, s: 0.45, ytor: [[809, 58]] }, gron: { x: 114, y: 479, s: 0.353, ytor: [[114, 434]] }, rod: { x: 959, y: 407, s: 0.405, ytor: [[959, 357]] } },
+    { nr: 52, namn: 'Stort flygplan 5', fil: 'flygplan-stort5', keiws: { x: 884, y: 114, s: 0.45, ytor: [[884, 58]] }, gron: { x: 189, y: 479, s: 0.353, ytor: [[189, 434]] }, rod: { x: 1034, y: 407, s: 0.405, ytor: [[1034, 357]] } },
     { nr: 53, namn: 'Kranbil 3', fil: 'kranbil3', keiws: { x: 770, y: 380, s: 0.3, ytor: [[770, 310]] } }, // i kranhytten
     { nr: 54, namn: 'Traktor 6', fil: 'traktor6', keiws: { x: 736, y: 144, s: 0.42, ytor: [[736, 91]] }, gron: { x: 589, y: 128, s: 0.5, ytor: [[589, 66]] }, rod: { x: 879, y: 413, s: 0.412, ytor: [[879, 361]] } },
     { nr: 55, namn: 'Betongbil 3', fil: 'betongbil3', keiws: { x: 365, y: 380, s: 0.28, ytor: [[365, 320]] } }, // i sidorutan
@@ -77,12 +77,12 @@ const ALLA_BILDER = [
     { nr: 61, namn: 'Sopbil 6', fil: 'sopbil6', keiws: { x: 425, y: 480, s: 0.28, ytor: [[425, 380]] } }, // i sidorutan
     { nr: 62, namn: 'Helikopter 3', fil: 'helikopter3', keiws: { x: 680, y: 480, s: 0.3, ytor: [[680, 420]] } }, // i kabinfönstret
     { nr: 63, namn: 'Dumper 3', fil: 'dumper3', keiws: { x: 240, y: 400, s: 0.3, ytor: [[240, 320]] } }, // i vindrutan
-    { nr: 64, namn: 'Skördetröska', fil: 'skordetroska', keiws: { x: 945, y: 220, s: 0.5, ytor: [[945, 158]] }, gron: { x: 677, y: 114, s: 0.45, ytor: [[677, 58]] }, rod: { x: 310, y: 224, s: 0.4, ytor: [[310, 174]] } },
+    { nr: 64, namn: 'Skördetröska', fil: 'skordetroska', keiws: { x: 1000, y: 223, s: 0.47, ytor: [[1000, 165]] }, gron: { x: 752, y: 114, s: 0.45, ytor: [[752, 58]] }, rod: { x: 374, y: 227, s: 0.4, ytor: [[374, 177]] } },
     { nr: 65, namn: 'Dumper 4', fil: 'dumper4', keiws: { x: 1000, y: 400, s: 0.3, ytor: [[1000, 320]] } }, // i vindrutan
     { nr: 66, namn: 'Plogbil', fil: 'plogbil', keiws: { x: 680, y: 380, s: 0.3, ytor: [[680, 300]] } }, // i vindrutan
     { nr: 67, namn: 'Bärgningsbil', fil: 'bargningsbil', keiws: { x: 180, y: 430, s: 0.3, ytor: [[130, 400], [195, 400], [260, 400]] } }, // i vindrutan
     { nr: 68, namn: 'Postbil', fil: 'postbil', keiws: { x: 800, y: 420, s: 0.3, ytor: [[800, 320]] } }, // i vindrutan
-    { nr: 69, namn: 'Traktor 7', fil: 'traktor7', keiws: { x: 1100, y: 245, s: 0.33, ytor: [[1100, 185]] }, gron: { x: 274, y: 257, s: 0.5, ytor: [[274, 195]] }, rod: { x: 864, y: 216, s: 0.5, ytor: [[864, 154]] } },
+    { nr: 69, namn: 'Traktor 7', fil: 'traktor7', keiws: { x: 1175, y: 245, s: 0.33, ytor: [[1175, 185]] }, gron: { x: 349, y: 257, s: 0.5, ytor: [[349, 195]] }, rod: { x: 939, y: 216, s: 0.5, ytor: [[939, 154]] } },
     { nr: 70, namn: 'Lastfartyg', fil: 'lastfartyg', keiws: { x: 400, y: 250, s: 0.18, ytor: [[400, 230]] } }, // på bryggan
     { nr: 71, namn: 'Sopbil 7', fil: 'sopbil7', keiws: { x: 1060, y: 460, s: 0.3, ytor: [[1060, 380]] } }, // i vindrutan
     { nr: 72, namn: 'Buss 3', fil: 'buss3', keiws: { x: 515, y: 500, s: 0.3, ytor: [[515, 400], [515, 470]] } }, // i ett sidofönster

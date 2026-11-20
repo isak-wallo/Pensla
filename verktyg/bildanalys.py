@@ -52,8 +52,9 @@ class Ritare:
 
     def __enter__(self):
         from playwright.sync_api import sync_playwright
+        from vinkarm import chromium
         self.pw = sync_playwright().start()
-        self.b = self.pw.chromium.launch()
+        self.b = chromium(self.pw)
         self.sida = self.b.new_page()
         self.sida.set_content('<html><body></body></html>')
         return self

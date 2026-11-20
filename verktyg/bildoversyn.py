@@ -17,6 +17,10 @@ varje fri ände undersöks. Finns en annan linje inom GLAPP_RADIE px framför
 fritt (glansstreck, skuggstreck eller en kontur som tar slut). Ändar vid
 bildkanten räknas inte.
 
+Ytorna: `små ytor` = ytor under SMA_YTA px (för små att se), `remsor` =
+ytor som ingenstans är bredare än 2 × SMAL_YTA px (dubbla eller fransiga
+konturer), `linje %` = andel av bilden som är linje (täthet).
+
 Figurerna: som i appen ritas de bara i sina ytor och ovanför fötterna.
 `dold` = andel av figuren (stilla) som inte syns, `kropp` = andel av
 kroppen, `streck` = ett streck går över kroppen, `arm` = andel av den
@@ -37,6 +41,19 @@ import bildanalys as ba  # noqa: E402
 UT = os.path.join(ba.ROT, 'granskning', 'oversyn')
 GLAPP_RADIE = 20
 DOLD_GRANS = 2.0      # % av figuren som får döljas innan den räknas som delvis dold
+SMA_YTA = 60          # ytor mindre än så (px vid 900) är för små att se eller måla
+SMAL_YTA = 2.5        # ytor som ingenstans är bredare än 2 × så (px) är remsor (dubbla eller fransiga konturer)
+
+
+def ytmatt(linje, lab):
+    """Små ytor, smala remsor (dubbla/fransiga konturer) och linjeandel."""
+    n = lab.max()
+    area = np.bincount(lab.ravel(), minlength=n + 1)
+    sma = int(((area[1:] > 0) & (area[1:] < SMA_YTA)).sum())
+    djup = nd.distance_transform_edt(lab > 0)
+    bredast = nd.maximum(djup, lab, index=np.arange(1, n + 1))
+    smala = int(((np.asarray(bredast) < SMAL_YTA) & (area[1:] >= SMA_YTA)).sum())
+    return {'sma_ytor': sma, 'remsor': smala, 'ytor': int(n), 'linjeandel': round(100 * float(linje.mean()), 1)}
 
 
 def forhandsbild(rgb, alfa, andar, figurer):
@@ -108,9 +125,11 @@ def main():
                 'losa': sum(1 for a in andar if a[2] == 'lös'),
                 'figurer': fres, 'krock': krock,
             }
+            rad.update(ytmatt(linje, lab))
             resultat.append(rad)
             forhandsbild(rgb, alfa, andar, figurer).save(os.path.join(UT, b['fil'] + '.png'))
-            print(b['nr'], b['fil'], 'glapp', rad['glapp'], 'lösa', rad['losa'],
+            print(b['nr'], b['fil'], 'glapp', rad['glapp'], 'lösa', rad['losa'], 'små', rad['sma_ytor'],
+                  'remsor', rad['remsor'], 'linje %', rad['linjeandel'],
                   {n: (k['dold'], k['kropp_dold'], k['streck_over_kropp']) for n, k in fres.items()}, krock or '')
     json.dump(resultat, open(os.path.join(UT, 'resultat.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     open(os.path.join(UT, 'tabell.md'), 'w', encoding='utf-8').write(tabell(resultat))
@@ -136,12 +155,12 @@ def figurtext(k):
 
 
 def tabell(resultat):
-    rader = ['| Nr | Bild | Glapp | Lösa streck | keIWs | Grön | Röd |',
-             '|---:|---|---:|---:|---|---|---|']
+    rader = ['| Nr | Bild | Glapp | Lösa streck | Små ytor | Remsor | Linje % | keIWs | Grön | Röd |',
+             '|---:|---|---:|---:|---:|---:|---:|---|---|---|']
     for r in resultat:
         f = r['figurer']
-        rad = '| %d | %s | %d | %d | %s | %s | %s |' % (
-            r['nr'], r['namn'], r['glapp'], r['losa'],
+        rad = '| %d | %s | %d | %d | %d | %d | %.1f | %s | %s | %s |' % (
+            r['nr'], r['namn'], r['glapp'], r['losa'], r['sma_ytor'], r['remsor'], r['linjeandel'],
             figurtext(f.get('keiws')), figurtext(f.get('gron')), figurtext(f.get('rod')))
         if r['krock']:
             rad = rad[:-2] + ' (krockar: ' + ', '.join(r['krock']) + ') |'

@@ -123,12 +123,15 @@ BORT = {
 # beskärs som förut, så att keIWs-måtten i bilder.js stämmer.
 BESKAR_4_3 = {
     'ambulans3', 'bargningsbil', 'betongbil3', 'brandbil3', 'brandbil4',
-    'brandbil5', 'buss3', 'dumper3', 'dumper4', 'flygplan-stort5',
-    'flygplan6', 'gravare4', 'gravare5', 'helikopter3', 'kranbil3',
+    'brandbil5', 'buss3', 'dumper3', 'dumper4',
+    'gravare4', 'gravare5', 'helikopter3', 'kranbil3',
     'lastfartyg', 'plogbil', 'polisbil4', 'polisbil5', 'postbil',
-    'raddningsbat', 'skordetroska', 'sopbil5', 'sopbil6', 'sopbil7',
-    'traktor5', 'traktor6', 'traktor7',
+    'raddningsbat', 'sopbil5', 'sopbil6', 'sopbil7',
+    'traktor5', 'traktor6',
 }
+# Togs ur BESKAR_4_3 i v108 (beskärningen klippte av fordonet, nu 1350 × 900;
+# figurerna flyttades 75 px åt höger): flygplan6, flygplan-stort5,
+# skordetroska och traktor7.
 HOJD = 900
 
 

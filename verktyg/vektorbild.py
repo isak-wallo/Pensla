@@ -81,6 +81,7 @@ from scipy import ndimage as nd
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bildanalys as ba  # noqa: E402
 from fargbild import tunna, utan_sporrar, LINJEFARG  # noqa: E402
+from gomstallen import typsnitt  # noqa: E402
 
 def _keiws_mapp():
     """Mappen med Pensla och pensla-native (även när verktyget körs från en git worktree)."""
@@ -935,7 +936,7 @@ def main():
             k, rgb = kandidater(data)
             im = Image.fromarray((rgb * 0.75 + 255 * 0.25).astype(np.uint8))
             d = ImageDraw.Draw(im)
-            font = ImageFont.truetype('C:/Windows/Fonts/segoeuib.ttf', 22)
+            font = typsnitt(22)
             for i, c in enumerate(k, 1):
                 for x0, y0, x1, y1, f in ba.rektanglar(c, ba.STILLA):
                     d.rectangle([x0, y0, x1 - 1, y1 - 1], fill=ba.FARGER['keiws'].get(f, '#5685d7'))
