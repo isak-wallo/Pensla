@@ -145,6 +145,23 @@ SPARA-knappen togs bort i v105 (Isak 2026-11-17): det målade sparas ändå i
 plattan, och knappen gjorde inget i en vanlig WebView. `SparaPlugin.java` ligger
 kvar i android/ men används inte.
 
+### Vektorbilderna till Pensla N (sedan v108)
+Pensla N (native-appen, repot pensla-native som bara finns lokalt hos
+keIWs) ritar bilderna som vektorer i JSON (format 1, beskrivet överst i
+`verktyg/vektorbild.py`). Alla aktiva bilder ligger i `native/bilder/NAMN.json`
+(kopieras till pensla-native/app/src/main/assets/bilder/).
+- `python verktyg/vektorbild.py --gor NAMN ...` gör JSON-filen (ca 0,5–2 min
+  per bild), `--figurer` skriver bara om figurerna, `--kontroll` kontrollerar
+  (inga fria ändar, inga luckor, ΔE mot färgbilden, figurerna). Förvald mapp
+  är `native/bilder`.
+- Figurerna: `GOMSTALLEN` (valda för hand) eller annars webbens platser ur
+  bilder.js, som `justera` flyttar upp eller ner (högst 40 px, samma yta)
+  så att kroppen syns till 65–80 % (`KROPP_MAL`) och armen till minst 90 %
+  (`ARM_MIN`, även ett fel i kontrollen). `python verktyg/matt_figurer.py`
+  mäter dem.
+- Plattan har 2 GB minne: håll koll på storleken (rapporten
+  `docs/utredningar/vektor_v108.md`).
+
 ### Arbetsflöde: bara `main`
 Jobba direkt på `main` (inga sidgrenar). Commit-meddelanden på svenska.
 När en ändring är klar: bumpa VERSION, commit, `git push origin main` och

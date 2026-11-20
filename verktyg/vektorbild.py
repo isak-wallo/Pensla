@@ -6,8 +6,8 @@ skarpt i alla storlekar, och kontrollerar dem.
     python verktyg/vektorbild.py --kandidater NAMN ...  # gömställen att välja bland
     python verktyg/vektorbild.py --kontroll [NAMN ...]  # kontrollerar JSON-filerna
 
-`--ut MAPP` byter mapp för JSON-filerna (förval: pensla-native/app/src/main/
-assets/bilder bredvid repot, tills webben också använder formatet).
+`--ut MAPP` byter mapp för JSON-filerna (förval: native/bilder i repot; de
+kopieras till pensla-native/app/src/main/assets/bilder).
 Förhandsbilder och kandidater hamnar i granskning/vektor/.
 
 Formatet (NAMN.json, version 1). Alla mått i bildpixlar, bilden är `h` = 900
@@ -95,7 +95,7 @@ def _keiws_mapp():
 
 
 KEIWS_MAPP = _keiws_mapp()
-UT_FORVAL = os.path.join(KEIWS_MAPP, 'pensla-native', 'app', 'src', 'main', 'assets', 'bilder')
+UT_FORVAL = os.path.join(ba.ROT, 'native', 'bilder')   # kopieras till pensla-native/app/src/main/assets/bilder
 GRANSK = os.path.join(ba.ROT, 'granskning', 'vektor')
 
 F = 2                  # arbetsskala (1800 px hög)
@@ -717,6 +717,14 @@ def kolla_figurer(data, linje, skala=1.0):
         syns = (kropp & klipp).sum() / max(1, kropp.sum())
         if syns < KROPP_SYNS:
             fel.append('%s: bara %d %% av kroppen syns' % (namn, 100 * syns))
+        k2 = klipp.copy()
+        k2[int(round(cc['y'])):] = False   # som PenslaVy: inget under fötterna
+        arm = ba.figurmask(cc, (H, W), ARMRUTOR)
+        am = (arm & k2).sum() / max(1, arm.sum())
+        if am < ARM_MIN:
+            fel.append('%s: bara %d %% av den vinkande armen syns' % (namn, 100 * am))
+        if syns > KROPP_MAL[1] + 0.05:
+            varn.append('%s: kroppen syns till %d %% (målet %d–%d %%)' % (namn, 100 * syns, 100 * KROPP_MAL[0], 100 * KROPP_MAL[1]))
         fs = (fotter & klipp).sum() / max(1, fotter.sum())
         if fs > FOTTER_SYNS:
             varn.append('%s: fötterna syns (%d %%), står inte bakom något' % (namn, 100 * fs))
@@ -782,14 +790,99 @@ def kandidater(data, antal=20):
 
 # ------------------------------------------------------------------ huvudprogram
 
-def figurer(data):
-    """Figurerna ur GOMSTALLEN med klippbanor (linjeytan där kroppen står)."""
+KROPP_MAL = (0.65, 0.80)   # så stor del av kroppen ska synas (justera)
+ARM_MIN = 0.9              # så stor del av den vinkande armen ska synas
+JUSTERA_MAX = 40           # högst så långt (px) en figur flyttas upp eller ner
+
+
+def armrutor():
+    """Armen i vinka-bilderna där den är uppe (x0 >= 160, y0 < 64)."""
+    ut = []
+    for r in ba.VINKA:
+        for a in r:
+            if a[0] >= 160 and a[1] < 64 and a[:4] not in [b[:4] for b in ut]:
+                ut.append(a)
+    return ut
+
+
+ARMRUTOR = armrutor()
+
+
+def figurmatt(linjeyta, linje, c, punkter=None, klipp=None):
+    """Hur stor del av kroppen, fötterna och den vinkande armen som syns i
+    klippbanan (som PenslaVy: bara i ytan, under linjerna, ovanför fötterna).
+    linjeyta och linje i arbetsskalan F."""
+    H, W = linje.shape
+    if klipp is None:
+        klipp = klippbana(linjeyta, c, punkter)
+    if not klipp:
+        return None
+    k = fyll_bana(klipp, (H, W), F) & ~linje
+    k[int(round(c['y'] * F)):] = False
+    cc = skalad(c, F)
+    ut = {}
+    for namn, rekt in (('kropp', [[0, 0, 160, 160, 'bla']]), ('fotter', [[0, 168, 160, 204, 'bla']]), ('arm', ARMRUTOR)):
+        m = ba.figurmask(cc, (H, W), rekt)
+        ut[namn] = float((m & k).sum() / max(1, m.sum()))
+    return ut
+
+
+def fran_bilder(bild, fil):
+    """Figurerna ur bilder.js (webbens gömställen), flyttade efter BESKAR:
+    {namn: (x, y, s, ytor)}."""
+    dx = BESKAR[fil][0] if fil in BESKAR else 0
+    ut = {}
+    for n in ('keiws', 'gron', 'rod'):
+        c = bild.get(n) if bild else None
+        if c:
+            ut[n] = (c['x'] - dx, c['y'], c['s'], [(px - dx, py) for px, py in c['ytor']])
+    return ut
+
+
+def justera(linjeyta, linje, c, punkter):
+    """Flyttar figuren upp eller ner (högst JUSTERA_MAX px, samma yta) tills
+    kroppen syns till KROPP_MAL och armen till ARM_MIN. Returnerar (c, mått)."""
+    H, W = linje.shape[0] / F, linje.shape[1] / F
+    lag, hog = KROPP_MAL
+
+    def mat(c):
+        m = figurmatt(linjeyta, linje, c, punkter)
+        if m is not None:
+            m['utanfor'] = any(x0 < 0 or y0 < 0 or x1 > W or y1 > H for x0, y0, x1, y1 in ram(c))
+        return m
+
+    def kost(m):
+        # innanför bilden, armen synlig, kroppen i målet, fötterna dolda
+        return (m['utanfor'], m['arm'] < ARM_MIN, round(max(0, lag - m['kropp'], m['kropp'] - hog), 2), m['fotter'])
+    m0 = mat(c)
+    if m0 is None:
+        return c, None
+    bast = (c, m0)
+    if kost(m0)[:3] == (False, False, 0):
+        return bast
+    for dy in list(range(2, JUSTERA_MAX + 1, 2)) + list(range(-2, -JUSTERA_MAX - 1, -2)):
+        c2 = dict(c, y=c['y'] + dy)
+        m = mat(c2)
+        if m and kost(m) < kost(bast[1]):
+            bast = (c2, m)
+    return bast
+
+
+def figurer(data, bild=None):
+    """Figurerna med klippbanor (linjeytan där kroppen står): ur GOMSTALLEN
+    (valda för hand) eller annars ur bilder.js (bild), justerade upp eller
+    ner så att kroppen syns till KROPP_MAL och armen syns (justera)."""
     linje = fyll_bana(data['linje']['d'], (data['h'] * F, data['b'] * F), F)
     linjeyta, _ = nd.label(~linje)
     ut = {}
-    for k, v in GOMSTALLEN.get(data['fil'], {}).items():
+    hand = GOMSTALLEN.get(data['fil'])
+    platser = hand if hand is not None else fran_bilder(bild, data['fil'])
+    for k, v in platser.items():
         c = {'x': v[0], 'y': v[1], 's': v[2]}
-        klipp = klippbana(linjeyta, c, v[3] if len(v) > 3 else None)
+        punkter = v[3] if len(v) > 3 else None
+        if hand is None:
+            c, _ = justera(linjeyta, linje, c, punkter)
+        klipp = klippbana(linjeyta, c, punkter)
         if klipp:
             c['klipp'] = klipp
         ut[k] = c
@@ -801,18 +894,27 @@ def gor(fil, ut, bild):
     with ba.Ritare() as r:
         alfa2, rgb2 = las_bild(r, fil, ba.PAPER_H * F)
     sk = linjeskelett(alfa2, logg)
-    tjock = cv2.dilate(sk.astype(np.uint8), skiva(round(LINJE_BREDD * F / 2)))
+    tjock = cv2.dilate(sk.astype(np.uint8), skiva(round(LINJE_BREDD * F / 2))).astype(bool)
+    # hål i den tjocka linjen som är mindre än YTA_MIN (smala glipor mellan två
+    # streck som går tätt) fylls, annars blir de öglor med fria ändar
+    lab, _ = nd.label(~tjock)
+    storlek = np.bincount(lab.ravel())
+    glipa = storlek < YTA_MIN * F * F
+    glipa[0] = False
+    if glipa[1:].any():
+        logg.append('%d glipor i linjerna fylls' % glipa[1:].sum())
+        tjock |= glipa[lab]
     yta, okand, _ = fargytor(sk, rgb2, alfa2, logg)
     data = {
         'format': 1, 'nr': bild['nr'], 'namn': bild['namn'], 'fil': fil,
         'b': rgb2.shape[1] // F, 'h': ba.PAPER_H,
         'ytor': ytor(yta, rgb2, okand),
-        'linje': {'f': LINJEFARG, 'd': potracebana(tjock.astype(bool), 1 / F)},
+        'linje': {'f': LINJEFARG, 'd': potracebana(tjock, 1 / F)},
     }
     if fil in BESKAR:
         data['beskar'] = list(BESKAR[fil])   # (x0, x1) i färgbilden, för granskningen
     del yta, okand, alfa2, rgb2
-    data['figurer'] = figurer(data)
+    data['figurer'] = figurer(data, bild)
     os.makedirs(ut, exist_ok=True)
     p = os.path.join(ut, fil + '.json')
     json.dump(data, open(p, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
@@ -820,10 +922,10 @@ def gor(fil, ut, bild):
     return data
 
 
-def satt_figurer(fil, ut):
+def satt_figurer(fil, ut, bild=None):
     p = os.path.join(ut, fil + '.json')
     data = json.load(open(p, encoding='utf-8'))
-    data['figurer'] = figurer(data)
+    data['figurer'] = figurer(data, bild)
     json.dump(data, open(p, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     return data
 
@@ -879,12 +981,19 @@ def kontroll(data, org=None):
     im, linje, tackt = rita(data, F, med_figurer=False)
     H, W = linje.shape
     # 1. alla konturer slutna: skelettet av linjerna har inga fria ändar
-    sk = utan_sporrar(tunna(linje), 3 * F)
+    # sporrar kortare än två linjebredder är hörn och knölar i den tjocka
+    # linjen (de kan varken öppna eller stänga en yta), inte fria ändar
+    sporre = round(2 * LINJE_BREDD * F)
+    sk = utan_sporrar(tunna(linje), sporre)
     sk = ba.stora_bitar(sk, 20 * F)
     e = ba.andpunkter(sk)
     e[:10 * F] = e[-10 * F:] = False
     e[:, :10 * F] = e[:, -10 * F:] = False
     ys, xs = np.nonzero(e)
+    # en ände som når en korsning inom `sporre` px är en knöl (en stump kvar
+    # efter en borttagen sporre), inte ett öppet streck
+    fria = [(y, x) for y, x in zip(ys, xs) if not gren_bakat(sk, (y, x), sporre)[1]]
+    ys, xs = [p[0] for p in fria], [p[1] for p in fria]
     if len(ys):
         fel.append('%d fria ändar i linjerna, t.ex. vid %s' % (len(ys), ', '.join('(%d, %d)' % (x // F, y // F) for y, x in list(zip(ys, xs))[:5])))
     # 2. inga luckor: allt utanför linjerna täcks av en färgyta
@@ -914,7 +1023,7 @@ def kontroll(data, org=None):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--gor', action='store_true')
-    ap.add_argument('--figurer', action='store_true', help='skriv bara om figurerna från GOMSTALLEN')
+    ap.add_argument('--figurer', action='store_true', help='skriv bara om figurerna (GOMSTALLEN eller bilder.js)')
     ap.add_argument('--kandidater', action='store_true')
     ap.add_argument('--kontroll', action='store_true')
     ap.add_argument('--dekarta', action='store_true', help='spara ΔE-karta i granskning/vektor/de-NAMN.png')
@@ -929,7 +1038,7 @@ def main():
         if a.gor:
             data = gor(fil, a.ut, alla[fil])
         elif a.figurer:
-            data = satt_figurer(fil, a.ut)
+            data = satt_figurer(fil, a.ut, alla.get(fil))
         else:
             data = json.load(open(os.path.join(a.ut, fil + '.json'), encoding='utf-8'))
         if a.kandidater:
