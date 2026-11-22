@@ -173,6 +173,94 @@ där. Ny APK (`verktyg/bygg_apk.py`) efter varje ny version.
 `sw.js` har `const VERSION = 'vNN'`. Höj den varje gång filer ändras och
 pushas, annars fastnar plattan på gammal cache.
 
+## Hemlig markering (v111)
+
+Ägaren märker ut bilder som ska ses över, direkt i appen. Barnets målning
+rörs aldrig. Koden: `app.js` (blocket "Hemlig markering"), `index.html`
+(`#mark-lage`), `style.css`, `worker/mottagare.js`, `worker/schema.sql`.
+Samma funktion finns i Pensla N (se CLAUDE.md där).
+
+- **Gesten:** håll ◀, ▶ och FÄRGLÄGG samtidigt i 5 s (`GEST_MS`), utan att
+  BÖRJA OM hålls (en hand över hela panelen ger alltså inget). Ordningen
+  spelar ingen roll. Lyfts ett finger, glider det av sin knapp (`GEST_SLACK`)
+  eller trycks BÖRJA OM börjar tiden om. Under gesten färgläggs inget, och
+  bilden är densamma efteråt: den första pilen byter bild direkt, den andra
+  går tillbaka till bilden som visades innan (`foreBild`), så bilden blinkar
+  till en gång.
+- **Läget:** texten "Markera områden som ska ses över" högst upp i bilden och
+  knapparna KLAR och AVBRYT över knapp-panelen. Man målar grovt med fingret
+  (flera drag, flera fingrar) i ett eget halvgenomskinligt lager
+  (`markCanvas`, magenta). KLAR sparar och skickar, AVBRYT kastar, och båda
+  går tillbaka till den vanliga appen. KLAR utan drag = hela bilden. Läget
+  stänger sig självt efter 90 s utan beröring och när appen döljs. KLAR och
+  AVBRYT agerar när fingret släpps på knappen.
+- **Format** (samma i webben, Pensla N och mottagaren):
+  ```
+  {"id":"16 hex","nr":22,"namn":"Ambulans","drag":[[x0,y0,x1,y1,...],...],
+   "bredd":0.05,"tid":"2026-11-22T20:15:03Z","version":"v110-test","plattform":"webb"}
+  ```
+  Punkterna är normerade 0–1 i bildens koordinater (x mot bredden, y mot
+  höjden; i stående vy är bilden roterad men koordinaterna desamma), 3
+  decimaler. `bredd` = penselns bredd som andel av bildens höjd. Tak: 20
+  drag, 100 punkter per drag, 600 punkter sammanlagt (dragen förenklas med
+  Ramer–Douglas–Peucker). `version` tas ur cachens namn (sw.js).
+- **Kön:** KLAR lägger markeringen i `pensla-markeringar` i localStorage
+  (högst 50) och skickar kön med POST till `api/markering` på samma adress.
+  En markering tas ur kön först när mottagaren svarat `sparad` eller
+  `ogiltig` (svarshuvudet `X-Pensla-Markering`); annars (inget nät, `stangd`,
+  `full`) ligger den kvar och skickas när appen startas nästa gång eller
+  nätet kommer tillbaka. Kvittot: "Skickat ✓" eller "Sparat ✓ Skickas senare".
+  `sw.js` rör inget under `/api/` och bara GET.
+- **Mottagaren** (`worker/mottagare.js`, Worker framför de statiska filerna,
+  körs bara för `/api/*`): bara POST med JSON från sidans egen adress
+  (Origin), högst 10 kB, bara kända fält, bildnummer som finns i bilder.js,
+  namnet slås upp i mottagaren (appens text sparas inte), inget om
+  avsändaren sparas. Sparar i D1-tabellen `markering` (kolumnen `miljo` =
+  `skarp` eller `test` efter värdnamnet, `hanterad` = 0). Tak: 60 nya per
+  dygn och 500 rader sammanlagt, sedan 429 `full` tills någon rensat. Det
+  finns ingen adress att läsa på. Svar: 204 `sparad` (även för en dubblett),
+  400/403/405/413/415 `ogiltig`, 429 `full`, 503 `stangd` (ingen databas).
+- **Databasen** (ägarens val 2026-11-22: EN databas för test och skarpt,
+  `miljo` skiljer dem åt). Tills den finns står `d1_databases` som kommentar
+  i `wrangler.jsonc`, mottagaren svarar `stangd` och apparna behåller kön.
+  Stegen (körs av den som har kontot, inte av verktygen här):
+  ```
+  npx wrangler@4 d1 create pensla-markeringar
+  ```
+  Lägg det `database_id` som skrivs ut på BÅDA ställena i `wrangler.jsonc`
+  (överst och i env `test`, samma id) och ta bort kommentartecknen runt
+  `d1_databases`. Sedan en gång:
+  ```
+  npx wrangler@4 d1 execute pensla-markeringar --remote --file worker/schema.sql
+  ```
+  och vanlig publicering (`python verktyg/slapp.py --test`, skarpt när ägaren
+  säger "släpp"). Markera som åtgärdad eller rensa (taket 500 räknar alla
+  rader):
+  ```
+  npx wrangler@4 d1 execute pensla-markeringar --remote --command "UPDATE markering SET hanterad = 1 WHERE id = '...'"
+  npx wrangler@4 d1 execute pensla-markeringar --remote --command "DELETE FROM markering WHERE hanterad = 1"
+  ```
+- **Läsa:** `python verktyg/markeringar.py` listar markeringarna per bild och
+  ritar en översiktsbild per bild med dragen ovanpå färgbilden i
+  `granskning/markeringar/NR-FIL.png` (en markering utan drag ritas som en
+  ram). Källor: `--server` (D1 på Cloudflare via `wrangler --remote`, bara
+  ohanterade; `--alla` tar alla), `--fil FIL.jsonl` (plattans fil från
+  Pensla N), `--adb` (hämtar plattans fil med `adb pull`), `--lokal MAPP
+  --konfig FIL` (lokal D1 från `wrangler dev --persist-to`, för prov).
+- **Prova lokalt:** kopiera appens filer till en mapp, gör en wrangler-fil
+  med `main`, `assets` och `d1_databases` (valfritt id), kör
+  `npx wrangler d1 execute pensla-markeringar --local --persist-to MAPP -c FIL
+  --file worker/schema.sql` och `npx wrangler dev -c FIL --persist-to MAPP`.
+  Med Playwright: riktiga flerfingerhändelser via CDP
+  `Input.dispatchTouchEvent` (`touchStart` tar alla fingrar som är nere,
+  `touchEnd` bara dem som SLÄPPS). Provet 2026-11-22 står i
+  `docs/LAGE-markering.md`.
+- I headless Chromium går `touchstart` på knapparna inte att avbryta
+  (`cancelable` = false), så webbläsaren skickar också mus-händelser och ett
+  klick efter ett tryck. Därför räknas inte ett klick på en pil inom
+  `PIL_KLICK_MS` efter ett tryck med fingret (annars byttes två bilder), och
+  musdrag i markeringslagret direkt efter ett finger räknas inte.
+
 ## Arkitektur (`app.js`)
 
 - **Lager** i bildens storlek (900 px hög, oftast 1200 bred; `setPaperSize`

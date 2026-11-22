@@ -277,6 +277,10 @@ body {
 .mark-btn:active {
     transform: scale(0.94);
 }
+/* Efter AVBRYT ligger lagret kvar osynligt ett ögonblick (app.js, markAvbryt). */
+#mark-lage.stanger {
+    opacity: 0;
+}
 /* Medan kvittot visas finns inga knappar. */
 #mark-lage.kvitto .mark-btn {
     display: none;

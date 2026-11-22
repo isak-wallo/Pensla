@@ -1,4 +1,4 @@
-# Läge: hemlig markering (avbrutet 2026-11-22 ca 21:15, datorn startades om)
+# Läge: hemlig markering (uppdaterat 2026-11-22 sent)
 
 Isak ska kunna märka ut bilder som ska kontrolleras noggrannare: håll ◀, ▶
 och FÄRGLÄGG samtidigt i 5 s (BÖRJA OM får inte hållas). Då visas texten
@@ -7,133 +7,129 @@ Man målar grovt med fingret (flera drag, eget halvgenomskinligt lager i
 magenta, det målade rörs inte). KLAR sparar/skickar, AVBRYT kastar, båda går
 tillbaka till vanliga appen. Inga drag + KLAR = hela bilden.
 
+Beskrivningen (gest, format, mottagare, tak, Cloudflare-steg, verktyg) står
+nu i CLAUDE.md, avsnittet "Hemlig markering", i båda repona. Den här filen
+är bara läget.
+
 Allt är bara lokalt: inget pushat, inget utlagt på test eller skarpt, inget
 installerat, inga resurser skapade i Cloudflare.
 
-## Format (samma i webb, native och mottagaren)
+## Klart
 
-```
-{"id":"16 hex","nr":22,"namn":"Ambulans","drag":[[x0,y0,x1,y1,...],...],
- "bredd":0.05,"tid":"2026-11-22T20:15:03Z","version":"v110-test","plattform":"webb"}
-```
+- Webben (v111-test): gest, markeringsläge, kö, mottagare. Provat i
+  Chromium, se nedan.
+- `verktyg/markeringar.py`: läser `--fil` (JSONL från plattan), `--lokal`
+  (lokal D1), `--server` (D1 på Cloudflare) och `--adb`; listar per bild och
+  ritar översiktsbilder i `granskning/markeringar/`.
+- CLAUDE.md i båda repona.
+- Pensla N (versionCode 6, `native-v6`): genomgången mot webben utan
+  ändringar i källan (samma text, knappar, format, tak). APK oförändrad:
+  `C:\Dropbox\Isak\Program\AI\Claude\keIWs\apk\Pensla-native-v6.apk`,
+  sha256 `24628281c4c8a15873cf1278c701242e85794f28ef5d077aa618e68b37f2c9ec`
+  (v5 ligger kvar bredvid).
 
-Punkter normerade 0–1 (x mot bildens bredd, y mot höjden), 3 decimaler,
-`bredd` = penselbredd som andel av bildens höjd. Tak: 20 drag, 100 punkter
-per drag, 600 punkter totalt (dragen förenklas med Ramer–Douglas–Peucker).
+## Ändrat i webben efter provet (v110-test → v111-test)
 
-## Byggt
+Provet visade att `touchstart` på knapparna inte går att avbryta i headless
+Chromium (`cancelable` = false; likadant i v109, alltså inget nytt med
+markeringen). Webbläsaren skickar då också mus-händelser och ett klick
+efter ett tryck med fingret. Om det är likadant på en riktig platta är inte
+känt. Följderna, och rättningarna:
 
-Pensla (webb), version v110-test i `sw.js`:
-- `app.js`: gesten (`gestNer`, `gestUpp`, `gestFlytt`, `gestKoll`) och
-  blocket "Hemlig markering" (läget, dragen, kön `pensla-markeringar` i
-  localStorage, `skickaKo` vid start). `index.html` (`#mark-lage`) och
-  `style.css`.
-- `sw.js`: rör inte `/api/`.
-- `worker/mottagare.js`: POST `/api/markering` till D1, strikt validering,
-  10 kB, högst 60 per dygn och 500 totalt, ingen läsväg, svarshuvudet
-  `X-Pensla-Markering: sparad|ogiltig|full|stangd`. Namnet tas ur bilder.js
-  i mottagaren (det appen skickar sparas inte). Allt annat än `/api/*` går
-  till de statiska filerna.
-- `worker/schema.sql`: tabellen `markering`.
-- `wrangler.jsonc`: `main` + assets-bindningen `ASSETS` +
-  `run_worker_first: ["/api/*"]`. D1-bindningen står UTKOMMENTERAD (topp och
-  env test), så publicering fungerar som förut innan databasen finns;
-  mottagaren svarar då 503 "stangd" och appen behåller sin kö.
-- I Capacitor-appen (`ANDROID_APP`) är `MARK_URL = null`: markeringarna
-  blir liggande i kön i localStorage (öppen fråga till Isak).
+- Ett tryck på en pil bytte två bilder (touchstart + klick). Nu räknas inte
+  ett klick på en pil inom 1 s efter ett tryck med fingret (`PIL_KLICK_MS`).
+- Ett tryck i markeringslagret gav två drag (fingret + den härmade musen).
+  Nu räknas inte musen inom 1 s efter ett finger.
+- KLAR och AVBRYT väntade på webbläsarens klick, som uteblev efter snabba
+  drag. Nu agerar de när fingret släpps på knappen (som i Pensla N), och
+  glider fingret av händer inget. Klicket är kvar för mus.
+- Efter AVBRYT ligger lagret kvar osynligt i 0,35 s, så att ett sent klick
+  inte hamnar på knappen under.
 
-Pensla N (`..\pensla-native`), versionCode 6 / `native-v6`:
-- `Markering.kt` (ny): format, förenkling och filskrivning (append + sync).
-- `PenslaVy.kt`: gest och markeringsläge (avsnittet "Hemlig markering").
-- Filen: `/sdcard/Android/data/com.keiws.pensla.nativ/files/markeringar.jsonl`
-  (appens externa filmapp, ingen behörighet i manifestet), hämtas med
-  `adb pull` utan root. Reserv: appens interna mapp (kvittot säger då
-  "Sparat ✓ (i appen)").
-- APK byggd (inte installerad någonstans):
-  `C:\Dropbox\Isak\Program\AI\Claude\keIWs\apk\Pensla-native-v6.apk`
-  sha256 `24628281c4c8a15873cf1278c701242e85794f28ef5d077aa618e68b37f2c9ec`.
-  `Pensla-native-v5.apk` ligger kvar bredvid (byggskriptet tog bort den,
-  jag la tillbaka den eftersom v6 inte är provad på enhet).
+## Provat (2026-11-22)
 
-## Provat
+Webben i headless Chromium (Playwright) med riktiga flerfingerhändelser
+(CDP `Input.dispatchTouchEvent`) mot lokal `wrangler dev` (4.166.0) med
+lokal D1, ingenting mot Cloudflare-kontot. Sista körningen: 118 fall, 118
+som väntat (108 liggande 1280×800, 10 stående 800×1280). Körningarna innan
+föll på de fyra felen ovan och på fel i själva provet.
 
-- `node --check` på `app.js` och `worker/mottagare.js`.
-- Statiska filer med och utan worker, lokalt `wrangler dev`, miljöerna
-  skarp och test, navigering och no-cors: 40 jämförelser, alla lika
-  (status och Content-Type).
-- Pensla N kompilerar och bygger med R8 (releasebygget ovan).
-- Mottagaren (drag-versionen) mot lokal `wrangler dev` med lokal D1, 37
-  fall, alla som väntat: giltig, dubblett, inga drag, native-version, tom
-  version, utan namn, påhittat namn (sparas som bilder.js-namnet) och 20
-  drag ger 204 "sparad"; okänt fält, fel id, okänd bild, nr som text, udda
-  antal tal, tal över 1, text i drag, tomt drag, 21 drag, 101 punkter, över
-  600 punkter, drag saknas, fel bredd, fel tid, fri text i version, fel
-  plattform, lista, trasig JSON ger 400; 11 kB ger 413; annan eller ingen
-  Origin 403; text/plain 415; GET 405; annan /api-väg 404; utan databas
-  503 "stangd". Raderna lästes tillbaka ur databasen och såg rätt ut.
+- Gesten: öppnar efter 5 s i tre ordningsföljder (5,3–5,4 s uppmätt från
+  första fingret); 4,3 s öppnar inte; alla fyra knapparna öppnar inte;
+  BÖRJA OM tryckt efter 2 s nollställer tiden; FÄRGLÄGG släppt efter 3 s,
+  finger som glider av ▶, bara pilarna och FÄRGLÄGG + en pil öppnar inte.
+  Samma bild efteråt och inget färglagt (bildens pixlar jämförda) i alla
+  fallen. FÄRGLÄGG ensam, kort tryck (tipset), ◀ ▶ med finger (ett steg per
+  tryck) och med mus fungerar som förut.
+- Läget: texten, var den står, panelen täcker knapparna, KLAR och AVBRYT
+  syns, tryck på panelen byter inte bild. Drag ritas under fingret, två
+  fingrar samtidigt, mus. Barnets bild orörd av dragen. AVBRYT: inget
+  sparat, inget skickat. KLAR utan drag: `drag: []`. KLAR med drag: hörnen
+  i datat stämmer med bilden inom 0,003 (liggande och stående, där bilden
+  är roterad). 22 drag ger 20; 700 rörelser ger 69 punkter.
+- Barnets målning: det sparade (mask och hittade figurer i IndexedDB) är
+  bit för bit detsamma före och efter en markering och efter omladdning,
+  och penseln fungerar efteråt. Bilden på skärmen skilde bara där en hittad
+  figur vinkar.
+- Kön: utan nät ("Sparat ✓ Skickas senare", ligger kvar efter omstart utan
+  nät, skickas när nätet är tillbaka); mottagaren utan databas (503
+  `stangd`, kön behålls även efter omstart, två i kön); dygnstaket (60
+  rader, 429 `full`, kön behålls); totaltaket (500 rader, 429 `full`; en
+  dubblett av en sparad ger ändå 204); efter rensning skickas kön (3 st) i
+  ordning vid nästa start; en ogiltig i kön kastas (400) och nästa skickas.
+- Service workern: styr sidan, 175 filer i cachen, inget under `/api/` i
+  cachen, inget `/api`-svar kom via den, GET `/api/finns-inte` ger 404 från
+  mottagaren och GET `/api/markering` 405.
+- Raderna i den lokala databasen lästa tillbaka: namn ur bilder.js, miljö
+  `skarp`, dragen som JSON.
+- Mottagaren för sig (föregående omgång): 37 fall med giltiga och ogiltiga
+  anrop, alla som väntat.
+- `verktyg/markeringar.py`: en provfil (5 rader + en trasig + en dubblett +
+  ett okänt bildnummer) och den lokala databasen efter provet (11 rader):
+  listan och översiktsbilderna granskade för ögat. `--server` och `--adb`
+  är inte körda.
 
-## INTE provat (viktigt)
+Skärmbilder av läget:
+`C:\Dropbox\Isak\Program\AI\Claude\keIWs\apk\Pensla-v111-markering-skarmbilder\`
+(`markering-liggande.png`, `markering-staende.png`).
 
-- Webb: gesten och markeringsläget är INTE provade i en webbläsare efter
-  omgörningen till frihandsdrag (Playwright med multi-touch var nästa
-  steg): 5 s, att ingen bild byts netto, att inget färgläggs, KLAR/AVBRYT,
-  kön offline och omsändning vid start, att sw.js inte stör POST.
-- Mottagaren, dygnstaket: svaret 429 "full" är inte visat. Provskriptet
-  räknade en rad fel (dubbletten ger ingen ny rad), så det stannade på
-  exakt 60 rader, som alla sparades. Skicka en till för att se 429.
-  Totaltaket 500 är inte heller provat.
-- Pensla N: ingenting provat på emulator eller platta (emulatorn var
-  upptagen). Inga enhetstester finns i repot (JUnit vore ett nytt bibliotek).
-- Tre samtidiga fingrar är inte provat på någon riktig enhet.
+Provskripten låg i sessionens scratchpad och kan vara borta. Återskapa:
+kopiera appens filer till en mapp `webb`, gör en wrangler-fil med `main`
+(worker/mottagare.js), `assets` (`./webb`, bindning `ASSETS`,
+`run_worker_first: ["/api/*"]`) och `d1_databases` (bindning `DB`, valfritt
+id), kör `worker/schema.sql` med `d1 execute --local --persist-to`, starta
+`wrangler dev --persist-to`. Öppna `/` (inte `/index.html`, som
+omdirigeras och sedan inte går att ladda om genom service workern). CDP:
+`touchStart` tar alla fingrar som är nere, `touchEnd` bara dem som släpps.
+
+## INTE provat
+
+- Ingen riktig enhet: varken webben på en platta eller tre riktiga fingrar.
+- Pensla N: ingenting på emulator eller platta (emulatorn var upptagen):
+  gesten, läget, filskrivningen, `adb pull`. Inga enhetstester finns
+  (JUnit vore ett nytt bibliotek).
+- Mot Cloudflare: ingenting (databasen finns inte). `markeringar.py
+  --server` och `--adb` är skrivna men inte körda.
+- Om `touchstart` går att avbryta på plattans Chrome (se ovan).
 
 ## Återstår
 
-1. Prova webben (se ovan) och mottagaren. Provmaterialet låg i sessionens
-   scratchpad (`prov\prova_worker.py`, `med-db.json`, `utan-db.json`) och
-   kan vara borta efter omstarten: starta då `wrangler dev` på nytt med en
-   kopia av wrangler.jsonc där D1-bindningen är med (`--local`,
-   `--persist-to`), kör `worker/schema.sql` med `d1 execute --local`.
-2. `verktyg/markeringar.py` är INTE skrivet: ska läsa JSONL-filer
-   (`--fil`), servern (`--server`, via `wrangler d1 execute ... --remote
-   --json`) och gärna `--adb`, lista per bild och rita dragen
-   halvgenomskinligt ovanpå `bilder/farg/FIL.jpg` i `granskning/markeringar/`.
-3. Avsnitt "Hemlig markering" i CLAUDE.md i båda repona (wrangler.jsonc
-   hänvisar dit).
-4. Prova Pensla N v6 på emulator/platta innan den installeras.
+1. Granskning, sedan D1-databasen (en annan session): stegen står i
+   CLAUDE.md. Isak valde 2026-11-22 EN databas för test och skarpt
+   (kolumnen `miljo`).
+2. Prova Pensla N v6 på emulator/platta innan den installeras.
+3. Push, `slapp.py --test`, prov på plattan.
 
 Kända avvikelser från beställningen: den första pilen byter bild
 kortvarigt innan den andra pilen går tillbaka (nettobyte noll); en pil som
-trycks medan FÄRGLÄGG hålls avbryter hållningen.
+trycks medan FÄRGLÄGG hålls avbryter hållningen. Att låta pilarna agera
+först vid släpp är inte gjort: då händer inget medan ett barn håller kvar
+fingret, och inget alls om fingret glider av, och det måste göras och
+provas i båda apparna.
 
-## Cloudflare-steg (inget är kört)
+## Frågor till Isak
 
-```
-npx wrangler@4 d1 create pensla-markeringar
-```
-Lägg det `database_id` som skrivs ut i `wrangler.jsonc` och ta bort
-kommentartecknen runt `d1_databases` (både överst och i env `test`). Sedan:
-```
-npx wrangler@4 d1 execute pensla-markeringar --remote --file worker/schema.sql
-```
-och vanlig publicering (`git push origin main`, `python verktyg/slapp.py
---test`, skarpt först när Isak säger "släpp"). Läsa:
-```
-npx wrangler@4 d1 execute pensla-markeringar --remote --json --command "SELECT * FROM markering WHERE hanterad = 0 ORDER BY mottagen"
-```
-Markera som åtgärdad: `UPDATE markering SET hanterad = 1 WHERE id = '...'`;
-rensa med `DELETE` (taket 500 räknar alla rader).
-
-Varför D1 och inte KV: taken hålls atomiskt i samma INSERT som
-skrivningen, allt läses med ett enda kommando, och Isak har redan D1 i
-Tidkort. KV är eventuellt konsistent och svår att räkna tak i.
-
-## Frågor till Isak (inte ställda än)
-
-- Pilarna: godta att första pilen byter bild kortvarigt under gesten
-  (rekommenderas), eller låta pilarna agera först när de släpps?
-- Capacitor-appen: bara kö (som nu), eller skicka till pensla.keiws.com?
-- Samma D1-databas för test och skarpt med kolumnen `miljo`
-  (rekommenderas), eller två?
+- Pilarna: godta blinkningen (som nu), eller låta pilarna agera vid släpp?
 - Enhetstester i Pensla N kräver JUnit (nytt bibliotek): lägga till?
 - ContentProvider (signature-behörighet) så att keIWs Fjärr kan hämta
   filen utan adb: bara ett förslag, inte byggt.

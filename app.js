@@ -936,6 +936,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // som andel av bildens höjd. Dragen förenklas innan de sparas. Samma
     // rad skrivs av Pensla N, och läses med verktyg/markeringar.py.
     const GEST_MS = 5000;
+    const PIL_KLICK_MS = 1000;      // ett klick så här snart efter ett tryck med fingret på en pil är samma tryck
     const GEST_SLACK = 12;          // så många px får ett finger glida utanför sin knapp
     const MARK_BREDD = 0.05;        // penselns bredd (andel av bildens höjd)
     const MARK_FARG = '#e6007e';    // syns mot alla bilderna; lagret är halvgenomskinligt (style.css)
@@ -949,6 +950,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const MARK_KO_MAX = 50;
     const MARK_URL = ANDROID_APP ? null : 'api/markering';   // Android-appen har ingen mottagare
     const MARK_VANTA_MS = 8000;
+    const MARK_SVALJ_MS = 350;      // så länge ligger lagret kvar (osynligt) efter AVBRYT
     const MARK_TEXT = 'Markera områden som ska ses över';
     const markLage = document.getElementById('mark-lage');
     const markCanvas = document.getElementById('markCanvas');
@@ -1112,7 +1114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         markDrag = [];
         markPagar.clear();
         markText.textContent = MARK_TEXT;
-        markLage.classList.remove('kvitto');
+        markLage.classList.remove('kvitto', 'stanger');
         markLage.hidden = false;
         markLayout();
         markVilaOm();
@@ -1126,6 +1128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         markDrag = [];
         markPagar.clear();
         markLage.hidden = true;
+        markLage.classList.remove('kvitto', 'stanger');
     }
 
     function markBorja(id, clientX, clientY) {
@@ -1155,8 +1158,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ritaMarkering();
     }
 
+    let markTryck = 0;      // senaste fingret i lagret (musen som webbläsaren härmar efteråt räknas inte)
     markCanvas.addEventListener('touchstart', e => {
         e.preventDefault();
+        markTryck = Date.now();
         for (let i = 0; i < e.changedTouches.length; i++) {
             const t = e.changedTouches[i];
             markBorja(t.identifier, t.clientX, t.clientY);
@@ -1171,12 +1176,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: false });
     ['touchend', 'touchcancel'].forEach(typ => {
         markCanvas.addEventListener(typ, e => {
+            markTryck = Date.now();
             for (let i = 0; i < e.changedTouches.length; i++) markSlut(e.changedTouches[i].identifier);
         });
     });
     // Mus (test på dator)
     markCanvas.addEventListener('mousedown', e => {
-        if (e.button === 0) markBorja('mus', e.clientX, e.clientY);
+        if (e.button === 0 && Date.now() - markTryck > PIL_KLICK_MS) markBorja('mus', e.clientX, e.clientY);
     });
     window.addEventListener('mousemove', e => markDra('mus', e.clientX, e.clientY));
     window.addEventListener('mouseup', () => markSlut('mus'));
@@ -1287,8 +1293,30 @@ document.addEventListener('DOMContentLoaded', () => {
         markKvitto(lasKo().some(x => x.id === m.id) ? 'Sparat ✓ Skickas senare' : 'Skickat ✓');
     }
 
-    document.getElementById('mark-klar').addEventListener('click', markKlar);
-    document.getElementById('mark-avbryt').addEventListener('click', stangMarkering);
+    // AVBRYT: markeringen kastas. Lagret ligger kvar osynligt en kort stund
+    // och sväljer det klick som webbläsaren kan skicka efter fingret, så att
+    // det inte hamnar på en pil under.
+    function markAvbryt() {
+        if (!markerar || markLage.classList.contains('kvitto')) return;
+        if (markVila) { clearTimeout(markVila); markVila = null; }
+        markLage.classList.add('kvitto', 'stanger');
+        markStang = setTimeout(stangMarkering, MARK_SVALJ_MS);
+    }
+
+    // KLAR och AVBRYT agerar när fingret släpps på knappen (som i Pensla N),
+    // och glider fingret av knappen händer inget. De väntar inte på
+    // webbläsarens klick, som kan utebli efter ett snabbt drag; klicket är
+    // kvar för mus och gör inget en andra gång.
+    [['mark-klar', markKlar], ['mark-avbryt', markAvbryt]].forEach(([id, gor]) => {
+        const btn = document.getElementById(id);
+        btn.addEventListener('click', gor);
+        btn.addEventListener('touchend', e => {
+            if (e.cancelable) e.preventDefault();
+            const t = e.changedTouches[0];
+            const r = btn.getBoundingClientRect();
+            if (t.clientX >= r.left && t.clientX <= r.right && t.clientY >= r.top && t.clientY <= r.bottom) gor();
+        });
+    });
     window.addEventListener('online', () => { skickaKo(); });
 
     // --- Händelsebindningar (tidigare inline i HTML) ---
@@ -1299,11 +1327,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // (början på vuxengesten, se "Hemlig markering") går appen i stället
     // tillbaka till bilden som visades innan den första pilen trycktes, så
     // att gesten inte byter bild.
+    // Klicket som webbläsaren kan skicka efter ett tryck med fingret (när
+    // touchstart inte gick att avbryta) räknas inte, annars byttes två bilder.
+    let pilTryck = 0;
     [[prevBtn, -1, nextBtn], [nextBtn, 1, prevBtn]].forEach(([btn, step, andra]) => {
-        btn.addEventListener('click', () => changePicture(step));
+        btn.addEventListener('click', () => {
+            if (Date.now() - pilTryck < PIL_KLICK_MS) return;
+            changePicture(step);
+        });
         btn.addEventListener('touchstart', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            pilTryck = Date.now();
             const nere = nereKnappar();
             const bas = vantarPaBild >= 0 ? vantarPaBild : currentPicture;
             gestNer(e, btn);
