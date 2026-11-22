@@ -11,10 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
     const app = document.getElementById('app');
-    // Android-appen (Capacitor, verktyg/bygg_apk.py): helskärm, vridning och
-    // bakåt sköts av appen själv, så ingen startskärm och ingen service worker.
-    const ANDROID_APP = !!window.Capacitor;
-    if (ANDROID_APP) startOverlay.style.display = 'none';
 
     // Bilden är 900 px hög och oftast 1200 bred (4:3), men andra format går
     // också: bredden tas från färgbilden när bilden laddas (setPaperSize).
@@ -225,9 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // skärmlåsning/pinning där hela fönstret förskjuts). I immersive
             // fullscreen är den dynamiska delen 0.
             const isPhone = lockedH < PHONE_LANDSCAPE_MAX_H;
-            // Android-appen: systemfälten är dolda och ritytan krymper själv
-            // om de syns (MainActivity.java), så ingen remsa.
-            let staticPad = IS_ANDROID && !ANDROID_APP ? DEAD_ZONE : 0;
+            let staticPad = IS_ANDROID ? DEAD_ZONE : 0;
             let dynPad = 0;
             if (window.visualViewport) {
                 const dyn = isPhone
@@ -948,7 +942,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const MARK_VILA_MS = 90000;     // läget stängs av sig självt om inget händer
     const MARK_KO = 'pensla-markeringar';
     const MARK_KO_MAX = 50;
-    const MARK_URL = ANDROID_APP ? null : 'api/markering';   // Android-appen har ingen mottagare
+    const MARK_URL = 'api/markering';
     const MARK_VANTA_MS = 8000;
     const MARK_SVALJ_MS = 350;      // så länge ligger lagret kvar (osynligt) efter AVBRYT
     const MARK_TEXT = 'Markera områden som ska ses över';
@@ -1215,7 +1209,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let koGar = null;
 
     function skickaKo() {
-        if (!MARK_URL) return Promise.resolve();
         if (koGar) return koGar;
         koGar = (async () => {
             for (const m of lasKo()) {
@@ -1242,7 +1235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Versionen står i sw.js (VERSION), som appen inte läser; cachens namn
-    // är 'pensla-' + VERSION. Utan service worker (Android-appen) blir den tom.
+    // är 'pensla-' + VERSION. Utan service worker blir den tom.
     function appVersion() {
         if (!window.caches) return Promise.resolve('');
         return caches.keys().then(namn => {
@@ -1286,7 +1279,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const ko = lasKo();
         ko.push(m);
         if (!skrivKo(ko)) { markKvitto('Gick inte att spara'); return; }
-        if (!MARK_URL) { markKvitto('Sparat ✓'); return; }
         markText.textContent = 'Skickar …';
         await skickaKo();
         if (!markerar) return;
@@ -1568,7 +1560,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // appen startas, så den letar också när man kommer tillbaka till appen
     // och var UPPDATERA_VAR medan den är öppen (ny version: laddaOmOmNy).
     const UPPDATERA_VAR = 10 * 60 * 1000;
-    if ('serviceWorker' in navigator && !ANDROID_APP) {
+    if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').then(reg => {
             const leta = () => reg.update().catch(() => {});
             document.addEventListener('visibilitychange', () => {

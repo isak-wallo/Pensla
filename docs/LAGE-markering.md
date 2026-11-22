@@ -16,7 +16,7 @@ installerat, inga resurser skapade i Cloudflare.
 
 ## Klart
 
-- Webben (v111-test): gest, markeringsläge, kö, mottagare. Provat i
+- Webben (v112-test): gest, markeringsläge, kö, mottagare. Provat i
   Chromium, se nedan.
 - `verktyg/markeringar.py`: läser `--fil` (JSONL från plattan), `--lokal`
   (lokal D1), `--server` (D1 på Cloudflare) och `--adb`; listar per bild och
@@ -46,11 +46,21 @@ känt. Följderna, och rättningarna:
 - Efter AVBRYT ligger lagret kvar osynligt i 0,35 s, så att ett sent klick
   inte hamnar på knappen under.
 
+## Den äldre Android-appen borttagen (v112-test)
+
+På Isaks besked 2026-11-22, i en egen commit: `android/` (40 filer, bl.a.
+SparaPlugin.java), `verktyg/bygg_apk.py`, `capacitor.config.json`,
+`package.json`, `package-lock.json` (bara Capacitor stod i dem),
+`ANDROID_APP`-grenarna i `app.js` och raderna för `node_modules/` och
+`app-webb/` i `.gitignore`. Kvar: `native/bilder/` (vektorbilderna till
+Pensla N, inte Capacitor). Hela provet kördes om efteråt.
+
 ## Provat (2026-11-22)
 
 Webben i headless Chromium (Playwright) med riktiga flerfingerhändelser
 (CDP `Input.dispatchTouchEvent`) mot lokal `wrangler dev` (4.166.0) med
-lokal D1, ingenting mot Cloudflare-kontot. Sista körningen: 118 fall, 118
+lokal D1, ingenting mot Cloudflare-kontot. Sista körningarna (v111-test,
+och v112-test efter att den äldre Android-appen tagits bort): 118 fall, 118
 som väntat (108 liggande 1280×800, 10 stående 800×1280). Körningarna innan
 föll på de fyra felen ovan och på fel i själva provet.
 
@@ -90,7 +100,7 @@ föll på de fyra felen ovan och på fel i själva provet.
   är inte körda.
 
 Skärmbilder av läget:
-`C:\Dropbox\Isak\Program\AI\Claude\keIWs\apk\Pensla-v111-markering-skarmbilder\`
+`C:\Dropbox\Isak\Program\AI\Claude\keIWs\apk\Pensla-markering-skarmbilder\`
 (`markering-liggande.png`, `markering-staende.png`).
 
 Provskripten låg i sessionens scratchpad och kan vara borta. Återskapa:

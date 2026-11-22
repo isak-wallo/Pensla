@@ -74,7 +74,7 @@ färger, inga ljud, inga poäng, inga val att göra.
   den är målad (`pensla-senast` i localStorage), annars på en slumpad som
   förut. Första bilden visas när det sparade är inläst (`lasSparat`,
   väntar högst `DB_VANTA_MS`). Utan IndexedDB fungerar appen som förut
-  (minns så länge den är öppen). Gäller även Android-appen.
+  (minns så länge den är öppen).
 - **Ny version** (v104, som i Kludda): appen letar efter en ny version när
   man kommer tillbaka till den och var tionde minut (`UPPDATERA_VAR`), men
   laddar inte om mitt i målandet utan när appen döljs eller startskärmen
@@ -133,17 +133,12 @@ Repot ligger kvar på GitHub, men GitHub Pages är avstängt (2026-10-31).
   `slapp-N`). Inget galleri där. Utan flagga visar skriptet vad som är
   släppt och vad som är nytt.
 
-### Android-appen (APK, sedan v90)
-Samma upplägg som Kludda: Capacitor-projekt i `android/`,
-`python verktyg/bygg_apk.py` bygger i `%LOCALAPPDATA%\keiws-bygg\pensla`
-(aldrig i Dropbox) och lägger `Claude\keIWs\apk\Pensla-vNN.apk` (versionCode
-= numret i VERSION i sw.js). Signeras med keIWs nyckel utanför repot
-(keiwsNycklar i ~/.gradle/gradle.properties). I appen (`ANDROID_APP`) visas
-ingen startskärm, ingen dö-yta, ingen service worker; MainActivity döljer
-systemfälten, låser vridningen, fäster appen och bakåt gör ingenting.
-SPARA-knappen togs bort i v105 (Isak 2026-11-17): det målade sparas ändå i
-plattan, och knappen gjorde inget i en vanlig WebView. `SparaPlugin.java` ligger
-kvar i android/ men används inte.
+### Ingen Android-app i det här repot (sedan v112)
+Den äldre Android-appen (Capacitor, `com.keiws.pensla`, v90–v111) togs bort
+ur repot 2026-11-22 på ägarens besked: `android/`, `verktyg/bygg_apk.py`,
+`capacitor.config.json`, `package.json`/`package-lock.json` och
+`ANDROID_APP`-grenarna i `app.js`. Den finns i git-historiken (sista commit
+med appen: v111-test). Android-appen är Pensla N (repot pensla-native).
 
 ### Vektorbilderna till Pensla N (sedan v108)
 Pensla N (native-appen, repot pensla-native som bara finns lokalt hos
@@ -167,13 +162,13 @@ Jobba direkt på `main` (inga sidgrenar). Commit-meddelanden på svenska.
 När en ändring är klar: bumpa VERSION, commit, `git push origin main` och
 `python verktyg/slapp.py --test` direkt; ägaren testar på
 https://test.pensla.keiws.com och förväntar sig att nya versioner ligger
-där. Ny APK (`verktyg/bygg_apk.py`) efter varje ny version.
+där.
 
 ### VIKTIGT vid uppdatering: bumpa SW-versionen
 `sw.js` har `const VERSION = 'vNN'`. Höj den varje gång filer ändras och
 pushas, annars fastnar plattan på gammal cache.
 
-## Hemlig markering (v111)
+## Hemlig markering (v111–v112)
 
 Ägaren märker ut bilder som ska ses över, direkt i appen. Barnets målning
 rörs aldrig. Koden: `app.js` (blocket "Hemlig markering"), `index.html`
