@@ -1,6 +1,6 @@
 // Höj VERSION (v1 -> v2 osv.) varje gång du laddar upp nya filer,
 // så hämtas och cachas den nya versionen säkert.
-const VERSION = 'v109-test';
+const VERSION = 'v110-test';
 const CACHE = 'pensla-' + VERSION;
 
 const ASSETS = [
@@ -208,9 +208,12 @@ self.addEventListener('activate', function (e) {
 // Endast egna GET-anrop hanteras.
 self.addEventListener('fetch', function (e) {
   var req = e.request;
+  // Markeringarna (POST till api/markering, se app.js) rörs aldrig här:
+  // bara GET hanteras, och inget under /api/ cachas eller besvaras ur cachen.
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  if (/\/api\//.test(url.pathname)) return;
   // Galleriet (och dess bilder.js?farsk) hämtas alltid färskt från nätet,
   // så att det visar det senaste även där appen är installerad. Cloudflare
   // skickar galleri.html vidare till /galleri.

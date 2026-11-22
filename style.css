@@ -192,3 +192,92 @@ body {
     background-color: #f2b8b0;
     color: #ffffff;
 }
+
+/* Hemlig markering (app.js): efter vuxengesten målar man grovt runt det
+   som ska kollas. Lagret täcker hela appen, så att varken penseln eller de
+   vanliga knapparna nås. JS lägger markCanvas precis över bilden, texten
+   högst upp i den och mark-panel precis över knapp-panelen. */
+#mark-lage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 50;
+    touch-action: none;
+}
+#mark-lage[hidden] {
+    display: none;
+}
+/* Dragen ritas heltäckande och hela lagret är halvgenomskinligt, så att
+   bilden syns igenom och överlappande drag inte blir mörkare. */
+#markCanvas {
+    position: fixed;
+    display: block;
+    touch-action: none;
+    opacity: 0.45;
+}
+#mark-text {
+    position: fixed;
+    transform: translateX(-50%);
+    padding: 6px 16px;
+    border-radius: 14px;
+    background-color: rgba(247, 251, 254, 0.9);
+    box-shadow: 0 2px 6px rgba(80, 110, 140, 0.18);
+    color: #5b6b7b;
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: clamp(13px, 2.6vmin, 20px);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;      /* man kan måla under texten */
+}
+#mark-panel {
+    position: fixed;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    background-color: #dcecf8;
+}
+@media (orientation: landscape) {
+    #mark-panel {
+        flex-direction: column;
+    }
+}
+.mark-btn {
+    flex: 0 0 auto;
+    min-width: 22%;
+    padding: 14px 6px;
+    color: #5b6b7b;
+    background-color: #f7fbfe;
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 2px 6px rgba(80, 110, 140, 0.18);
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: clamp(13px, 2.6vmin, 20px);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+@media (orientation: landscape) {
+    .mark-btn {
+        min-width: 0;
+        width: 100%;
+    }
+}
+#mark-klar {
+    background-color: #cfead8;
+    color: #3f6b52;
+}
+.mark-btn:active {
+    transform: scale(0.94);
+}
+/* Medan kvittot visas finns inga knappar. */
+#mark-lage.kvitto .mark-btn {
+    display: none;
+}

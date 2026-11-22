@@ -40,6 +40,16 @@
     <button id="fill-btn" class="sys-btn">FÄRGLÄGG</button>
     <button id="restart-btn" class="sys-btn liten">BÖRJA OM</button>
 </div>
+
+<!-- Hemlig markering (app.js, "Hemlig markering"): visas bara efter vuxengesten. -->
+<div id="mark-lage" hidden>
+    <canvas id="markCanvas"></canvas>
+    <div id="mark-text">Markera områden som ska ses över</div>
+    <div id="mark-panel">
+        <button id="mark-klar" class="mark-btn">KLAR</button>
+        <button id="mark-avbryt" class="mark-btn">AVBRYT</button>
+    </div>
+</div>
 </div>
 
 <script src="keiws.js" defer></script>

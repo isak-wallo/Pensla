@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const startOverlay = document.getElementById('start-overlay');
     const restartBtn = document.getElementById('restart-btn');
     const fillBtn = document.getElementById('fill-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
     const app = document.getElementById('app');
     // Android-appen (Capacitor, verktyg/bygg_apk.py): helskärm, vridning och
     // bakåt sköts av appen själv, så ingen startskärm och ingen service worker.
@@ -153,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         viewRect = viewCanvas.getBoundingClientRect();
         requestRender();
+        markLayout();
     }
 
     // Layoutlås
@@ -909,22 +912,411 @@ document.addEventListener('DOMContentLoaded', () => {
     // tillbaka in i fullscreen. Det målade påverkas inte.
     function showStartOverlay() {
         startOverlay.style.display = 'flex';
+        stangMarkering();
         aterstallKnappar();
         laddaOmOmNy();
     }
+
+    // --- Hemlig markering (vuxengest) ---
+    // Ägaren kan märka ut bilder som ska kontrolleras noggrannare: håll
+    // båda pilarna och FÄRGLÄGG samtidigt i GEST_MS (5 s), utan att BÖRJA OM
+    // hålls. Då kommer texten "Markera områden som ska ses över" högst upp
+    // och knapparna KLAR och AVBRYT i panelen, och man målar grovt med
+    // fingret runt det som ska kollas (flera drag går; inga drag alls =
+    // hela bilden). Dragen ritas i ett eget lager ovanpå appen, så det
+    // målade rörs inte och inget målas under tiden. KLAR sparar markeringen
+    // i en kö i plattan (localStorage) och skickar den till mottagaren på
+    // samma adress (worker/mottagare.js); går det inte fram ligger den kvar
+    // i kön och skickas när appen startas nästa gång. AVBRYT kastar den.
+    // Båda går tillbaka till den vanliga appen. Inget ljud.
+    //
+    // En markering: { id, nr, namn, drag: [[x0, y0, x1, y1, ...] ...],
+    // bredd, tid, version, plattform }. Punkterna är normerade 0–1 relativt
+    // bilden (x mot bredden, y mot höjden) och `bredd` är penselns bredd
+    // som andel av bildens höjd. Dragen förenklas innan de sparas. Samma
+    // rad skrivs av Pensla N, och läses med verktyg/markeringar.py.
+    const GEST_MS = 5000;
+    const GEST_SLACK = 12;          // så många px får ett finger glida utanför sin knapp
+    const MARK_BREDD = 0.05;        // penselns bredd (andel av bildens höjd)
+    const MARK_FARG = '#e6007e';    // syns mot alla bilderna; lagret är halvgenomskinligt (style.css)
+    const MARK_STEG = 0.006;        // tätare punkter än så tas inte med (andel av höjden)
+    const MARK_SLAT = 0.004;        // förenklingen får flytta draget högst så här mycket
+    const MARK_MAX_DRAG = 20;       // taken kontrolleras också av mottagaren
+    const MARK_MAX_PUNKTER = 100;   // per drag
+    const MARK_MAX_ALLA = 600;      // punkter sammanlagt
+    const MARK_VILA_MS = 90000;     // läget stängs av sig självt om inget händer
+    const MARK_KO = 'pensla-markeringar';
+    const MARK_KO_MAX = 50;
+    const MARK_URL = ANDROID_APP ? null : 'api/markering';   // Android-appen har ingen mottagare
+    const MARK_VANTA_MS = 8000;
+    const MARK_TEXT = 'Markera områden som ska ses över';
+    const markLage = document.getElementById('mark-lage');
+    const markCanvas = document.getElementById('markCanvas');
+    const markPanel = document.getElementById('mark-panel');
+    const markText = document.getElementById('mark-text');
+    const mCtx = markCanvas.getContext('2d');
+    const gestNere = new Map();     // finger (touch.identifier) -> knappen det sattes ner på
+    let gestTimer = null;
+    let foreBild = -1;              // bilden som visades innan den första pilen trycktes
+    let markerar = false;
+    let markDrag = [];              // färdiga drag: [x0, y0, x1, y1, ...] normerat
+    const markPagar = new Map();    // finger -> draget som ritas just nu
+    let markVila = null;
+    let markStang = null;
+
+    function nereKnappar() {
+        return new Set(gestNere.values());
+    }
+
+    function gestNer(e, btn) {
+        for (let i = 0; i < e.changedTouches.length; i++) gestNere.set(e.changedTouches[i].identifier, btn);
+    }
+
+    function gestUpp(e) {
+        for (let i = 0; i < e.changedTouches.length; i++) gestNere.delete(e.changedTouches[i].identifier);
+        gestKoll();
+    }
+
+    // Ett finger som glider av sin knapp räknas inte längre.
+    function gestFlytt(e) {
+        if (!gestNere.size) return;
+        let andrat = false;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const t = e.changedTouches[i];
+            const btn = gestNere.get(t.identifier);
+            if (!btn) continue;
+            const r = btn.getBoundingClientRect();
+            if (t.clientX < r.left - GEST_SLACK || t.clientX > r.right + GEST_SLACK ||
+                t.clientY < r.top - GEST_SLACK || t.clientY > r.bottom + GEST_SLACK) {
+                gestNere.delete(t.identifier);
+                andrat = true;
+            }
+        }
+        if (andrat) gestKoll();
+    }
+
+    // Gesten räknas bara medan ◀, ▶ och FÄRGLÄGG alla hålls och BÖRJA OM
+    // inte gör det (en hand som vilar över hela panelen ger alltså inget).
+    function gestKoll() {
+        const n = nereKnappar();
+        const alla = n.has(prevBtn) && n.has(nextBtn) && n.has(fillBtn) && !n.has(restartBtn);
+        if (alla && !markerar) {
+            if (gestTimer) return;
+            holdEnd(false);         // FÄRGLÄGG ska inte färglägga
+            slackTips();
+            gestTimer = setTimeout(() => { gestTimer = null; oppnaMarkering(); }, GEST_MS);
+        } else if (gestTimer) {
+            clearTimeout(gestTimer);
+            gestTimer = null;
+        }
+    }
+
+    // Lägger lagret precis över bilden, texten högst upp i den och
+    // knapparna precis över knapp-panelen.
+    function markLayout() {
+        if (!markerar) return;
+        const c = viewCanvas.getBoundingClientRect();
+        markCanvas.style.left = c.left + 'px';
+        markCanvas.style.top = c.top + 'px';
+        markCanvas.style.width = c.width + 'px';
+        markCanvas.style.height = c.height + 'px';
+        if (markCanvas.width !== viewCanvas.width || markCanvas.height !== viewCanvas.height) {
+            markCanvas.width = viewCanvas.width;
+            markCanvas.height = viewCanvas.height;
+        }
+        markText.style.left = (c.left + c.width / 2) + 'px';
+        markText.style.top = (c.top + 8) + 'px';
+        markText.style.maxWidth = (c.width - 16) + 'px';
+        const p = document.getElementById('button-container').getBoundingClientRect();
+        markPanel.style.left = p.left + 'px';
+        markPanel.style.top = p.top + 'px';
+        markPanel.style.width = p.width + 'px';
+        markPanel.style.height = p.height + 'px';
+        ritaMarkering();
+    }
+
+    // Dragen ritas i bildens koordinater med samma transform som bilden,
+    // heltäckande (lagret är halvgenomskinligt, så överlapp blir inte mörkare).
+    function ritaMarkering() {
+        mCtx.setTransform(1, 0, 0, 1, 0, 0);
+        mCtx.clearRect(0, 0, markCanvas.width, markCanvas.height);
+        updateTransform();
+        mCtx.setTransform(xf.a, xf.b, xf.c, xf.d, xf.e, xf.f);
+        mCtx.lineJoin = mCtx.lineCap = 'round';
+        mCtx.lineWidth = MARK_BREDD * PAPER_H;
+        mCtx.strokeStyle = mCtx.fillStyle = MARK_FARG;
+        markDrag.concat(Array.from(markPagar.values())).forEach(d => {
+            mCtx.beginPath();
+            if (d.length === 2) {
+                mCtx.arc(d[0] * PAPER_W, d[1] * PAPER_H, MARK_BREDD * PAPER_H / 2, 0, 2 * Math.PI);
+                mCtx.fill();
+                return;
+            }
+            mCtx.moveTo(d[0] * PAPER_W, d[1] * PAPER_H);
+            for (let i = 2; i < d.length; i += 2) mCtx.lineTo(d[i] * PAPER_W, d[i + 1] * PAPER_H);
+            mCtx.stroke();
+        });
+        mCtx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+
+    // Skärmpunkt -> normerad bildpunkt (0–1), hållen inom bilden.
+    function markPunkt(clientX, clientY) {
+        const p = getPaperCoords(clientX, clientY);
+        return [Math.min(1, Math.max(0, p.x / PAPER_W)), Math.min(1, Math.max(0, p.y / PAPER_H))];
+    }
+
+    // Avståndet mellan två normerade punkter, i andelar av bildens höjd.
+    function markAvstand(ax, ay, bx, by) {
+        return Math.hypot((bx - ax) * PAPER_W / PAPER_H, by - ay);
+    }
+
+    // Förenklar ett drag (Ramer–Douglas–Peucker): punkter som ligger närmare
+    // än `slat` från linjen mellan sina grannar tas bort. Grövre tills
+    // draget ryms i MARK_MAX_PUNKTER.
+    function markForenkla(d) {
+        const k = PAPER_W / PAPER_H;
+        const n = d.length / 2;
+        const X = i => d[2 * i] * k, Y = i => d[2 * i + 1];
+        for (let slat = MARK_SLAT; ; slat *= 2) {
+            const kvar = new Uint8Array(n);
+            kvar[0] = kvar[n - 1] = 1;
+            const stack = [[0, n - 1]];
+            while (stack.length) {
+                const [a, b] = stack.pop();
+                const dx = X(b) - X(a), dy = Y(b) - Y(a), l2 = dx * dx + dy * dy;
+                let bast = -1, langst = slat;
+                for (let i = a + 1; i < b; i++) {
+                    const t = l2 ? Math.min(1, Math.max(0, ((X(i) - X(a)) * dx + (Y(i) - Y(a)) * dy) / l2)) : 0;
+                    const av = Math.hypot(X(i) - X(a) - t * dx, Y(i) - Y(a) - t * dy);
+                    if (av > langst) { langst = av; bast = i; }
+                }
+                if (bast >= 0) { kvar[bast] = 1; stack.push([a, bast], [bast, b]); }
+            }
+            const ut = [];
+            for (let i = 0; i < n; i++) if (kvar[i]) ut.push(d[2 * i], d[2 * i + 1]);
+            if (ut.length / 2 <= MARK_MAX_PUNKTER) return ut;
+        }
+    }
+
+    function markVilaOm() {
+        if (!markerar) return;
+        if (markVila) clearTimeout(markVila);
+        markVila = setTimeout(stangMarkering, MARK_VILA_MS);
+    }
+
+    function oppnaMarkering() {
+        if (markerar || !startad || !pictureLoaded || vantarPaBild >= 0) return;
+        holdEnd(false);
+        slackTips();
+        markerar = true;
+        markDrag = [];
+        markPagar.clear();
+        markText.textContent = MARK_TEXT;
+        markLage.classList.remove('kvitto');
+        markLage.hidden = false;
+        markLayout();
+        markVilaOm();
+    }
+
+    // Tillbaka till den vanliga appen (AVBRYT, efter kvittot, eller när appen döljs).
+    function stangMarkering() {
+        if (markVila) { clearTimeout(markVila); markVila = null; }
+        if (markStang) { clearTimeout(markStang); markStang = null; }
+        markerar = false;
+        markDrag = [];
+        markPagar.clear();
+        markLage.hidden = true;
+    }
+
+    function markBorja(id, clientX, clientY) {
+        if (markLage.classList.contains('kvitto') || markPagar.has(id)) return;
+        if (markDrag.length + markPagar.size >= MARK_MAX_DRAG) return;
+        markPagar.set(id, markPunkt(clientX, clientY));
+        ritaMarkering();
+    }
+
+    function markDra(id, clientX, clientY) {
+        const d = markPagar.get(id);
+        if (!d) return;
+        const p = markPunkt(clientX, clientY);
+        if (markAvstand(d[d.length - 2], d[d.length - 1], p[0], p[1]) < MARK_STEG) return;
+        d.push(p[0], p[1]);
+        ritaMarkering();
+    }
+
+    function markSlut(id) {
+        const d = markPagar.get(id);
+        if (!d) return;
+        markPagar.delete(id);
+        const f = markForenkla(d);
+        const redan = markDrag.reduce((n, x) => n + x.length / 2, 0);
+        // Ryms inte draget inom taken tas det inte med (det försvinner från bilden).
+        if (markDrag.length < MARK_MAX_DRAG && redan + f.length / 2 <= MARK_MAX_ALLA) markDrag.push(f);
+        ritaMarkering();
+    }
+
+    markCanvas.addEventListener('touchstart', e => {
+        e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const t = e.changedTouches[i];
+            markBorja(t.identifier, t.clientX, t.clientY);
+        }
+    }, { passive: false });
+    markCanvas.addEventListener('touchmove', e => {
+        e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const t = e.changedTouches[i];
+            markDra(t.identifier, t.clientX, t.clientY);
+        }
+    }, { passive: false });
+    ['touchend', 'touchcancel'].forEach(typ => {
+        markCanvas.addEventListener(typ, e => {
+            for (let i = 0; i < e.changedTouches.length; i++) markSlut(e.changedTouches[i].identifier);
+        });
+    });
+    // Mus (test på dator)
+    markCanvas.addEventListener('mousedown', e => {
+        if (e.button === 0) markBorja('mus', e.clientX, e.clientY);
+    });
+    window.addEventListener('mousemove', e => markDra('mus', e.clientX, e.clientY));
+    window.addEventListener('mouseup', () => markSlut('mus'));
+    // Inget i läget går vidare till appen under (penseln, knapparna).
+    ['touchstart', 'mousedown'].forEach(typ => {
+        markLage.addEventListener(typ, e => { e.stopPropagation(); markVilaOm(); });
+    });
+
+    // Kön i plattan: markeringar som inte kommit fram än.
+    function lasKo() {
+        try {
+            const ko = JSON.parse(localStorage.getItem(MARK_KO));
+            return Array.isArray(ko) ? ko : [];
+        } catch (e) { return []; }
+    }
+
+    function skrivKo(ko) {
+        try {
+            if (ko.length) localStorage.setItem(MARK_KO, JSON.stringify(ko.slice(-MARK_KO_MAX)));
+            else localStorage.removeItem(MARK_KO);
+            return true;
+        } catch (e) { return false; }
+    }
+
+    // Skickar kön, en markering i taget. En markering tas ur kön först när
+    // mottagaren själv har svarat (huvudet X-Pensla-Markering): "sparad",
+    // eller "ogiltig" (den kommer aldrig att tas emot). Allt annat (inget
+    // nät, ingen mottagare, fullt för i dag) låter den ligga kvar till nästa
+    // gång. Löftet är klart när försöket är gjort.
+    let koGar = null;
+
+    function skickaKo() {
+        if (!MARK_URL) return Promise.resolve();
+        if (koGar) return koGar;
+        koGar = (async () => {
+            for (const m of lasKo()) {
+                let svar = null;
+                const stopp = new AbortController();
+                const tid = setTimeout(() => stopp.abort(), MARK_VANTA_MS);
+                try {
+                    const res = await fetch(MARK_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(m),
+                        cache: 'no-store',
+                        credentials: 'omit',
+                        signal: stopp.signal
+                    });
+                    svar = res.headers.get('X-Pensla-Markering');
+                } catch (e) { /* inget nät: ligger kvar */ }
+                clearTimeout(tid);
+                if (svar !== 'sparad' && svar !== 'ogiltig') break;
+                skrivKo(lasKo().filter(x => x.id !== m.id));
+            }
+        })().then(() => { koGar = null; }, () => { koGar = null; });
+        return koGar;
+    }
+
+    // Versionen står i sw.js (VERSION), som appen inte läser; cachens namn
+    // är 'pensla-' + VERSION. Utan service worker (Android-appen) blir den tom.
+    function appVersion() {
+        if (!window.caches) return Promise.resolve('');
+        return caches.keys().then(namn => {
+            const v = namn.map(n => /^pensla-(v\d+(?:-test)?)$/.exec(n)).filter(m => m).map(m => m[1]);
+            v.sort((a, b) => parseInt(a.slice(1), 10) - parseInt(b.slice(1), 10));
+            return v.length ? v[v.length - 1] : '';
+        }).catch(() => '');
+    }
+
+    function markId() {
+        const b = new Uint8Array(8);
+        crypto.getRandomValues(b);
+        return Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    function markKvitto(text) {
+        markText.textContent = text;
+        if (markStang) clearTimeout(markStang);
+        markStang = setTimeout(stangMarkering, 2000);
+    }
+
+    // KLAR: markeringen läggs i kön och skickas. Ett kort kvitto, sedan
+    // tillbaka till den vanliga appen.
+    async function markKlar() {
+        if (!markerar || markLage.classList.contains('kvitto')) return;
+        if (markVila) { clearTimeout(markVila); markVila = null; }
+        markLage.classList.add('kvitto');
+        Array.from(markPagar.keys()).forEach(markSlut);
+        const pic = PICTURES[currentPicture];
+        const m = {
+            id: markId(),
+            nr: pic.nr,
+            namn: pic.namn,
+            drag: markDrag.map(d => d.map(v => Math.round(v * 1000) / 1000)),
+            bredd: MARK_BREDD,
+            tid: new Date().toISOString().replace(/\.\d+Z$/, 'Z'),
+            version: '',
+            plattform: 'webb'
+        };
+        m.version = await appVersion();
+        const ko = lasKo();
+        ko.push(m);
+        if (!skrivKo(ko)) { markKvitto('Gick inte att spara'); return; }
+        if (!MARK_URL) { markKvitto('Sparat ✓'); return; }
+        markText.textContent = 'Skickar …';
+        await skickaKo();
+        if (!markerar) return;
+        markKvitto(lasKo().some(x => x.id === m.id) ? 'Sparat ✓ Skickas senare' : 'Skickat ✓');
+    }
+
+    document.getElementById('mark-klar').addEventListener('click', markKlar);
+    document.getElementById('mark-avbryt').addEventListener('click', stangMarkering);
+    window.addEventListener('online', () => { skickaKo(); });
 
     // --- Händelsebindningar (tidigare inline i HTML) ---
     document.getElementById('start-btn').addEventListener('click', startApp);
 
     // Bläddra mellan bilder: touchstart (med stopPropagation) agerar direkt
-    // för touch, click för mus.
-    [['prev-btn', -1], ['next-btn', 1]].forEach(([id, step]) => {
-        const btn = document.getElementById(id);
+    // för touch, click för mus. Sätts en pil ner medan den andra hålls
+    // (början på vuxengesten, se "Hemlig markering") går appen i stället
+    // tillbaka till bilden som visades innan den första pilen trycktes, så
+    // att gesten inte byter bild.
+    [[prevBtn, -1, nextBtn], [nextBtn, 1, prevBtn]].forEach(([btn, step, andra]) => {
         btn.addEventListener('click', () => changePicture(step));
         btn.addEventListener('touchstart', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            changePicture(step);
+            const nere = nereKnappar();
+            const bas = vantarPaBild >= 0 ? vantarPaBild : currentPicture;
+            gestNer(e, btn);
+            // En pil medan FÄRGLÄGG hålls: hållningen avbryts (annars
+            // färglades den nya bilden).
+            if (holdTimer && holdBtn === fillBtn) holdEnd(false);
+            if (nere.has(andra)) {
+                if (startad && foreBild >= 0 && foreBild !== bas) loadPicture(foreBild);
+            } else {
+                if (!nere.has(btn)) foreBild = bas;
+                changePicture(step);
+            }
+            gestKoll();
         }, { passive: false });
     });
 
@@ -945,7 +1337,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         btn.addEventListener('touchstart', function(e) {
             e.stopPropagation();
+            gestNer(e, btn);
             holdStart();
+            gestKoll();     // alla tre nere: hållningen avbryts och gesten börjar
             e.preventDefault();
         }, { passive: false });
 
@@ -971,8 +1365,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // touchend/cancel på hela fönstret stänger hållningen (fingret lyfts)
-    window.addEventListener('touchend', () => holdEnd(true), { passive: true });
-    window.addEventListener('touchcancel', () => holdEnd(false), { passive: true });
+    window.addEventListener('touchend', e => { gestUpp(e); holdEnd(true); }, { passive: true });
+    window.addEventListener('touchcancel', e => { gestUpp(e); holdEnd(false); }, { passive: true });
+    window.addEventListener('touchmove', gestFlytt, { passive: true });
     window.addEventListener('mouseup', () => holdEnd(true));
 
     // --- Back-knapp: håll användaren kvar i appen ---
@@ -1108,6 +1503,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('orientationchange', debouncedLayout);
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) return;
+        stangMarkering();
         aterstallKnappar();
         sparaNu();
         laddaOmOmNy();
@@ -1130,6 +1526,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (i > 0 && sparade.has(senast)) PICTURES.unshift(PICTURES.splice(i, 1)[0]);
         startad = true;
         loadPicture(0);
+        skickaKo();     // markeringar som inte kom fram förra gången
     });
 
     // Service worker. Webbläsaren letar själv efter en ny version bara när

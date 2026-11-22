@@ -2,10 +2,25 @@
 // filer), och testversionen med galleriet på test.pensla.keiws.com (env
 // test). Publiceras bara med verktyg/slapp.py, som bygger webb/ med appens
 // filer (ASSETS i sw.js) från den pushade koden.
+//
+// worker/mottagare.js tar emot de hemliga markeringarna (POST
+// /api/markering) och körs bara för /api/* (run_worker_first) och för
+// adresser som inte är en fil; då skickar den vidare till filerna, så att
+// allt annat serveras som utan worker. Workern tas från arbetskopian (inte
+// från origin/main som webb/).
+//
+// Databasen (D1) där markeringarna sparas är INTE kopplad än: raderna med
+// d1_databases står som kommentar tills ägaren sagt ja och databasen är
+// skapad (stegen står i CLAUDE.md, "Hemlig markering"). Utan dem svarar
+// mottagaren "stangd" och appen behåller markeringarna i sin kö.
 {
   "name": "pensla",
   "compatibility_date": "2026-10-01",
-  "assets": { "directory": "./webb" },
+  "main": "worker/mottagare.js",
+  "assets": { "directory": "./webb", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
+  // "d1_databases": [
+  //   { "binding": "DB", "database_name": "pensla-markeringar", "database_id": "ID-FRÅN-D1-CREATE" }
+  // ],
   "routes": [
     { "pattern": "pensla.keiws.com", "custom_domain": true }
   ],
@@ -14,8 +29,13 @@
       // Ingen omdirigering av index.html och galleri.html: Pensla test har
       // scope ./index.html och galleriet ./galleri (se slapp.py). Adressen /
       // ger ändå appen (single-page-application).
-      "assets": { "directory": "./webb", "html_handling": "none",
+      "assets": { "directory": "./webb", "binding": "ASSETS", "run_worker_first": ["/api/*"],
+                  "html_handling": "none",
                   "not_found_handling": "single-page-application" },
+      // Samma databas som den skarpa (kolumnen miljo skiljer dem åt).
+      // "d1_databases": [
+      //   { "binding": "DB", "database_name": "pensla-markeringar", "database_id": "ID-FRÅN-D1-CREATE" }
+      // ],
       "routes": [
         { "pattern": "test.pensla.keiws.com", "custom_domain": true }
       ]
