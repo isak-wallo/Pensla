@@ -15,14 +15,18 @@ färger, inga ljud, inga poäng, inga val att göra.
   (ägarens val i v49; ifyllnaden med `FYLL_ANDEL`/`startFade` finns i
   git-historiken). Det enda som händer av sig självt är keIWs.
 - Panelen har fem knappar, till höger i liggande läge (en rad nederst
-  i stående): **◀** föregående bild, **▶** nästa bild (agerar direkt på
-  `touchstart` med `stopPropagation`), **FÄRGLÄGG** (håll 1 s → hela
+  i stående): **◀** föregående bild, **▶** nästa bild (byter när fingret
+  SLÄPPS, sedan v114), **FÄRGLÄGG** (håll 1,5 s och släpp → hela
   färgbilden sveps fram från vänster och keIWs poppar upp, `fargaHela`;
-  BÖRJA OM ångrar) och den lite mindre **BÖRJA OM** (håll 1 s → bilden töms direkt; sedan
+  BÖRJA OM ångrar; sedan v114 vid släpp) och den lite mindre **BÖRJA OM** (håll 1 s → bilden töms direkt; sedan
   står "HÅLL INNE LÄNGE FÖR ATT NOLLSTÄLLA ALLA BILDER" i 4 s, och håller
-  man då i 4 s töms alla bilder, `glomAllt`). Håll-logiken
-  (`startHold`/`holdEnd`) delas av de tre. Ett för kort tryck visar
-  "HÅLL INNE FÖR ATT …" i 5 s, som i Kludda.
+  man då i 4 s töms alla bilder, `glomAllt`; `startHold`/`holdEnd`). Ett
+  för kort tryck visar "HÅLL INNE FÖR ATT …" i 5 s, som i Kludda.
+  **Knapptryck vid släpp (v114):** ◀, ▶ och FÄRGLÄGG gör sitt först när
+  fingret släpps på knappen, och bara om ingen annan knapp (pil,
+  FÄRGLÄGG, BÖRJA OM) hållits någon gång under samma tryck (`tryck`,
+  `smittad`, `tryckSlut` i app.js). Glider fingret av (`GEST_SLACK`) händer
+  inget. BÖRJA OM är som förut.
 - **Bildbanken:** alla bilder står med fast löpnummer i `bilder.js`
   (`ALLA_BILDER`), men bara de vars nummer står i `AKTIVA` visas och cachas
   (sedan 2026-10-31 vill ägaren ha så många aktiva som möjligt, inte
@@ -173,7 +177,7 @@ där.
 `sw.js` har `const VERSION = 'vNN'`. Höj den varje gång filer ändras och
 pushas, annars fastnar plattan på gammal cache.
 
-## Hemlig markering (v111–v113)
+## Hemlig markering (v111–v114)
 
 Ägaren märker ut bilder som ska ses över, direkt i appen. Barnets målning
 rörs aldrig. Koden: `app.js` (blocket "Hemlig markering"), `index.html`
@@ -183,14 +187,14 @@ Samma funktion finns i Pensla N (se CLAUDE.md där).
 - **Gesten:** håll ◀, ▶ och FÄRGLÄGG samtidigt i 5 s (`GEST_MS`), utan att
   BÖRJA OM hålls (en hand över hela panelen ger alltså inget). Ordningen
   spelar ingen roll. Lyfts ett finger, glider det av sin knapp (`GEST_SLACK`)
-  eller trycks BÖRJA OM börjar tiden om. Under gesten färgläggs inget, och
-  bilden är densamma efteråt: den första pilen byter bild direkt, den andra
-  går tillbaka till bilden som visades innan (`foreBild`), så bilden blinkar
-  till en gång. FÄRGLÄGG som trycks medan en pil hålls startar ingen hållning
-  (v113, samma regel som i Pensla N): förut färglades grannbilden helt när
-  gesten gjordes långsamt (pil, FÄRGLÄGG, den andra pilen först efter mer än
-  `FARGA_HOLD_MS`). Trycks FÄRGLÄGG FÖRST och hålls ensam över 1,5 s
-  färgläggs bilden som visas, som vanligt: börja gesten med en pil.
+  eller trycks BÖRJA OM börjar tiden om. Sedan v114 ger gesten aldrig
+  några vanliga effekter: pilarna och FÄRGLÄGG verkar först vid släpp och
+  bara om ingen annan knapp hållits under samma tryck (se "Knapptryck vid
+  släpp" ovan), så bilden byts aldrig (inte ens kortvarigt) och inget
+  färgläggs, i vilken ordning och hur långsamt gesten än görs, även när den
+  avbryts och även om FÄRGLÄGG trycks först och hålls ensam längre än
+  1,5 s. (v111–v113 bytte den första pilen bild direkt och den andra gick
+  tillbaka, `foreBild`; det är borttaget.)
 - **Läget:** texten "Markera områden som ska ses över" överst i panelen och
   knapparna KLAR och AVBRYT under den (`#mark-panel` ligger precis över
   knapp-panelen; stående: texten på en rad och knapparna bredvid varandra).
@@ -271,7 +275,12 @@ Samma funktion finns i Pensla N (se CLAUDE.md där).
   https://test.pensla.keiws.com/index.html` provar testmiljön, `--bilder MAPP`
   sparar skärmbilder, `--mapp` provar en annan kopia av appen. Kör det när
   gesten, läget eller knapparnas håll-logik ändras. Mottagaren och kön
-  provas inte av det.
+  provas inte av det. Sedan v114 provar det också reglerna för knapparna:
+  ◀ ▶ FÄRGLÄGG i alla sex ordningar (långsamt, snabbt, öppnat och avbrutet,
+  släpp i olika ordning), pil ensam (byter vid släpp, glider av, två
+  fingrar), pil eller FÄRGLÄGG + annan knapp (inget händer), FÄRGLÄGG
+  ensam (tips, färgläggning vid släpp, glider av) och samma med mus
+  (`--grupp tre regler`).
 - I headless Chromium går `touchstart` på knapparna inte att avbryta
   (`cancelable` = false), så webbläsaren skickar också mus-händelser och ett
   klick efter ett tryck. Därför räknas inte ett klick på en pil inom

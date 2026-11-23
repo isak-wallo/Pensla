@@ -14,6 +14,42 @@ nu i CLAUDE.md, avsnittet "Hemlig markering", i båda repona. Den här filen
 Allt är bara lokalt: inget pushat, inget utlagt på test eller skarpt, inget
 installerat, inga resurser skapade i Cloudflare.
 
+## v114-test (2026-11-23): knapptryck vid släpp
+
+Isaks beslut: gesten ska aldrig ge vanliga effekter. Pushat och utlagt på
+https://test.pensla.keiws.com (inte på den skarpa sidan). Samma regler i
+Pensla N v9.
+
+- **Pilarna:** byter bild först när fingret SLÄPPS på pilen, och bara om
+  ingen annan knapp (pil, FÄRGLÄGG, BÖRJA OM) har hållits någon gång under
+  samma tryck. Ingen hålltid. Glider fingret av pilen (`GEST_SLACK`) byts
+  inget. Två fingrar på samma pil = ett tryck (ett steg när det sista
+  släpps). Tillbakagången `foreBild` är borttagen.
+- **FÄRGLÄGG:** verkar också vid släpp (valt framför att ångra en påbörjad
+  färgläggning pixel för pixel, som hade krävt att masken, figurerna,
+  animationen och det sparade i IndexedDB återställdes). Fyllningen växer i
+  knappen som förut; släpps den efter 1,5 s färgläggs bilden, släpps den
+  tidigare kommer tipset. Har en annan knapp hållits under trycket
+  försvinner fyllningen och inget händer vid släpp (varken tips eller
+  färgläggning). Det barnet märker: färgen sveps fram när fingret lyfts i
+  stället för medan det hålls; den som håller kvar ser fyllningen stå full
+  tills fingret lyfts.
+- **BÖRJA OM** och gesten/läget i övrigt oförändrade. Följd av att
+  FÄRGLÄGG inte längre använder den gemensamma hålltimern: trycks
+  FÄRGLÄGG medan BÖRJA OM hålls fortsätter BÖRJA OM:s hållning (förut tog
+  FÄRGLÄGG över den).
+- Mus: klick på pilarna (vid släpp, som förut), FÄRGLÄGG som med fingret.
+  Härmade musklick inom 1 s efter ett finger på en knapp räknas inte.
+- **Provet:** `verktyg/prov_markering.py`, 644 kontroller i 66 fall, alla
+  som väntat (39 nya fall: ◀ ▶ FÄRGLÄGG i alla sex ordningar långsamt och
+  snabbt, öppnat och avbrutet med släpp i olika ordning, FÄRGLÄGG ensam
+  först, alla tre i samma ögonblick; pil ensam, pil + annan knapp,
+  FÄRGLÄGG + annan knapp, FÄRGLÄGG ensam, mus). Alla avbrutna gester: 0
+  pixlars skillnad på bilden som visas och båda grannarna, inget tips.
+  Provet fäller v113 (FÄRGLÄGG först i 2 s + pilarna: 233 564 pixlar
+  färglagda; ▶ hålls: bilden byts direkt).
+- Skärmbilder: `C:\Dropbox\Isak\Program\AI\Claude\keIWspk\Pensla-markering-skarmbilder\webb-v114\`.
+
 ## v113-test (2026-11-23): långsam gest och skylten utanför bilden
 
 Pushat och utlagt på https://test.pensla.keiws.com (inte på den skarpa
@@ -65,7 +101,7 @@ bilden som visas och på båda grannbilderna):
 - Ett finger glider av sin knapp: inget öppnas, samma bild.
 - Kvar som det är: trycks FÄRGLÄGG FÖRST och hålls ensam i 1,5 s färgläggs
   bilden som visas (det går inte att skilja från en vanlig färgläggning).
-  Börja gesten med en pil.
+  Börja gesten med en pil. (Rättat i v114: inget färgläggs.)
 
 ## Klart
 
@@ -183,16 +219,13 @@ omdirigeras och sedan inte går att ladda om genom service workern). CDP:
 2. Prova Pensla N v6 på emulator/platta innan den installeras.
 3. Push, `slapp.py --test`, prov på plattan.
 
-Kända avvikelser från beställningen: den första pilen byter bild
-kortvarigt innan den andra pilen går tillbaka (nettobyte noll); en pil som
-trycks medan FÄRGLÄGG hålls avbryter hållningen. Att låta pilarna agera
-först vid släpp är inte gjort: då händer inget medan ett barn håller kvar
-fingret, och inget alls om fingret glider av, och det måste göras och
-provas i båda apparna.
+Kända avvikelser från beställningen (v113, åtgärdade i v114 och Pensla N
+v9 genom att pilarna och FÄRGLÄGG verkar vid släpp): den första pilen bytte
+bild kortvarigt innan den andra pilen gick tillbaka; FÄRGLÄGG ensam först
+färglade bilden.
 
 ## Frågor till Isak
 
-- Pilarna: godta blinkningen (som nu), eller låta pilarna agera vid släpp?
 - Enhetstester i Pensla N kräver JUnit (nytt bibliotek): lägga till?
 - ContentProvider (signature-behörighet) så att keIWs Fjärr kan hämta
   filen utan adb: bara ett förslag, inte byggt.

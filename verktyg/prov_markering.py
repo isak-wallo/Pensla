@@ -13,13 +13,19 @@ Kör appen i headless Chromium (Playwright) med riktiga flerfingerhändelser
   - läget: texten och knapparna ligger i panelen och inget ligger över
     bilden, i liggande och stående och på liten telefon,
   - att man kan markera i bildens överkant (draget ritas där och kommer med
-    i det som skickas), och att KLAR och AVBRYT fungerar.
+    i det som skickas), och att KLAR och AVBRYT fungerar,
+  - knapptryck vid släpp (v114): ◀ ▶ FÄRGLÄGG i alla sex ordningar
+    (långsamt, snabbt, öppnat, avbrutet, släpp i olika ordning) ger samma
+    bild och 0 pixlar; en pil ensam byter vid släpp (inte när den glider av);
+    pil eller FÄRGLÄGG + en annan knapp gör ingenting; FÄRGLÄGG ensam ger
+    tipset eller färglägger vid släpp; samma med mus.
 
     python verktyg/prov_markering.py                 # arbetskopian
     python verktyg/prov_markering.py --mapp MAPP     # en annan kopia av appen
     python verktyg/prov_markering.py --adress https://test.pensla.keiws.com/index.html
     python verktyg/prov_markering.py --bilder MAPP   # sparar skärmbilder där
     python verktyg/prov_markering.py --bara langsam  # bara fall vars namn innehåller ordet
+    python verktyg/prov_markering.py --grupp tre regler   # bara knappreglerna (v114)
 
 Inget skickas någonstans: anropen till api/markering fångas i webbläsaren
 (svaret "sparad" härmas), även med --adress. Service workern är avstängd i
@@ -286,11 +292,14 @@ class Prov:
                 except Exception:
                     pass
 
-    def gest(self, namn, steg, oppnar, visas='A', bredd=1280, hojd=800, efter=None):
-        """steg: lista av ('ner', finger, knapp) | ('upp', finger...) | ('vanta', ms) | ('glid', finger, dx, dy)."""
-        self.fall_(namn, lambda: self.gest_(steg, oppnar, visas, efter), bredd, hojd)
+    def gest(self, namn, steg, oppnar, visas='A', bredd=1280, hojd=800, efter=None, farglagd=False):
+        """steg: lista av ('ner', finger, knapp) | ('upp', finger...) | ('vanta', ms) | ('glid', finger, dx, dy)
+        | ('oppet', väntat, text) | ('ner3',) | ('bild', namn, text) | ('farglagd', namn, text) | ('stilla',)
+        | ('klass', klass, väntat, text) | ('text', id, väntat, text).
+        farglagd: bilden blir färglagd i fallet; BÖRJA OM tömmer den innan bilderna jämförs."""
+        self.fall_(namn, lambda: self.gest_(steg, oppnar, visas, efter, farglagd), bredd, hojd)
 
-    def gest_(self, steg, oppnar, visas, efter):
+    def gest_(self, steg, oppnar, visas, efter, farglagd=False):
         if True:
             for s in steg:
                 if s[0] == 'ner':
@@ -306,9 +315,34 @@ class Prov:
                         self.vanta(30)
                 elif s[0] == 'oppet':
                     self.kolla(s[2], self.oppet() == s[1], self.oppet())
+                elif s[0] == 'ner3':      # ◀ ▶ FÄRGLÄGG i samma touchStart
+                    for i, k in ((1, 'prev-btn'), (2, 'next-btn'), (3, 'fill-btn')):
+                        self.f.nere[i] = self.mitt(k)
+                    self.f.ner(3, *self.f.nere[3])
+                elif s[0] == 'bild':
+                    n = self.skillnad(s[1])
+                    self.kolla(s[2], n == 0, n)
+                elif s[0] == 'farglagd':
+                    n = self.skillnad(s[1])
+                    self.kolla(s[2], n > 50000, n)
+                elif s[0] == 'stilla':
+                    self.stilla()
+                elif s[0] == 'klass':
+                    har = self.sida.evaluate("document.getElementById('fill-btn').classList.contains(%s)"
+                                             % json.dumps(s[1]))
+                    self.kolla(s[3], har == s[2], har)
+                elif s[0] == 'text':
+                    self.kolla(s[3], self.text(s[1]) == s[2], self.text(s[1]))
             self.kolla('läget öppnat' if oppnar else 'läget inte öppnat', self.oppet() == oppnar)
             if efter:
                 efter()
+            if farglagd:
+                self.f.alla_upp()
+                self.ner(4, 'restart-btn')
+                self.vanta(1200)
+                self.f.upp(4)
+                self.vanta(4500)
+                self.stilla()
             self.orort(visas)
 
     def alla_gester(self):
@@ -337,7 +371,7 @@ class Prov:
            ('upp', 1, 2, 3), ('vanta', 2000)], False)
         g('avbruten långsam: ◀ och FÄRGLÄGG i 4 s, ingen andra pil',
           [('ner', 1, P), ('vanta', 300), ('ner', 3, F), ('vanta', 4000), ('upp', 1, 3), ('vanta', 500)], False,
-          visas='C', efter=lambda: self.kolla('inget tips på FÄRGLÄGG', self.text('fill-btn') == 'FÄRGLÄGG',
+          efter=lambda: self.kolla('inget tips på FÄRGLÄGG', self.text('fill-btn') == 'FÄRGLÄGG',
                                               self.text('fill-btn')))
         g('avbruten långsam: ◀, FÄRGLÄGG 2,5 s, ▶, släpp efter 2 s',
           [('ner', 1, P), ('vanta', 300), ('ner', 3, F), ('vanta', 2500), ('ner', 2, N), ('vanta', 2000),
@@ -345,9 +379,9 @@ class Prov:
         g('bara pilarna i 6 s',
           [('ner', 1, P), ('vanta', 150), ('ner', 2, N), ('vanta', 6000)], False)
         g('FÄRGLÄGG, sedan en pil (▶), 6 s',
-          [('ner', 3, F), ('vanta', 400), ('ner', 2, N), ('vanta', 6000)], False, visas='B')
+          [('ner', 3, F), ('vanta', 400), ('ner', 2, N), ('vanta', 6000)], False)
         g('en pil (▶), sedan FÄRGLÄGG, 6 s',
-          [('ner', 2, N), ('vanta', 400), ('ner', 3, F), ('vanta', 6000)], False, visas='B')
+          [('ner', 2, N), ('vanta', 400), ('ner', 3, F), ('vanta', 6000)], False)
         g('lyft FÄRGLÄGG efter 3 s och åter: tiden börjar om',
           [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 3000),
            ('upp', 3), ('vanta', 300), ('ner', 3, F), ('vanta', 3500), ('oppet', False, 'inte öppet 6,9 s efter start'),
@@ -370,6 +404,156 @@ class Prov:
            ('ner', 4, B), ('vanta', 500), ('upp', 4), ('vanta', 4300), ('oppet', False, 'inte öppet 5 s efter start'),
            ('vanta', 5000)], True)
 
+    def tre_i_alla_ordningar(self):
+        """Alla sex ordningar av ◀ ▶ FÄRGLÄGG, snabbt och långsamt, öppnade och
+        avbrutna, med släpp i olika ordning: alltid samma bild och 0 pixlar."""
+        import itertools
+        K = {'P': 'prev-btn', 'N': 'next-btn', 'F': 'fill-btn'}
+        nr = {'P': 1, 'N': 2, 'F': 3}
+        tecken = {'P': '◀', 'N': '▶', 'F': 'FÄRGLÄGG'}
+        for i, ordning in enumerate(itertools.permutations('PNF')):
+            namn = ' '.join(tecken[k] for k in ordning)
+            # långsamt (1,7 s mellan, mer än FARGA_HOLD_MS), hålls 2,5 s, släpps i omvänd ordning
+            steg = []
+            for k in ordning:
+                steg += [('ner', nr[k], K[k]), ('vanta', 1700)]
+            steg += [('vanta', 800)] + [('upp', nr[k]) for k in reversed(ordning)] + [('vanta', 600)]
+            self.gest('tre, långsam och avbruten: %s, släpp omvänt' % namn, steg, False,
+                      efter=self.inget_tips)
+            # snabbt, släpps ett i taget i samma ordning med 0,8 s mellan (den sista hålls ensam en stund)
+            steg = []
+            for k in ordning:
+                steg += [('ner', nr[k], K[k]), ('vanta', 60)]
+            steg += [('vanta', 2000)]
+            for k in ordning:
+                steg += [('upp', nr[k]), ('vanta', 800)]
+            self.gest('tre, snabb och avbruten: %s, släpp ett i taget' % namn, steg, False,
+                      efter=self.inget_tips)
+            # öppnar (varannan långsam), och den sista knappen släpps först 2 s efter de andra
+            steg = []
+            for k in ordning:
+                steg += [('ner', nr[k], K[k]), ('vanta', 1700 if i % 2 else 300)]
+            steg += [('vanta', 5400), ('oppet', True, 'läget öppet'), ('upp', nr[ordning[0]], nr[ordning[1]]),
+                     ('vanta', 2000), ('upp', nr[ordning[2]]), ('vanta', 600)]
+            self.gest('tre, öppnar: %s (%s)' % (namn, 'långsam' if i % 2 else 'snabb'), steg, True,
+                      efter=self.inget_tips)
+        P, N, F = K['P'], K['N'], K['F']
+        self.gest('FÄRGLÄGG ensam 2 s först, sedan ◀ och ▶, släpp efter 1 s',
+                  [('ner', 3, F), ('vanta', 2000), ('ner', 1, P), ('vanta', 200), ('ner', 2, N), ('vanta', 1000),
+                   ('upp', 3), ('vanta', 300), ('upp', 1, 2), ('vanta', 600)], False, efter=self.inget_tips)
+        self.gest('FÄRGLÄGG ensam 2 s först, sedan hela gesten (öppnar)',
+                  [('ner', 3, F), ('vanta', 2000), ('ner', 1, P), ('vanta', 200), ('ner', 2, N), ('vanta', 5400)],
+                  True, efter=self.inget_tips)
+        self.gest('alla tre ner i samma ögonblick, 1 s, upp i samma ögonblick',
+                  [('ner3',), ('vanta', 1000), ('upp', 1, 2, 3), ('vanta', 600)], False, efter=self.inget_tips)
+
+    def inget_tips(self):
+        self.kolla('inget tips på FÄRGLÄGG', self.text('fill-btn') == 'FÄRGLÄGG', self.text('fill-btn'))
+
+    def regler(self):
+        """Reglerna för pilarna och FÄRGLÄGG var för sig (v114)."""
+        P, N, F, B = 'prev-btn', 'next-btn', 'fill-btn', 'restart-btn'
+        g = self.gest
+        # Pil ensam: byter först vid släpp
+        g('pil ensam: ▶ hålls 3 s, bilden byts först vid släpp',
+          [('ner', 2, N), ('vanta', 3000), ('bild', 'A', 'samma bild medan ▶ hålls i 3 s'), ('upp', 2),
+           ('vanta', 400), ('stilla',), ('bild', 'B', 'nästa bild efter släppet')], False, visas='B')
+        g('pil ensam: ◀ kort tryck, byter vid släpp',
+          [('ner', 1, P), ('vanta', 120), ('bild', 'A', 'samma bild medan ◀ hålls'), ('upp', 1), ('vanta', 400),
+           ('stilla',)], False, visas='C')
+        g('pil ensam: ▶ glider av knappen och släpps, inget byte',
+          [('ner', 2, N), ('vanta', 300), ('glid', 2, -260, 0), ('upp', 2), ('vanta', 600)], False)
+        g('pil ensam: två fingrar på ▶, ett steg när det sista släpps',
+          [('ner', 2, N), ('vanta', 200), ('ner', 5, N), ('vanta', 200), ('upp', 2), ('vanta', 400),
+           ('bild', 'A', 'samma bild när det första fingret släppts'), ('upp', 5), ('vanta', 400), ('stilla',)],
+          False, visas='B')
+        g('pil ensam: ▶ och sedan ◀ var för sig, tillbaka',
+          [('ner', 2, N), ('vanta', 150), ('upp', 2), ('vanta', 400), ('stilla',), ('bild', 'B', '▶ ett steg'),
+           ('ner', 1, P), ('vanta', 150), ('upp', 1), ('vanta', 400), ('stilla',), ('bild', 'A', '◀ tillbaka')],
+          False)
+        # Pil + annan knapp: inget byte
+        g('pil + pil: ◀ och ▶, släpps i samma ordning',
+          [('ner', 1, P), ('vanta', 300), ('ner', 2, N), ('vanta', 300), ('upp', 1), ('vanta', 300), ('upp', 2),
+           ('vanta', 600)], False)
+        g('pil + pil: ▶ hålls, ◀ kort tryck, ▶ släpps',
+          [('ner', 2, N), ('vanta', 300), ('ner', 1, P), ('vanta', 100), ('upp', 1), ('vanta', 500), ('upp', 2),
+           ('vanta', 600)], False)
+        g('pil + FÄRGLÄGG: ▶ hålls, FÄRGLÄGG kort tryck, ▶ släpps',
+          [('ner', 2, N), ('vanta', 300), ('ner', 3, F), ('vanta', 100), ('upp', 3), ('vanta', 500), ('upp', 2),
+           ('vanta', 600)], False, efter=self.inget_tips)
+        g('pil + FÄRGLÄGG: ◀ hålls, FÄRGLÄGG 2 s, ◀ släpps sist',
+          [('ner', 1, P), ('vanta', 300), ('ner', 3, F), ('vanta', 2000), ('upp', 3), ('vanta', 500), ('upp', 1),
+           ('vanta', 600)], False, efter=self.inget_tips)
+        g('pil + BÖRJA OM: ▶ hålls, BÖRJA OM kort tryck, ▶ släpps',
+          [('ner', 2, N), ('vanta', 300), ('ner', 4, B), ('vanta', 150), ('upp', 4), ('vanta', 500), ('upp', 2),
+           ('vanta', 600)], False)
+        g('pil + BÖRJA OM: BÖRJA OM hålls 0,5 s, ◀ kort tryck under tiden',
+          [('ner', 4, B), ('vanta', 200), ('ner', 1, P), ('vanta', 100), ('upp', 1), ('vanta', 200), ('upp', 4),
+           ('vanta', 600)], False)
+        # FÄRGLÄGG + annan knapp: inget av FÄRGLÄGGs vanliga saker
+        g('FÄRGLÄGG + pil: FÄRGLÄGG hålls 2 s, ▶ kort tryck, FÄRGLÄGG släpps',
+          [('ner', 3, F), ('vanta', 2000), ('ner', 2, N), ('vanta', 100), ('upp', 2), ('vanta', 300),
+           ('klass', 'holding', False, 'ingen fyllning i FÄRGLÄGG efter pilen'), ('upp', 3), ('vanta', 600)],
+          False, efter=self.inget_tips)
+        g('FÄRGLÄGG + pil: FÄRGLÄGG kort, ◀ under tiden, ◀ släpps sist',
+          [('ner', 3, F), ('vanta', 100), ('ner', 1, P), ('vanta', 100), ('upp', 3), ('vanta', 300), ('upp', 1),
+           ('vanta', 600)], False, efter=self.inget_tips)
+        g('FÄRGLÄGG + BÖRJA OM: FÄRGLÄGG 2 s, BÖRJA OM kort tryck, FÄRGLÄGG släpps',
+          [('ner', 3, F), ('vanta', 2000), ('ner', 4, B), ('vanta', 150), ('upp', 4), ('vanta', 300), ('upp', 3),
+           ('vanta', 600)], False, efter=self.inget_tips)
+        # FÄRGLÄGG ensam
+        g('FÄRGLÄGG ensam 2,5 s: fyllningen syns, inget färgläggs förrän vid släpp',
+          [('ner', 3, F), ('vanta', 300), ('klass', 'holding', True, 'fyllningen växer i FÄRGLÄGG'),
+           ('vanta', 2200), ('bild', 'A', 'inget färglagt medan FÄRGLÄGG hålls'), ('upp', 3), ('vanta', 2500),
+           ('stilla',), ('farglagd', 'A', 'färglagt efter släppet')], False, farglagd=True)
+        g('FÄRGLÄGG ensam 1,2 s: tipset, inget färglagt',
+          [('ner', 3, F), ('vanta', 1200), ('upp', 3), ('vanta', 300),
+           ('text', 'fill-btn', 'HÅLL INNE FÖR ATT FÄRGLÄGGA', 'tipset efter 1,2 s')], False)
+        g('FÄRGLÄGG ensam 2 s, glider av knappen och släpps: inget',
+          [('ner', 3, F), ('vanta', 2000), ('glid', 3, -260, 0), ('upp', 3), ('vanta', 600)], False,
+          efter=self.inget_tips)
+        self.fall_('mus: pilar och FÄRGLÄGG', self.mus_, 1280, 800)
+
+    def mus_(self):
+        m = self.sida.mouse
+        x, y = self.mitt('next-btn')
+        m.move(x, y)
+        m.down()
+        self.vanta(800)
+        self.kolla('mus: samma bild medan musknappen hålls på ▶', self.skillnad('A') == 0, self.skillnad('A'))
+        m.up()
+        self.vanta(400)
+        self.stilla()
+        self.kolla('mus: ▶ byter vid släpp', self.skillnad('B') == 0, self.skillnad('B'))
+        m.click(*self.mitt('prev-btn'))
+        self.vanta(400)
+        self.stilla()
+        self.kolla('mus: ◀ byter tillbaka', self.skillnad('A') == 0, self.skillnad('A'))
+        x, y = self.mitt('fill-btn')
+        m.move(x, y)
+        m.down()
+        self.vanta(200)
+        m.up()
+        self.vanta(300)
+        self.kolla('mus: kort klick på FÄRGLÄGG ger tipset', self.text('fill-btn') == 'HÅLL INNE FÖR ATT FÄRGLÄGGA',
+                   self.text('fill-btn'))
+        self.vanta(5200)
+        m.down()
+        self.vanta(2000)
+        m.move(x - 300, y, steps=5)
+        m.up()
+        self.vanta(2500)
+        self.kolla('mus: FÄRGLÄGG 2 s och av knappen, inget färglagt', self.skillnad('A') == 0, self.skillnad('A'))
+        m.move(x, y)
+        m.down()
+        self.vanta(2000)
+        self.kolla('mus: inget färglagt medan FÄRGLÄGG hålls 2 s', self.skillnad('A') == 0, self.skillnad('A'))
+        m.up()
+        self.vanta(2500)
+        self.stilla()
+        n = self.skillnad('A')
+        self.kolla('mus: FÄRGLÄGG färglägger vid släpp', n > 50000, n)
+
     def som_forut(self):
         """FÄRGLÄGG ensam, kort tryck och pilarna fungerar som förut."""
         self.fall_('som förut: FÄRGLÄGG ensam, tips, pilar', self.som_forut_, 1280, 800)
@@ -385,11 +569,12 @@ class Prov:
             self.vanta(1300)
             self.kolla('inget färglagt efter 1,3 s', self.skillnad('A') == 0, self.skillnad('A'))
             self.vanta(400)
+            self.kolla('inget färglagt medan FÄRGLÄGG hålls (1,7 s)', self.skillnad('A') == 0, self.skillnad('A'))
             self.f.upp(3)
             self.vanta(2500)
             self.stilla()
             n = self.skillnad('A')
-            self.kolla('FÄRGLÄGG ensam i 1,7 s färglägger bilden', n > 50000, n)
+            self.kolla('FÄRGLÄGG ensam i 1,7 s färglägger bilden vid släpp', n > 50000, n)
             self.ner(4, 'restart-btn')
             self.vanta(1200)
             self.f.upp(4)
@@ -581,7 +766,8 @@ class Prov:
         print('Provar', self.adress)
         with sync_playwright() as pw:
             self.webblasare = pw.chromium.launch()
-            grupper = [('gest', self.alla_gester), ('forut', self.som_forut), ('laget', self.alla_lagen)]
+            grupper = [('gest', self.alla_gester), ('tre', self.tre_i_alla_ordningar), ('regler', self.regler),
+                       ('forut', self.som_forut), ('laget', self.alla_lagen)]
             for namn, gor in grupper:
                 if self.arg.grupp and namn not in self.arg.grupp:
                     continue
@@ -604,12 +790,13 @@ if __name__ == '__main__':
     ap.add_argument('--mapp', default=ROT, help='mappen med appen (förval: arbetskopian)')
     ap.add_argument('--adress', help='prova en publicerad adress i stället, t.ex. testmiljöns index.html')
     ap.add_argument('--bilder', help='spara skärmbilder i den här mappen')
-    ap.add_argument('--grupp', nargs='*', choices=['gest', 'forut', 'laget'], help='bara de här grupperna')
+    ap.add_argument('--grupp', nargs='*', choices=['gest', 'tre', 'regler', 'forut', 'laget'],
+                    help='bara de här grupperna')
     ap.add_argument('--bara', help='bara gestfall vars namn innehåller texten')
     arg = ap.parse_args()
     prov = Prov(arg)
     if arg.bara:
         hel = prov.gest
         prov.gest = lambda namn, *a, **k: hel(namn, *a, **k) if arg.bara in namn else None
-        arg.grupp = ['gest']
+        arg.grupp = arg.grupp or ['gest', 'tre', 'regler']
     sys.exit(prov.kor())
