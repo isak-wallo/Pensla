@@ -9,18 +9,18 @@
 // allt annat serveras som utan worker. Workern tas från arbetskopian (inte
 // från origin/main som webb/).
 //
-// Databasen (D1) där markeringarna sparas är INTE kopplad än: raderna med
-// d1_databases står som kommentar tills ägaren sagt ja och databasen är
-// skapad (stegen står i CLAUDE.md, "Hemlig markering"). Utan dem svarar
-// mottagaren "stangd" och appen behåller markeringarna i sin kö.
+// Databasen (D1) där markeringarna sparas är kopplad sedan 2026-11-23
+// (pensla-markeringar, en databas för skarpt och test; se CLAUDE.md,
+// "Hemlig markering"). Utan bindningen svarar mottagaren "stangd" och appen
+// behåller markeringarna i sin kö.
 {
   "name": "pensla",
   "compatibility_date": "2026-10-01",
   "main": "worker/mottagare.js",
   "assets": { "directory": "./webb", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
-  // "d1_databases": [
-  //   { "binding": "DB", "database_name": "pensla-markeringar", "database_id": "ID-FRÅN-D1-CREATE" }
-  // ],
+  "d1_databases": [
+    { "binding": "DB", "database_name": "pensla-markeringar", "database_id": "e5f563fa-635a-4419-9a88-66c7defe2e3b" }
+  ],
   "routes": [
     { "pattern": "pensla.keiws.com", "custom_domain": true }
   ],
@@ -33,9 +33,9 @@
                   "html_handling": "none",
                   "not_found_handling": "single-page-application" },
       // Samma databas som den skarpa (kolumnen miljo skiljer dem åt).
-      // "d1_databases": [
-      //   { "binding": "DB", "database_name": "pensla-markeringar", "database_id": "ID-FRÅN-D1-CREATE" }
-      // ],
+      "d1_databases": [
+        { "binding": "DB", "database_name": "pensla-markeringar", "database_id": "e5f563fa-635a-4419-9a88-66c7defe2e3b" }
+      ],
       "routes": [
         { "pattern": "test.pensla.keiws.com", "custom_domain": true }
       ]
