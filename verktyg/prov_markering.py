@@ -3,9 +3,9 @@
 Kör appen i headless Chromium (Playwright) med riktiga flerfingerhändelser
 (CDP Input.dispatchTouchEvent) och kontrollerar:
 
-  - gesten: öppnar efter 5 s, i olika ordning och även när den görs långsamt
+  - gesten: öppnar efter 3 s (v116; 5 s förut), i olika ordning och även när den görs långsamt
     (pil, FÄRGLÄGG, den andra pilen först efter 2,5 s), och öppnar inte när
-    den avbryts (2 s, 4 s, bara pilarna, FÄRGLÄGG + en pil, lyft och åter,
+    den avbryts (2 s, 2,5 s, 2,7 s, bara pilarna, FÄRGLÄGG + en pil, lyft och åter,
     finger som glider av),
   - att ingen bild byts och inget färgläggs av gesten: bilden som visas och
     båda grannbilderna jämförs pixel för pixel med hur de såg ut före
@@ -352,25 +352,32 @@ class Prov:
         P, N, F, B = 'prev-btn', 'next-btn', 'fill-btn', 'restart-btn'
         g = self.gest
         # Öppnar
-        g('gest: ◀ ▶ FÄRGLÄGG snabbt, 5,4 s',
-          [('ner', 1, P), ('vanta', 150), ('ner', 2, N), ('vanta', 150), ('ner', 3, F), ('vanta', 4300),
-           ('oppet', False, 'inte öppet efter 4,3 s'), ('vanta', 1100)], True)
-        g('gest: FÄRGLÄGG ▶ ◀ snabbt, 5,4 s',
-          [('ner', 3, F), ('vanta', 150), ('ner', 2, N), ('vanta', 150), ('ner', 1, P), ('vanta', 5400)], True)
+        g('gest: ◀ ▶ FÄRGLÄGG snabbt, 3,4 s',
+          [('ner', 1, P), ('vanta', 150), ('ner', 2, N), ('vanta', 150), ('ner', 3, F), ('vanta', 2500),
+           ('oppet', False, 'inte öppet efter 2,5 s'), ('vanta', 900)], True)
+        g('gest: FÄRGLÄGG ▶ ◀ snabbt, 3,4 s',
+          [('ner', 3, F), ('vanta', 150), ('ner', 2, N), ('vanta', 150), ('ner', 1, P), ('vanta', 3400)], True)
+        # Gränsen (v116: GEST_MS = 3 s)
+        g('gränsen: alla tre 2,7 s och släpp (öppnar inte)',
+          [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 2500),
+           ('oppet', False, 'inte öppet efter 2,5 s'), ('vanta', 200), ('upp', 1, 2, 3), ('vanta', 2000)], False)
+        g('gränsen: öppnar mellan 2,8 och 3,2 s',
+          [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 2800),
+           ('oppet', False, 'inte öppet efter 2,8 s'), ('vanta', 400), ('oppet', True, 'öppet efter 3,2 s')], True)
         g('gest långsam: ◀, FÄRGLÄGG, ▶ först efter 2,5 s',
-          [('ner', 1, P), ('vanta', 300), ('ner', 3, F), ('vanta', 2500), ('ner', 2, N), ('vanta', 5400)], True,
+          [('ner', 1, P), ('vanta', 300), ('ner', 3, F), ('vanta', 2500), ('ner', 2, N), ('vanta', 3400)], True,
           efter=lambda: self.bild('gest-langsam-laget-oppet'))
         g('gest långsam: ▶, FÄRGLÄGG, ◀ först efter 2,5 s',
-          [('ner', 2, N), ('vanta', 300), ('ner', 3, F), ('vanta', 2500), ('ner', 1, P), ('vanta', 5400)], True)
+          [('ner', 2, N), ('vanta', 300), ('ner', 3, F), ('vanta', 2500), ('ner', 1, P), ('vanta', 3400)], True)
         g('gest långsam, stående: ◀, FÄRGLÄGG, ▶ först efter 2,5 s',
-          [('ner', 1, P), ('vanta', 300), ('ner', 3, F), ('vanta', 2500), ('ner', 2, N), ('vanta', 5400)], True,
+          [('ner', 1, P), ('vanta', 300), ('ner', 3, F), ('vanta', 2500), ('ner', 2, N), ('vanta', 3400)], True,
           bredd=800, hojd=1280)
         # Öppnar inte
         g('avbruten: alla tre i 2 s',
           [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 2000),
            ('upp', 1, 2, 3), ('vanta', 4000)], False)
-        g('avbruten: alla tre i 4 s',
-          [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 4000),
+        g('avbruten: alla tre i 2,5 s',
+          [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 2500),
            ('upp', 1, 2, 3), ('vanta', 2000)], False)
         g('avbruten långsam: ◀ och FÄRGLÄGG i 4 s, ingen andra pil',
           [('ner', 1, P), ('vanta', 300), ('ner', 3, F), ('vanta', 4000), ('upp', 1, 3), ('vanta', 500)], False,
@@ -385,27 +392,27 @@ class Prov:
           [('ner', 3, F), ('vanta', 400), ('ner', 2, N), ('vanta', 6000)], False)
         g('en pil (▶), sedan FÄRGLÄGG, 6 s',
           [('ner', 2, N), ('vanta', 400), ('ner', 3, F), ('vanta', 6000)], False)
-        g('lyft FÄRGLÄGG efter 3 s och åter: tiden börjar om',
-          [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 3000),
-           ('upp', 3), ('vanta', 300), ('ner', 3, F), ('vanta', 3500), ('oppet', False, 'inte öppet 6,9 s efter start'),
-           ('vanta', 1900)], True)
-        g('lyft en pil efter 3 s och åter: tiden börjar om',
-          [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 3000),
-           ('upp', 2), ('vanta', 300), ('ner', 2, N), ('vanta', 3500), ('oppet', False, 'inte öppet 6,9 s efter start'),
-           ('vanta', 1900)], True)
-        g('lyft en pil efter 3 s, åter först efter 2,5 s',
-          [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 3000),
+        g('lyft FÄRGLÄGG efter 2 s och åter: tiden börjar om',
+          [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 2000),
+           ('upp', 3), ('vanta', 300), ('ner', 3, F), ('vanta', 2200), ('oppet', False, 'inte öppet 4,7 s efter start'),
+           ('vanta', 1200)], True)
+        g('lyft en pil efter 2 s och åter: tiden börjar om',
+          [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 2000),
+           ('upp', 2), ('vanta', 300), ('ner', 2, N), ('vanta', 2200), ('oppet', False, 'inte öppet 4,7 s efter start'),
+           ('vanta', 1200)], True)
+        g('lyft en pil efter 2 s, åter först efter 2,5 s',
+          [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 2000),
            ('upp', 2), ('vanta', 2500), ('ner', 2, N), ('vanta', 2000), ('upp', 1, 2, 3), ('vanta', 500)], False)
-        g('finger glider av ▶ efter 3 s',
-          [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 3000),
+        g('finger glider av ▶ efter 2 s',
+          [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 2000),
            ('glid', 2, -260, 0), ('vanta', 3500)], False)
-        g('finger glider av FÄRGLÄGG efter 3 s',
-          [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 3000),
+        g('finger glider av FÄRGLÄGG efter 2 s',
+          [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 2000),
            ('glid', 3, -260, 0), ('vanta', 3500)], False)
         g('alla fyra knapparna i 6 s (BÖRJA OM sist)',
           [('ner', 1, P), ('vanta', 100), ('ner', 2, N), ('vanta', 100), ('ner', 3, F), ('vanta', 100),
-           ('ner', 4, B), ('vanta', 500), ('upp', 4), ('vanta', 4300), ('oppet', False, 'inte öppet 5 s efter start'),
-           ('vanta', 5000)], True)
+           ('ner', 4, B), ('vanta', 500), ('upp', 4), ('vanta', 2500),
+           ('oppet', False, 'inte öppet 2,5 s efter att BÖRJA OM släppts'), ('vanta', 1500)], True)
 
     def tre_i_alla_ordningar(self):
         """Alla sex ordningar av ◀ ▶ FÄRGLÄGG, snabbt och långsamt, öppnade och
@@ -441,7 +448,7 @@ class Prov:
             steg = []
             for k in ordning:
                 steg += [('ner', nr[k], K[k]), ('vanta', 1700 if i % 2 else 300)]
-            steg += [('vanta', 5400), ('oppet', True, 'läget öppet'), ('upp', nr[ordning[0]], nr[ordning[1]]),
+            steg += [('vanta', 3400), ('oppet', True, 'läget öppet'), ('upp', nr[ordning[0]], nr[ordning[1]]),
                      ('vanta', 2000), ('upp', nr[ordning[2]]), ('vanta', 600)]
             farg = forst and i % 2 == 1
             if farg:
@@ -455,7 +462,7 @@ class Prov:
                    ('upp', 3), ('vanta', 300), ('upp', 1, 2), ('vanta', 600), ('stilla',),
                    ('farglagd', 'A', 'samma bild, färglagd')], False, efter=self.inget_tips, farglagd=True)
         self.gest('FÄRGLÄGG ensam 2 s först (färglagt), sedan hela gesten (öppnar)',
-                  [('ner', 3, F), ('vanta', 2000), ('ner', 1, P), ('vanta', 200), ('ner', 2, N), ('vanta', 5400)],
+                  [('ner', 3, F), ('vanta', 2000), ('ner', 1, P), ('vanta', 200), ('ner', 2, N), ('vanta', 3400)],
                   True, efter=self.inget_tips, farglagd=True)
         self.gest('FÄRGLÄGG 1 s, sedan ◀ och ▶ (före 1,5 s), släpp efter 2 s: 0 pixlar',
                   [('ner', 3, F), ('vanta', 1000), ('ner', 1, P), ('vanta', 200), ('ner', 2, N), ('vanta', 2000),
@@ -636,7 +643,7 @@ class Prov:
         self.ner(2, 'next-btn')
         self.vanta(120)
         self.ner(3, 'fill-btn')
-        self.vanta(5500)
+        self.vanta(3500)
         self.f.upp(1, 2, 3)
         self.vanta(300)
 

@@ -189,7 +189,8 @@ rörs aldrig. Koden: `app.js` (blocket "Hemlig markering"), `index.html`
 (`#mark-lage`), `style.css`, `worker/mottagare.js`, `worker/schema.sql`.
 Samma funktion finns i Pensla N (se CLAUDE.md där).
 
-- **Gesten:** håll ◀, ▶ och FÄRGLÄGG samtidigt i 5 s (`GEST_MS`), utan att
+- **Gesten:** håll ◀, ▶ och FÄRGLÄGG samtidigt i 3 s (`GEST_MS`; 5 s före
+  v116, ägarens val 2026-11-23), utan att
   BÖRJA OM hålls (en hand över hela panelen ger alltså inget). Ordningen
   spelar ingen roll. Lyfts ett finger, glider det av sin knapp (`GEST_SLACK`)
   eller trycks BÖRJA OM börjar tiden om. Sedan v114 byter gesten aldrig
@@ -284,7 +285,8 @@ Samma funktion finns i Pensla N (se CLAUDE.md där).
   fingrar), pil eller FÄRGLÄGG + annan knapp (inget händer), FÄRGLÄGG
   ensam (tips, färgläggning vid 1,5 s medan fingret hålls, glider av),
   pil efter att färgläggningen startat (byter inte) och samma med mus
-  (`--grupp tre regler`). v115: 677 kontroller i 69 fall.
+  (`--grupp tre regler`). v115: 677 kontroller i 69 fall; v116 (gesten 3 s,
+  med gränsfallen 2,7 s och 2,8–3,2 s): 690 kontroller i 71 fall.
 - I headless Chromium går `touchstart` på knapparna inte att avbryta
   (`cancelable` = false), så webbläsaren skickar också mus-händelser och ett
   klick efter ett tryck. Därför räknas inte ett klick på en pil inom

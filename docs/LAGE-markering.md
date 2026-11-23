@@ -1,7 +1,7 @@
 # Läge: hemlig markering (uppdaterat 2026-11-23)
 
 Isak ska kunna märka ut bilder som ska kontrolleras noggrannare: håll ◀, ▶
-och FÄRGLÄGG samtidigt i 5 s (BÖRJA OM får inte hållas). Då visas texten
+och FÄRGLÄGG samtidigt i 3 s (5 s före v116; BÖRJA OM får inte hållas). Då visas texten
 "Markera områden som ska ses över" högst upp och knapparna KLAR och AVBRYT.
 Man målar grovt med fingret (flera drag, eget halvgenomskinligt lager i
 magenta, det målade rörs inte). KLAR sparar/skickar, AVBRYT kastar, båda går
@@ -13,6 +13,17 @@ nu i CLAUDE.md, avsnittet "Hemlig markering", i båda repona. Den här filen
 
 Allt är bara lokalt: inget pushat, inget utlagt på test eller skarpt, inget
 installerat, inga resurser skapade i Cloudflare.
+
+## v116-test (2026-11-23): gesten 3 s
+
+Isaks val: gesten (◀, ▶ och FÄRGLÄGG samtidigt) öppnar markeringen efter
+3 s i stället för 5 s (`GEST_MS` i app.js). Tipset (5 s) och FÄRGLÄGG:s
+1,5 s är som förut. Samma ändring i Pensla N v11.
+
+- Provet (`verktyg/prov_markering.py`, lokalt): 690 kontroller i 71 fall,
+  0 fel. Tiderna i provet är anpassade till 3 s, och två nya gränsfall:
+  alla tre i 2,7 s och släpp (öppnar inte, inte öppet efter 2,5 s) och
+  öppnar mellan 2,8 och 3,2 s.
 
 ## v115-test (2026-11-23): FÄRGLÄGG som förut
 
@@ -114,7 +125,7 @@ bilden som visas och på båda grannbilderna):
 - En pil och FÄRGLÄGG (i vilken ordning som helst), utan den andra pilen:
   inget öppnas och inget färgläggs, men pilen har bläddrat ett steg som ett
   vanligt piltryck.
-- Lyft ett finger och sätt ner det igen: tiden börjar om (5 s från att alla
+- Lyft ett finger och sätt ner det igen: tiden börjar om (3 s från att alla
   tre åter hålls).
 - Ett finger glider av sin knapp: inget öppnas, samma bild.
 - Kvar som det är: trycks FÄRGLÄGG FÖRST och hålls ensam i 1,5 s färgläggs

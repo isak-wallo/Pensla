@@ -915,7 +915,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Hemlig markering (vuxengest) ---
     // Ägaren kan märka ut bilder som ska kontrolleras noggrannare: håll
-    // båda pilarna och FÄRGLÄGG samtidigt i GEST_MS (5 s), utan att BÖRJA OM
+    // båda pilarna och FÄRGLÄGG samtidigt i GEST_MS (3 s), utan att BÖRJA OM
     // hålls. Då kommer texten "Markera områden som ska ses över" överst i
     // panelen (utanför bilden, så att hela bilden går att markera) med
     // knapparna KLAR och AVBRYT under, och man målar grovt med
@@ -932,7 +932,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // bilden (x mot bredden, y mot höjden) och `bredd` är penselns bredd
     // som andel av bildens höjd. Dragen förenklas innan de sparas. Samma
     // rad skrivs av Pensla N, och läses med verktyg/markeringar.py.
-    const GEST_MS = 5000;
+    const GEST_MS = 3000;           // 3 s sedan v116 (5 s förut, ägarens val 2026-11-23)
     const PIL_KLICK_MS = 1000;      // ett klick så här snart efter ett tryck med fingret på en pil är samma tryck
     const GEST_SLACK = 12;          // så många px får ett finger glida utanför sin knapp
     const MARK_BREDD = 0.05;        // penselns bredd (andel av bildens höjd)
