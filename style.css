@@ -195,8 +195,10 @@ body {
 
 /* Hemlig markering (app.js): efter vuxengesten målar man grovt runt det
    som ska kollas. Lagret täcker hela appen, så att varken penseln eller de
-   vanliga knapparna nås. JS lägger markCanvas precis över bilden, texten
-   högst upp i den och mark-panel precis över knapp-panelen. */
+   vanliga knapparna nås. JS lägger markCanvas precis över bilden och
+   mark-panel precis över knapp-panelen. Texten står överst i panelen med
+   KLAR och AVBRYT intill (v113), så att inget ligger över bilden och hela
+   bilden går att markera. */
 #mark-lage {
     position: fixed;
     top: 0;
@@ -217,42 +219,50 @@ body {
     touch-action: none;
     opacity: 0.45;
 }
-#mark-text {
+/* Stående: panelen är en rad nederst, texten överst i den och knapparna
+   bredvid varandra under. Liggande: panelen är en smal kolumn till höger,
+   texten överst (på flera rader) och knapparna under varandra. */
+#mark-panel {
     position: fixed;
-    transform: translateX(-50%);
-    padding: 6px 16px;
-    border-radius: 14px;
-    background-color: rgba(247, 251, 254, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 6px 10px;
+    background-color: #dcecf8;
+    overflow: hidden;
+}
+#mark-text {
+    flex: 0 0 auto;
+    max-width: 100%;
+    padding: 3px 14px;
+    border-radius: 12px;
+    background-color: #f7fbfe;
     box-shadow: 0 2px 6px rgba(80, 110, 140, 0.18);
     color: #5b6b7b;
     font-family: sans-serif;
     font-weight: bold;
-    font-size: clamp(13px, 2.6vmin, 20px);
+    font-size: clamp(12px, 2.4vmin, 19px);
+    line-height: 1.2;
     text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    pointer-events: none;      /* man kan måla under texten */
+    overflow-wrap: break-word;
 }
-#mark-panel {
-    position: fixed;
+#mark-knappar {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
     gap: 10px;
-    padding: 10px;
-    background-color: #dcecf8;
-}
-@media (orientation: landscape) {
-    #mark-panel {
-        flex-direction: column;
-    }
 }
 .mark-btn {
-    flex: 0 0 auto;
-    min-width: 22%;
-    padding: 14px 6px;
+    flex: 0 1 34%;
+    min-height: 0;
+    max-height: 72px;
+    padding: 4px 6px;
     color: #5b6b7b;
     background-color: #f7fbfe;
     border: none;
@@ -265,8 +275,22 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 @media (orientation: landscape) {
+    #mark-panel {
+        align-items: stretch;
+        gap: 10px;
+        padding: 10px;
+    }
+    #mark-text {
+        padding: 8px 4px;
+    }
+    #mark-knappar {
+        flex-direction: column;
+        justify-content: flex-start;
+    }
     .mark-btn {
-        min-width: 0;
+        flex: 0 1 16%;
+        min-height: 40px;
+        max-height: none;
         width: 100%;
     }
 }

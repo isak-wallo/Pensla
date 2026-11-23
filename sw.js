@@ -1,6 +1,6 @@
 // Höj VERSION (v1 -> v2 osv.) varje gång du laddar upp nya filer,
 // så hämtas och cachas den nya versionen säkert.
-const VERSION = 'v112-test';
+const VERSION = 'v113-test';
 const CACHE = 'pensla-' + VERSION;
 
 const ASSETS = [
@@ -204,6 +204,16 @@ self.addEventListener('activate', function (e) {
   );
 });
 
+// Ett sparat svar som kom via en omdirigering får inte lämnas till en
+// sidladdning: webbläsaren vägrar då visa sidan (ERR_FAILED). Så blir det
+// med ./index.html där servern skickar /index.html vidare till / (den
+// skarpa sidan på Cloudflare): filen sparas vid installationen som ett
+// omdirigerat svar. Samma innehåll i ett nytt svar går bra (v113).
+function utanOmdirigering(res) {
+  if (!res || !res.redirected) return res;
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers: res.headers });
+}
+
 // Hämta: cachen först (för blixtsnabb start), hämta sedan tyst i bakgrunden.
 // Endast egna GET-anrop hanteras.
 self.addEventListener('fetch', function (e) {
@@ -230,7 +240,7 @@ self.addEventListener('fetch', function (e) {
             }
           }).catch(function () {})
         );
-        return cachedResponse;
+        return utanOmdirigering(cachedResponse);
       }
 
       return fetch(req)
@@ -242,7 +252,7 @@ self.addEventListener('fetch', function (e) {
           return res;
         })
         .catch(function () {
-          return caches.match('./index.html');
+          return caches.match('./index.html').then(utanOmdirigering);
         });
     })
   );

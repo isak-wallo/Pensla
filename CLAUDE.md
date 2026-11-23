@@ -82,6 +82,11 @@ färger, inga ljud, inga poäng, inga val att göra.
   `sw.js` hämtar inte med `cache: 'reload'` vid installationen: Cloudflare
   svarar med `max-age=0, must-revalidate`, så filerna kontrolleras ändå
   mot servern, och med 168 bildfiler vore det dyrt att hämta om allt.
+  På den skarpa sidan skickar Cloudflare `/index.html` vidare till `/`, så
+  `./index.html` sparas i cachen som ett omdirigerat svar. Ett sådant får
+  inte lämnas till en sidladdning (webbläsaren ger ERR_FAILED), så `sw.js`
+  packar om det först (`utanOmdirigering`, v113). Testmiljön omdirigerar
+  inte (`html_handling: none`).
 - **keIWs** (den lilla blå klossfiguren) gömmer sig i varje bild, som krypet
   i Richard Scarrys böcker. Han syns inte från början; när man målat
   `KEIWS_TRAFF` pixlar där han är poppar han upp
@@ -168,7 +173,7 @@ där.
 `sw.js` har `const VERSION = 'vNN'`. Höj den varje gång filer ändras och
 pushas, annars fastnar plattan på gammal cache.
 
-## Hemlig markering (v111–v112)
+## Hemlig markering (v111–v113)
 
 Ägaren märker ut bilder som ska ses över, direkt i appen. Barnets målning
 rörs aldrig. Koden: `app.js` (blocket "Hemlig markering"), `index.html`
@@ -181,9 +186,16 @@ Samma funktion finns i Pensla N (se CLAUDE.md där).
   eller trycks BÖRJA OM börjar tiden om. Under gesten färgläggs inget, och
   bilden är densamma efteråt: den första pilen byter bild direkt, den andra
   går tillbaka till bilden som visades innan (`foreBild`), så bilden blinkar
-  till en gång.
-- **Läget:** texten "Markera områden som ska ses över" högst upp i bilden och
-  knapparna KLAR och AVBRYT över knapp-panelen. Man målar grovt med fingret
+  till en gång. FÄRGLÄGG som trycks medan en pil hålls startar ingen hållning
+  (v113, samma regel som i Pensla N): förut färglades grannbilden helt när
+  gesten gjordes långsamt (pil, FÄRGLÄGG, den andra pilen först efter mer än
+  `FARGA_HOLD_MS`). Trycks FÄRGLÄGG FÖRST och hålls ensam över 1,5 s
+  färgläggs bilden som visas, som vanligt: börja gesten med en pil.
+- **Läget:** texten "Markera områden som ska ses över" överst i panelen och
+  knapparna KLAR och AVBRYT under den (`#mark-panel` ligger precis över
+  knapp-panelen; stående: texten på en rad och knapparna bredvid varandra).
+  Inget ligger över bilden, så hela bilden går att markera (v113; förut låg
+  texten över bildens överkant). Kvittot visas på textens plats. Man målar grovt med fingret
   (flera drag, flera fingrar) i ett eget halvgenomskinligt lager
   (`markCanvas`, magenta). KLAR sparar och skickar, AVBRYT kastar, och båda
   går tillbaka till den vanliga appen. KLAR utan drag = hela bilden. Läget
@@ -250,6 +262,16 @@ Samma funktion finns i Pensla N (se CLAUDE.md där).
   `Input.dispatchTouchEvent` (`touchStart` tar alla fingrar som är nere,
   `touchEnd` bara dem som SLÄPPS). Provet 2026-11-22 står i
   `docs/LAGE-markering.md`.
+- **Provet i repot:** `python verktyg/prov_markering.py` (Playwright, riktiga
+  flerfingerhändelser, egen liten filserver, inget skickas: anropen till
+  `api/markering` fångas i webbläsaren). Provar gesten i olika ordning och
+  långsamt, de avbrutna gesterna (bilden som visas och båda grannbilderna
+  ska ha 0 pixlars skillnad mot före), läget i sex skärmstorlekar (inget
+  över bilden, markering i bildens överkant, KLAR, AVBRYT). `--adress
+  https://test.pensla.keiws.com/index.html` provar testmiljön, `--bilder MAPP`
+  sparar skärmbilder, `--mapp` provar en annan kopia av appen. Kör det när
+  gesten, läget eller knapparnas håll-logik ändras. Mottagaren och kön
+  provas inte av det.
 - I headless Chromium går `touchstart` på knapparna inte att avbryta
   (`cancelable` = false), så webbläsaren skickar också mus-händelser och ett
   klick efter ett tryck. Därför räknas inte ett klick på en pil inom

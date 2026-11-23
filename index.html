@@ -44,10 +44,13 @@
 <!-- Hemlig markering (app.js, "Hemlig markering"): visas bara efter vuxengesten. -->
 <div id="mark-lage" hidden>
     <canvas id="markCanvas"></canvas>
-    <div id="mark-text">Markera områden som ska ses över</div>
+    <!-- Texten och knapparna ligger i panelen, utanför bilden (v113). -->
     <div id="mark-panel">
-        <button id="mark-klar" class="mark-btn">KLAR</button>
-        <button id="mark-avbryt" class="mark-btn">AVBRYT</button>
+        <div id="mark-text">Markera områden som ska ses över</div>
+        <div id="mark-knappar">
+            <button id="mark-klar" class="mark-btn">KLAR</button>
+            <button id="mark-avbryt" class="mark-btn">AVBRYT</button>
+        </div>
     </div>
 </div>
 </div>

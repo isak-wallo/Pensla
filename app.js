@@ -914,8 +914,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Hemlig markering (vuxengest) ---
     // Ägaren kan märka ut bilder som ska kontrolleras noggrannare: håll
     // båda pilarna och FÄRGLÄGG samtidigt i GEST_MS (5 s), utan att BÖRJA OM
-    // hålls. Då kommer texten "Markera områden som ska ses över" högst upp
-    // och knapparna KLAR och AVBRYT i panelen, och man målar grovt med
+    // hålls. Då kommer texten "Markera områden som ska ses över" överst i
+    // panelen (utanför bilden, så att hela bilden går att markera) med
+    // knapparna KLAR och AVBRYT under, och man målar grovt med
     // fingret runt det som ska kollas (flera drag går; inga drag alls =
     // hela bilden). Dragen ritas i ett eget lager ovanpå appen, så det
     // målade rörs inte och inget målas under tiden. KLAR sparar markeringen
@@ -960,7 +961,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let markVila = null;
     let markStang = null;
 
-    function nereKnappar() {
+    // Vilka knappar som hålls just nu. Ett finger vars släpp aldrig kom fram
+    // räknas inte längre (annars kunde en pil se ut att hållas för alltid,
+    // och FÄRGLÄGG tiga): anropas med touchstart-händelsen innan den förs in.
+    function nereKnappar(e) {
+        if (e && e.touches) {
+            const kvar = new Set();
+            for (let i = 0; i < e.touches.length; i++) kvar.add(e.touches[i].identifier);
+            gestNere.forEach((b, id) => { if (!kvar.has(id)) gestNere.delete(id); });
+        }
         return new Set(gestNere.values());
     }
 
@@ -1007,8 +1016,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Lägger lagret precis över bilden, texten högst upp i den och
-    // knapparna precis över knapp-panelen.
+    // Lägger lagret precis över bilden och panelen med texten och
+    // knapparna precis över knapp-panelen (inget ligger över bilden).
     function markLayout() {
         if (!markerar) return;
         const c = viewCanvas.getBoundingClientRect();
@@ -1020,9 +1029,6 @@ document.addEventListener('DOMContentLoaded', () => {
             markCanvas.width = viewCanvas.width;
             markCanvas.height = viewCanvas.height;
         }
-        markText.style.left = (c.left + c.width / 2) + 'px';
-        markText.style.top = (c.top + 8) + 'px';
-        markText.style.maxWidth = (c.width - 16) + 'px';
         const p = document.getElementById('button-container').getBoundingClientRect();
         markPanel.style.left = p.left + 'px';
         markPanel.style.top = p.top + 'px';
@@ -1331,7 +1337,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             e.stopPropagation();
             pilTryck = Date.now();
-            const nere = nereKnappar();
+            const nere = nereKnappar(e);
             const bas = vantarPaBild >= 0 ? vantarPaBild : currentPicture;
             gestNer(e, btn);
             // En pil medan FÄRGLÄGG hålls: hållningen avbryts (annars
@@ -1364,8 +1370,15 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         btn.addEventListener('touchstart', function(e) {
             e.stopPropagation();
+            // FÄRGLÄGG medan en pil hålls är början på vuxengesten (pilen har
+            // redan bytt bild): ingen hållning startas, annars färglades
+            // grannbilden om den andra pilen dröjde över FARGA_HOLD_MS (v113,
+            // samma regel som i Pensla N).
+            const nere = nereKnappar(e);
+            const pilNere = btn === fillBtn && (nere.has(prevBtn) || nere.has(nextBtn));
             gestNer(e, btn);
-            holdStart();
+            if (pilNere) slackTips();
+            else holdStart();
             gestKoll();     // alla tre nere: hållningen avbryts och gesten börjar
             e.preventDefault();
         }, { passive: false });

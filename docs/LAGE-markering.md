@@ -1,4 +1,4 @@
-# Läge: hemlig markering (uppdaterat 2026-11-22 sent)
+# Läge: hemlig markering (uppdaterat 2026-11-23)
 
 Isak ska kunna märka ut bilder som ska kontrolleras noggrannare: håll ◀, ▶
 och FÄRGLÄGG samtidigt i 5 s (BÖRJA OM får inte hållas). Då visas texten
@@ -13,6 +13,59 @@ nu i CLAUDE.md, avsnittet "Hemlig markering", i båda repona. Den här filen
 
 Allt är bara lokalt: inget pushat, inget utlagt på test eller skarpt, inget
 installerat, inga resurser skapade i Cloudflare.
+
+## v113-test (2026-11-23): långsam gest och skylten utanför bilden
+
+Pushat och utlagt på https://test.pensla.keiws.com (inte på den skarpa
+sidan). Databasen finns sedan 2026-11-23 (commit a189fe3), så raderna
+"allt är bara lokalt" och "databasen finns inte" längre ner gäller inte nu.
+
+- **Långsam gest:** gjordes gesten långsamt (en pil, FÄRGLÄGG, den andra
+  pilen först efter mer än 1,5 s) öppnades läget rätt, men GRANNBILDEN (den
+  som den första pilen bläddrade till) färglades helt: FÄRGLÄGG-knappens
+  hållning startade fast en pil hölls. Nu startar FÄRGLÄGG ingen hållning
+  medan en pil hålls (samma regel som i Pensla N v7, `ner()` i PenslaVy.kt).
+  Återskapat i v112 (grannbilden 447 137 pixlar ändrade) och borta i v113
+  (0 pixlar).
+- **Tappat släpp:** knapparna som hålls rensas mot fingrarna som faktiskt
+  är nere (`nereKnappar(e)`), så att en pil inte kan se ut att hållas för
+  alltid om ett `touchend` skulle utebli (då hade FÄRGLÄGG tystnat).
+- **Skylten:** texten "Markera områden som ska ses över" står nu överst i
+  panelen med KLAR och AVBRYT under (stående: texten på en rad, knapparna
+  bredvid varandra under). Inget ligger över bilden. Kvittot visas på
+  textens plats.
+- **`/index.html` + service workern = ERR_FAILED (utrett och rättat):** där
+  servern skickar `/index.html` vidare till `/` (den skarpa sidan, och
+  `wrangler dev` utan `html_handling: none`) sparar `cache.addAll` filen
+  `./index.html` som ett omdirigerat svar (`redirected` = true). En
+  sidladdning får inte besvaras med ett sådant, så webbläsaren gav
+  ERR_FAILED för `/index.html` så fort service workern styrde sidan (även
+  utan nät, där reserven är just `./index.html`). `sw.js` packar nu om
+  svaret (`utanOmdirigering`). Provat lokalt med en server som omdirigerar
+  som Cloudflare: före ERR_FAILED, efter 200 med och utan nät. Testmiljön
+  omdirigerar inte och berördes aldrig; den skarpa får rättningen vid nästa
+  släpp.
+- **Provet ligger nu i repot:** `python verktyg/prov_markering.py` (se
+  CLAUDE.md). Senaste körningen mot arbetskopian: 402 kontroller i 27 fall,
+  alla som väntat (17 gestfall, 1 fall "som förut", 9 lägen i 6
+  skärmstorlekar varav två med Android-UA). Mottagaren och kön provas inte
+  av det (oförändrade sedan v112).
+- Skärmbilder: `C:\Dropbox\Isak\Program\AI\Claude\keIWspk\Pensla-markering-skarmbilder\webb-v113\`.
+
+Så beter sig gesten när den avbryts (provat, alla med 0 pixlars skillnad på
+bilden som visas och på båda grannbilderna):
+
+- Alla tre i 2 s eller 4 s och släpp: inget öppnas, samma bild.
+- Bara pilarna i 6 s: inget öppnas, samma bild.
+- En pil och FÄRGLÄGG (i vilken ordning som helst), utan den andra pilen:
+  inget öppnas och inget färgläggs, men pilen har bläddrat ett steg som ett
+  vanligt piltryck.
+- Lyft ett finger och sätt ner det igen: tiden börjar om (5 s från att alla
+  tre åter hålls).
+- Ett finger glider av sin knapp: inget öppnas, samma bild.
+- Kvar som det är: trycks FÄRGLÄGG FÖRST och hålls ensam i 1,5 s färgläggs
+  bilden som visas (det går inte att skilja från en vanlig färgläggning).
+  Börja gesten med en pil.
 
 ## Klart
 
