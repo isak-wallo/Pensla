@@ -16,17 +16,22 @@ färger, inga ljud, inga poäng, inga val att göra.
   git-historiken). Det enda som händer av sig självt är keIWs.
 - Panelen har fem knappar, till höger i liggande läge (en rad nederst
   i stående): **◀** föregående bild, **▶** nästa bild (byter när fingret
-  SLÄPPS, sedan v114), **FÄRGLÄGG** (håll 1,5 s och släpp → hela
-  färgbilden sveps fram från vänster och keIWs poppar upp, `fargaHela`;
-  BÖRJA OM ångrar; sedan v114 vid släpp) och den lite mindre **BÖRJA OM** (håll 1 s → bilden töms direkt; sedan
+  SLÄPPS, sedan v114), **FÄRGLÄGG** (håll 1,5 s → hela färgbilden
+  sveps fram från vänster medan fingret ligger kvar och keIWs poppar upp,
+  `fargaHela`; BÖRJA OM ångrar) och den lite mindre **BÖRJA OM** (håll 1 s → bilden töms direkt; sedan
   står "HÅLL INNE LÄNGE FÖR ATT NOLLSTÄLLA ALLA BILDER" i 4 s, och håller
   man då i 4 s töms alla bilder, `glomAllt`; `startHold`/`holdEnd`). Ett
   för kort tryck visar "HÅLL INNE FÖR ATT …" i 5 s, som i Kludda.
-  **Knapptryck vid släpp (v114):** ◀, ▶ och FÄRGLÄGG gör sitt först när
-  fingret släpps på knappen, och bara om ingen annan knapp (pil,
-  FÄRGLÄGG, BÖRJA OM) hållits någon gång under samma tryck (`tryck`,
-  `smittad`, `tryckSlut` i app.js). Glider fingret av (`GEST_SLACK`) händer
-  inget. BÖRJA OM är som förut.
+  **Knapptrycken (v114, FÄRGLÄGG v115):** ett tryck där en annan knapp
+  (pil, FÄRGLÄGG, BÖRJA OM) hållits någon gång är smittat och gör inget
+  (`tryck`, `smittad`, `tryckSlut` i app.js). ◀ ▶ byter bild först när
+  fingret släpps. FÄRGLÄGG (ägarens val 2026-11-23, som före v114):
+  hålls den ensam i 1,5 s färgläggs bilden medan fingret ligger kvar
+  (`fargaStartaTid`, `gjord`); kommer en annan knapp före dess, eller
+  glider fingret av, försvinner fyllningen och inget färgläggs; släpps den
+  tidigare visas tipset. Kommer en annan knapp efter färgläggningen är den
+  gjord och den andra knappen smittad (en pil byter inte bild). Glider
+  fingret av (`GEST_SLACK`) händer inget. BÖRJA OM är som förut.
 - **Bildbanken:** alla bilder står med fast löpnummer i `bilder.js`
   (`ALLA_BILDER`), men bara de vars nummer står i `AKTIVA` visas och cachas
   (sedan 2026-10-31 vill ägaren ha så många aktiva som möjligt, inte
@@ -187,14 +192,12 @@ Samma funktion finns i Pensla N (se CLAUDE.md där).
 - **Gesten:** håll ◀, ▶ och FÄRGLÄGG samtidigt i 5 s (`GEST_MS`), utan att
   BÖRJA OM hålls (en hand över hela panelen ger alltså inget). Ordningen
   spelar ingen roll. Lyfts ett finger, glider det av sin knapp (`GEST_SLACK`)
-  eller trycks BÖRJA OM börjar tiden om. Sedan v114 ger gesten aldrig
-  några vanliga effekter: pilarna och FÄRGLÄGG verkar först vid släpp och
-  bara om ingen annan knapp hållits under samma tryck (se "Knapptryck vid
-  släpp" ovan), så bilden byts aldrig (inte ens kortvarigt) och inget
-  färgläggs, i vilken ordning och hur långsamt gesten än görs, även när den
-  avbryts och även om FÄRGLÄGG trycks först och hålls ensam längre än
-  1,5 s. (v111–v113 bytte den första pilen bild direkt och den andra gick
-  tillbaka, `foreBild`; det är borttaget.)
+  eller trycks BÖRJA OM börjar tiden om. Sedan v114 byter gesten aldrig
+  bild (inte ens kortvarigt), i vilken ordning och hur långsamt den än
+  görs och även när den avbryts (se "Knapptrycken" ovan). Inget färgläggs,
+  utom om FÄRGLÄGG trycks först och hålls ensam i 1,5 s (v115, ägarens
+  val; i v114 färglades inget alls). (v111–v113 bytte den första pilen
+  bild direkt och den andra gick tillbaka, `foreBild`; det är borttaget.)
 - **Läget:** texten "Markera områden som ska ses över" överst i panelen och
   knapparna KLAR och AVBRYT under den (`#mark-panel` ligger precis över
   knapp-panelen; stående: texten på en rad och knapparna bredvid varandra).
@@ -279,8 +282,9 @@ Samma funktion finns i Pensla N (se CLAUDE.md där).
   ◀ ▶ FÄRGLÄGG i alla sex ordningar (långsamt, snabbt, öppnat och avbrutet,
   släpp i olika ordning), pil ensam (byter vid släpp, glider av, två
   fingrar), pil eller FÄRGLÄGG + annan knapp (inget händer), FÄRGLÄGG
-  ensam (tips, färgläggning vid släpp, glider av) och samma med mus
-  (`--grupp tre regler`).
+  ensam (tips, färgläggning vid 1,5 s medan fingret hålls, glider av),
+  pil efter att färgläggningen startat (byter inte) och samma med mus
+  (`--grupp tre regler`). v115: 677 kontroller i 69 fall.
 - I headless Chromium går `touchstart` på knapparna inte att avbryta
   (`cancelable` = false), så webbläsaren skickar också mus-händelser och ett
   klick efter ett tryck. Därför räknas inte ett klick på en pil inom

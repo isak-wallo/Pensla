@@ -14,6 +14,24 @@ nu i CLAUDE.md, avsnittet "Hemlig markering", i båda repona. Den här filen
 Allt är bara lokalt: inget pushat, inget utlagt på test eller skarpt, inget
 installerat, inga resurser skapade i Cloudflare.
 
+## v115-test (2026-11-23): FÄRGLÄGG som förut
+
+Isaks svar på v114: FÄRGLÄGG ska vara som förut, inte vid släpp. Hålls
+FÄRGLÄGG ensam i 1,5 s färgläggs bilden medan fingret ligger kvar. Trycks
+en annan knapp före 1,5 s, eller glider fingret av, försvinner fyllningen
+och inget färgläggs (0 pixlar). Kort tryck och släpp före 1,5 s ger tipset.
+Trycks en annan knapp efter att färgläggningen startat är den gjord, och
+den andra knappen är smittad (en pil byter inte bild). Pilarna är som i
+v114 (vid släpp). BÖRJA OM:s hållning tas inte över av FÄRGLÄGG: "Ja,
+okej". Samma regler i Pensla N v10.
+
+- Provet (`verktyg/prov_markering.py`, lokalt): 677 kontroller i 69 fall,
+  0 fel. Fallen där FÄRGLÄGG hålls ensam först i mer än 1,5 s kontrollerar
+  nu att bilden färgläggs och att pilarna inte byter bild; nya fall:
+  FÄRGLÄGG + pil eller BÖRJA OM före 1,5 s (0 pixlar även när FÄRGLÄGG
+  hålls kvar till 3 s), pil efter att färgläggningen startat, FÄRGLÄGG
+  som glider av före 1,5 s.
+
 ## v114-test (2026-11-23): knapptryck vid släpp
 
 Isaks beslut: gesten ska aldrig ge vanliga effekter. Pushat och utlagt på
@@ -101,7 +119,8 @@ bilden som visas och på båda grannbilderna):
 - Ett finger glider av sin knapp: inget öppnas, samma bild.
 - Kvar som det är: trycks FÄRGLÄGG FÖRST och hålls ensam i 1,5 s färgläggs
   bilden som visas (det går inte att skilja från en vanlig färgläggning).
-  Börja gesten med en pil. (Rättat i v114: inget färgläggs.)
+  Börja gesten med en pil. (I v114 färglades inget; sedan v115 är det som
+  här igen, Isaks val.)
 
 ## Klart
 

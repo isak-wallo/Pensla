@@ -59,13 +59,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let clearState = 0;
     let clearTimer = null;
     let viewRect = { left: 0, top: 0 };
-    // --- Håll-in-logik för BÖRJA OM (FÄRGLÄGG verkar vid släpp sedan v114,
-    // se "Knapptryck vid släpp") ---
+    // --- Håll-in-logik för BÖRJA OM (FÄRGLÄGG har egen tid sedan v115,
+    // se "Knapptrycken") ---
     // Man måste hålla fingret intryckt i HOLD_MS (ca 1 s). BÖRJA OM: en
     // hållning tömmer bilden, och sedan visar knappen en stund (ALLA_MS) att
     // en lång hållning (ALLA_HOLD_MS) nollställer alla bilder.
-    // FÄRGLÄGG: håll FARGA_HOLD_MS och släpp, så trollas hela färgbilden
-    // fram (BÖRJA OM ångrar).
+    // FÄRGLÄGG: håll FARGA_HOLD_MS, så trollas hela färgbilden fram medan
+    // fingret ligger kvar (BÖRJA OM ångrar).
     // En kort tryckning gör inget — så att ett barn inte råkar sudda allt
     // av misstag — utom att knappen en
     // stund (TIPS_MS) visar att man ska hålla inne.
@@ -993,7 +993,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nere.forEach(b => { if (b !== btn) t.smittad = true; });
         tryck.forEach((o, b) => { if (b !== btn) o.smittad = true; });
         for (let i = 0; i < e.changedTouches.length; i++) gestNere.set(e.changedTouches[i].identifier, btn);
-        if (tryck.has(fillBtn) && tryck.get(fillBtn).smittad) fillBtn.classList.remove('holding');
+        if (tryck.has(fillBtn) && tryck.get(fillBtn).smittad && !tryck.get(fillBtn).gjord) fargaStopp();
         return t;
     }
 
@@ -1023,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Allt som pågår räknas som smittat (läget öppnas, startskärmen visas).
     function smittaAlla() {
         tryck.forEach(o => { o.smittad = true; });
-        fillBtn.classList.remove('holding');
+        fargaStopp();
     }
 
     // Ett finger som glider av sin knapp räknas inte längre.
@@ -1366,31 +1366,53 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Händelsebindningar (tidigare inline i HTML) ---
     document.getElementById('start-btn').addEventListener('click', startApp);
 
-    // --- Knapptryck vid släpp (v114) ---
-    // ◀, ▶ och FÄRGLÄGG gör sitt först när fingret SLÄPPS på knappen, och
-    // bara om ingen annan knapp (en pil, FÄRGLÄGG eller BÖRJA OM) har hållits
-    // någon gång under samma tryck (`smittad`, se gestNer). Vuxengesten (◀ ▶
-    // FÄRGLÄGG, se "Hemlig markering") byter alltså aldrig bild och
-    // färglägger aldrig, hur långsamt och i vilken ordning den än görs, och
-    // inte heller när den avbryts. Glider fingret av knappen (GEST_SLACK)
+    // --- Knapptrycken (v114, FÄRGLÄGG v115) ---
+    // Ett tryck är "smittat" om en annan knapp (en pil, FÄRGLÄGG eller BÖRJA
+    // OM) har hållits någon gång under trycket (`smittad`, se gestNer); ett
+    // smittat tryck gör ingenting. Glider fingret av knappen (GEST_SLACK)
     // eller avbryts trycket händer inget.
-    // - ◀ ▶: byter bild vid släpp, hur länge fingret än hållits.
-    // - FÄRGLÄGG: fyllningen växer i knappen medan den hålls; släpps den
-    //   efter FARGA_HOLD_MS (1,5 s) färgläggs bilden, släpps den tidigare
-    //   visas tipset "HÅLL INNE FÖR ATT FÄRGLÄGGA". Kommer en annan knapp
-    //   försvinner fyllningen och inget händer vid släpp.
+    // - ◀ ▶: byter bild först när fingret SLÄPPS, hur länge det än hållits.
+    // - FÄRGLÄGG (som före v114): fyllningen växer i knappen, och när den
+    //   hållits ensam i FARGA_HOLD_MS (1,5 s) färgläggs bilden medan fingret
+    //   ligger kvar (`gjord`). Kommer en annan knapp före dess, eller glider
+    //   fingret av, försvinner fyllningen och inget färgläggs. Släpps den
+    //   tidigare visas tipset "HÅLL INNE FÖR ATT FÄRGLÄGGA". Kommer en annan
+    //   knapp efter färgläggningen är den gjord, och den andra knappen är
+    //   smittad (en pil byter alltså inte bild).
     // - BÖRJA OM: som förut (håll in, se startHold).
+    // Vuxengesten (◀ ▶ FÄRGLÄGG, se "Hemlig markering") byter alltså aldrig
+    // bild, och färglägger bara om FÄRGLÄGG hållits ensam i 1,5 s först.
     // Mus: klick på en pil byter bild (klicket kommer vid släpp), FÄRGLÄGG
     // som med fingret. Det härmade musklicket som webbläsaren kan skicka
     // efter ett tryck med fingret (när touchstart inte gick att avbryta)
     // räknas inte (PIL_KLICK_MS efter senaste fingret), annars byttes två
     // bilder.
     function tryckSlut(btn, t, slappt) {
-        if (btn === fillBtn) fillBtn.classList.remove('holding');
+        if (btn === fillBtn && !t.gjord) fargaStopp();
         if (!slappt || t.smittad || markerar) return;
         if (btn === prevBtn) changePicture(-1);
         else if (btn === nextBtn) changePicture(1);
-        else if (btn === fillBtn) fargaSlapp(t.start);
+        else if (btn === fillBtn && !t.gjord) fargaSlapp(t.start);
+    }
+
+    // FÄRGLÄGG:s tid. `fortfarande` avgör när tiden gått om trycket
+    // fortfarande gäller (inte smittat, inte släppt).
+    let fargaTimer = null;
+    function fargaStartaTid(fortfarande) {
+        clearTimeout(fargaTimer);
+        fargaTimer = setTimeout(() => {
+            fargaTimer = null;
+            if (!fortfarande()) return;
+            fillBtn.classList.remove('holding');
+            if (markerar || !startad) return;
+            slackTips();
+            fargaHela();
+        }, FARGA_HOLD_MS);
+    }
+    function fargaStopp() {
+        clearTimeout(fargaTimer);
+        fargaTimer = null;
+        fillBtn.classList.remove('holding');
     }
 
     function fargaSlapp(start) {
@@ -1433,25 +1455,38 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const ny = !tryck.has(fillBtn);
         const t = gestNer(e, fillBtn);
-        if (ny && !t.smittad) fargaVisaHall();
+        if (ny && !t.smittad) {
+            fargaVisaHall();
+            fargaStartaTid(() => {
+                if (tryck.get(fillBtn) !== t || t.smittad) return false;
+                t.gjord = true;
+                return true;
+            });
+        }
         gestKoll();         // alla tre nere: gesten börjar
     }, { passive: false });
     fillBtn.addEventListener('mousedown', function(e) {
         if (e.button !== 0 || harmatKlick() || gestNere.size) return;
         e.stopPropagation();
-        fillMus = Date.now();
+        const m = Date.now();
+        fillMus = m;
         fargaVisaHall();
+        fargaStartaTid(() => {
+            if (fillMus !== m) return false;
+            fillMus = 0;        // gjord: släppet gör inget mer
+            return true;
+        });
     });
     fillBtn.addEventListener('mouseleave', () => {
         if (!fillMus) return;
         fillMus = 0;
-        fillBtn.classList.remove('holding');
+        fargaStopp();
     });
     window.addEventListener('mouseup', () => {
         if (!fillMus) return;
         const start = fillMus;
         fillMus = 0;
-        fillBtn.classList.remove('holding');
+        fargaStopp();
         if (!markerar) fargaSlapp(start);
     });
 

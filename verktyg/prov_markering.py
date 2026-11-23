@@ -338,6 +338,9 @@ class Prov:
                 efter()
             if farglagd:
                 self.f.alla_upp()
+                if self.oppet():
+                    self.tryck('mark-avbryt', vanta=False)
+                    self.vanta(600)
                 self.ner(4, 'restart-btn')
                 self.vanta(1200)
                 self.f.upp(4)
@@ -406,7 +409,9 @@ class Prov:
 
     def tre_i_alla_ordningar(self):
         """Alla sex ordningar av ◀ ▶ FÄRGLÄGG, snabbt och långsamt, öppnade och
-        avbrutna, med släpp i olika ordning: alltid samma bild och 0 pixlar."""
+        avbrutna, med släpp i olika ordning: alltid samma bild, och 0 pixlar
+        utom när FÄRGLÄGG hålls ensam först i mer än 1,5 s (v115: då
+        färgläggs bilden medan fingret ligger kvar, men pilarna byter inte)."""
         import itertools
         K = {'P': 'prev-btn', 'N': 'next-btn', 'F': 'fill-btn'}
         nr = {'P': 1, 'N': 2, 'F': 3}
@@ -414,12 +419,15 @@ class Prov:
         for i, ordning in enumerate(itertools.permutations('PNF')):
             namn = ' '.join(tecken[k] for k in ordning)
             # långsamt (1,7 s mellan, mer än FARGA_HOLD_MS), hålls 2,5 s, släpps i omvänd ordning
+            forst = ordning[0] == 'F'
             steg = []
             for k in ordning:
                 steg += [('ner', nr[k], K[k]), ('vanta', 1700)]
             steg += [('vanta', 800)] + [('upp', nr[k]) for k in reversed(ordning)] + [('vanta', 600)]
+            if forst:
+                steg += [('stilla',), ('farglagd', 'A', 'färglagt (FÄRGLÄGG ensam 1,7 s först), samma bild')]
             self.gest('tre, långsam och avbruten: %s, släpp omvänt' % namn, steg, False,
-                      efter=self.inget_tips)
+                      efter=self.inget_tips, farglagd=forst)
             # snabbt, släpps ett i taget i samma ordning med 0,8 s mellan (den sista hålls ensam en stund)
             steg = []
             for k in ordning:
@@ -435,15 +443,23 @@ class Prov:
                 steg += [('ner', nr[k], K[k]), ('vanta', 1700 if i % 2 else 300)]
             steg += [('vanta', 5400), ('oppet', True, 'läget öppet'), ('upp', nr[ordning[0]], nr[ordning[1]]),
                      ('vanta', 2000), ('upp', nr[ordning[2]]), ('vanta', 600)]
+            farg = forst and i % 2 == 1
+            if farg:
+                steg += [('farglagd', 'A', 'färglagt (FÄRGLÄGG ensam 1,7 s först), samma bild')]
             self.gest('tre, öppnar: %s (%s)' % (namn, 'långsam' if i % 2 else 'snabb'), steg, True,
-                      efter=self.inget_tips)
+                      efter=self.inget_tips, farglagd=farg)
         P, N, F = K['P'], K['N'], K['F']
-        self.gest('FÄRGLÄGG ensam 2 s först, sedan ◀ och ▶, släpp efter 1 s',
-                  [('ner', 3, F), ('vanta', 2000), ('ner', 1, P), ('vanta', 200), ('ner', 2, N), ('vanta', 1000),
-                   ('upp', 3), ('vanta', 300), ('upp', 1, 2), ('vanta', 600)], False, efter=self.inget_tips)
-        self.gest('FÄRGLÄGG ensam 2 s först, sedan hela gesten (öppnar)',
+        self.gest('FÄRGLÄGG ensam 2 s först (färglagt), sedan ◀ och ▶: inget byte',
+                  [('ner', 3, F), ('vanta', 2000), ('farglagd', 'A', 'färglagt medan FÄRGLÄGG hålls'),
+                   ('ner', 1, P), ('vanta', 200), ('ner', 2, N), ('vanta', 1000),
+                   ('upp', 3), ('vanta', 300), ('upp', 1, 2), ('vanta', 600), ('stilla',),
+                   ('farglagd', 'A', 'samma bild, färglagd')], False, efter=self.inget_tips, farglagd=True)
+        self.gest('FÄRGLÄGG ensam 2 s först (färglagt), sedan hela gesten (öppnar)',
                   [('ner', 3, F), ('vanta', 2000), ('ner', 1, P), ('vanta', 200), ('ner', 2, N), ('vanta', 5400)],
-                  True, efter=self.inget_tips)
+                  True, efter=self.inget_tips, farglagd=True)
+        self.gest('FÄRGLÄGG 1 s, sedan ◀ och ▶ (före 1,5 s), släpp efter 2 s: 0 pixlar',
+                  [('ner', 3, F), ('vanta', 1000), ('ner', 1, P), ('vanta', 200), ('ner', 2, N), ('vanta', 2000),
+                   ('upp', 3), ('vanta', 300), ('upp', 1, 2), ('vanta', 600)], False, efter=self.inget_tips)
         self.gest('alla tre ner i samma ögonblick, 1 s, upp i samma ögonblick',
                   [('ner3',), ('vanta', 1000), ('upp', 1, 2, 3), ('vanta', 600)], False, efter=self.inget_tips)
 
@@ -490,27 +506,42 @@ class Prov:
         g('pil + BÖRJA OM: BÖRJA OM hålls 0,5 s, ◀ kort tryck under tiden',
           [('ner', 4, B), ('vanta', 200), ('ner', 1, P), ('vanta', 100), ('upp', 1), ('vanta', 200), ('upp', 4),
            ('vanta', 600)], False)
-        # FÄRGLÄGG + annan knapp: inget av FÄRGLÄGGs vanliga saker
-        g('FÄRGLÄGG + pil: FÄRGLÄGG hålls 2 s, ▶ kort tryck, FÄRGLÄGG släpps',
-          [('ner', 3, F), ('vanta', 2000), ('ner', 2, N), ('vanta', 100), ('upp', 2), ('vanta', 300),
-           ('klass', 'holding', False, 'ingen fyllning i FÄRGLÄGG efter pilen'), ('upp', 3), ('vanta', 600)],
+        # FÄRGLÄGG + annan knapp före 1,5 s: fyllningen bort, inget färgläggs (v115)
+        g('FÄRGLÄGG + pil före 1,5 s: FÄRGLÄGG 1 s, ▶ kort tryck, FÄRGLÄGG hålls till 3 s',
+          [('ner', 3, F), ('vanta', 1000), ('ner', 2, N), ('vanta', 100), ('upp', 2), ('vanta', 300),
+           ('klass', 'holding', False, 'ingen fyllning i FÄRGLÄGG efter pilen'), ('vanta', 1600),
+           ('bild', 'A', 'inget färglagt när FÄRGLÄGG hållits 3 s'), ('upp', 3), ('vanta', 600)],
           False, efter=self.inget_tips)
         g('FÄRGLÄGG + pil: FÄRGLÄGG kort, ◀ under tiden, ◀ släpps sist',
           [('ner', 3, F), ('vanta', 100), ('ner', 1, P), ('vanta', 100), ('upp', 3), ('vanta', 300), ('upp', 1),
            ('vanta', 600)], False, efter=self.inget_tips)
-        g('FÄRGLÄGG + BÖRJA OM: FÄRGLÄGG 2 s, BÖRJA OM kort tryck, FÄRGLÄGG släpps',
-          [('ner', 3, F), ('vanta', 2000), ('ner', 4, B), ('vanta', 150), ('upp', 4), ('vanta', 300), ('upp', 3),
-           ('vanta', 600)], False, efter=self.inget_tips)
+        g('FÄRGLÄGG + BÖRJA OM före 1,5 s: FÄRGLÄGG 1 s, BÖRJA OM kort tryck, FÄRGLÄGG hålls till 3 s',
+          [('ner', 3, F), ('vanta', 1000), ('ner', 4, B), ('vanta', 150), ('upp', 4), ('vanta', 1850),
+           ('bild', 'A', 'inget färglagt när FÄRGLÄGG hållits 3 s'), ('upp', 3), ('vanta', 600)],
+          False, efter=self.inget_tips)
+        # Pil efter att färgläggningen startat: färglagt, ingen bildväxling
+        g('FÄRGLÄGG 2 s (färglagt), sedan ▶ kort tryck: ▶ byter inte',
+          [('ner', 3, F), ('vanta', 2000), ('farglagd', 'A', 'färglagt medan FÄRGLÄGG hålls'),
+           ('ner', 2, N), ('vanta', 100), ('upp', 2), ('vanta', 600), ('upp', 3), ('vanta', 600), ('stilla',),
+           ('farglagd', 'A', 'samma bild, färglagd')], False, efter=self.inget_tips, farglagd=True)
+        g('FÄRGLÄGG 2 s (färglagt), ◀ hålls, FÄRGLÄGG släpps, ◀ släpps: ◀ byter inte',
+          [('ner', 3, F), ('vanta', 2000), ('ner', 1, P), ('vanta', 300), ('upp', 3), ('vanta', 300), ('upp', 1),
+           ('vanta', 600), ('stilla',), ('farglagd', 'A', 'samma bild, färglagd')], False,
+          efter=self.inget_tips, farglagd=True)
         # FÄRGLÄGG ensam
-        g('FÄRGLÄGG ensam 2,5 s: fyllningen syns, inget färgläggs förrän vid släpp',
+        g('FÄRGLÄGG ensam 2,5 s: färgläggs vid 1,5 s medan fingret ligger kvar',
           [('ner', 3, F), ('vanta', 300), ('klass', 'holding', True, 'fyllningen växer i FÄRGLÄGG'),
-           ('vanta', 2200), ('bild', 'A', 'inget färglagt medan FÄRGLÄGG hålls'), ('upp', 3), ('vanta', 2500),
-           ('stilla',), ('farglagd', 'A', 'färglagt efter släppet')], False, farglagd=True)
+           ('vanta', 900), ('bild', 'A', 'inget färglagt efter 1,2 s'),
+           ('vanta', 1300), ('farglagd', 'A', 'färglagt medan FÄRGLÄGG hålls (2,5 s)'), ('upp', 3), ('vanta', 600),
+           ('stilla',), ('farglagd', 'A', 'färglagt efter släppet'), ('text', 'fill-btn', 'FÄRGLÄGG', 'inget tips')],
+          False, farglagd=True)
         g('FÄRGLÄGG ensam 1,2 s: tipset, inget färglagt',
           [('ner', 3, F), ('vanta', 1200), ('upp', 3), ('vanta', 300),
-           ('text', 'fill-btn', 'HÅLL INNE FÖR ATT FÄRGLÄGGA', 'tipset efter 1,2 s')], False)
-        g('FÄRGLÄGG ensam 2 s, glider av knappen och släpps: inget',
-          [('ner', 3, F), ('vanta', 2000), ('glid', 3, -260, 0), ('upp', 3), ('vanta', 600)], False,
+           ('text', 'fill-btn', 'HÅLL INNE FÖR ATT FÄRGLÄGGA', 'tipset efter 1,2 s'), ('vanta', 1000),
+           ('bild', 'A', 'inget färglagt efter tipset')], False)
+        g('FÄRGLÄGG ensam 1 s, glider av knappen och hålls till 3 s: inget',
+          [('ner', 3, F), ('vanta', 1000), ('glid', 3, -260, 0), ('vanta', 1800),
+           ('bild', 'A', 'inget färglagt'), ('upp', 3), ('vanta', 600)], False,
           efter=self.inget_tips)
         self.fall_('mus: pilar och FÄRGLÄGG', self.mus_, 1280, 800)
 
@@ -539,20 +570,22 @@ class Prov:
                    self.text('fill-btn'))
         self.vanta(5200)
         m.down()
-        self.vanta(2000)
+        self.vanta(1000)
         m.move(x - 300, y, steps=5)
+        self.vanta(1500)
         m.up()
-        self.vanta(2500)
-        self.kolla('mus: FÄRGLÄGG 2 s och av knappen, inget färglagt', self.skillnad('A') == 0, self.skillnad('A'))
+        self.vanta(1000)
+        self.kolla('mus: FÄRGLÄGG 1 s och av knappen, inget färglagt', self.skillnad('A') == 0, self.skillnad('A'))
         m.move(x, y)
         m.down()
-        self.vanta(2000)
-        self.kolla('mus: inget färglagt medan FÄRGLÄGG hålls 2 s', self.skillnad('A') == 0, self.skillnad('A'))
-        m.up()
-        self.vanta(2500)
-        self.stilla()
+        self.vanta(1200)
+        self.kolla('mus: inget färglagt efter 1,2 s', self.skillnad('A') == 0, self.skillnad('A'))
+        self.vanta(1300)
         n = self.skillnad('A')
-        self.kolla('mus: FÄRGLÄGG färglägger vid släpp', n > 50000, n)
+        self.kolla('mus: färglagt medan musknappen hålls (2,5 s)', n > 50000, n)
+        m.up()
+        self.vanta(600)
+        self.kolla('mus: inget tips efter släppet', self.text('fill-btn') == 'FÄRGLÄGG', self.text('fill-btn'))
 
     def som_forut(self):
         """FÄRGLÄGG ensam, kort tryck och pilarna fungerar som förut."""
@@ -568,13 +601,14 @@ class Prov:
             self.ner(3, 'fill-btn')
             self.vanta(1300)
             self.kolla('inget färglagt efter 1,3 s', self.skillnad('A') == 0, self.skillnad('A'))
-            self.vanta(400)
-            self.kolla('inget färglagt medan FÄRGLÄGG hålls (1,7 s)', self.skillnad('A') == 0, self.skillnad('A'))
+            self.vanta(1200)
+            n = self.skillnad('A')
+            self.kolla('FÄRGLÄGG ensam färglägger medan den hålls (2,5 s)', n > 50000, n)
             self.f.upp(3)
-            self.vanta(2500)
+            self.vanta(600)
             self.stilla()
             n = self.skillnad('A')
-            self.kolla('FÄRGLÄGG ensam i 1,7 s färglägger bilden vid släpp', n > 50000, n)
+            self.kolla('färglagt efter släppet', n > 50000, n)
             self.ner(4, 'restart-btn')
             self.vanta(1200)
             self.f.upp(4)
