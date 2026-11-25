@@ -1024,6 +1024,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function smittaAlla() {
         tryck.forEach(o => { o.smittad = true; });
         fargaStopp();
+        pilHallStopp();
     }
 
     // Ett finger som glider av sin knapp räknas inte längre.
@@ -1371,7 +1372,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // OM) har hållits någon gång under trycket (`smittad`, se gestNer); ett
     // smittat tryck gör ingenting. Glider fingret av knappen (GEST_SLACK)
     // eller avbryts trycket händer inget.
-    // - ◀ ▶: byter bild först när fingret SLÄPPS, hur länge det än hållits.
+    // - ◀ ▶: byter bild när fingret SLÄPPS. Sedan v117 byts bilden redan
+    //   efter PIL_HALL_MS (0,7 s) om pilens finger varit ensamt på skärmen
+    //   hela tiden; släppet gör då inget mer (se pilHallStart).
     // - FÄRGLÄGG (som före v114): fyllningen växer i knappen, och när den
     //   hållits ensam i FARGA_HOLD_MS (1,5 s) färgläggs bilden medan fingret
     //   ligger kvar (`gjord`). Kommer en annan knapp före dess, eller glider
@@ -1380,8 +1383,9 @@ document.addEventListener('DOMContentLoaded', () => {
     //   knapp efter färgläggningen är den gjord, och den andra knappen är
     //   smittad (en pil byter alltså inte bild).
     // - BÖRJA OM: som förut (håll in, se startHold).
-    // Vuxengesten (◀ ▶ FÄRGLÄGG, se "Hemlig markering") byter alltså aldrig
-    // bild, och färglägger bara om FÄRGLÄGG hållits ensam i 1,5 s först.
+    // Vuxengesten (◀ ▶ FÄRGLÄGG, se "Hemlig markering") byter alltså inte
+    // bild (utom om en pil hålls ensam i 0,7 s först), och färglägger bara
+    // om FÄRGLÄGG hållits ensam i 1,5 s först.
     // Mus: klick på en pil byter bild (klicket kommer vid släpp), FÄRGLÄGG
     // som med fingret. Det härmade musklicket som webbläsaren kan skicka
     // efter ett tryck med fingret (när touchstart inte gick att avbryta)
@@ -1389,7 +1393,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // bilder.
     function tryckSlut(btn, t, slappt) {
         if (btn === fillBtn && !t.gjord) fargaStopp();
+        if (pilHall && pilHall.btn === btn) pilHallStopp();
         if (!slappt || t.smittad || markerar) return;
+        if ((btn === prevBtn || btn === nextBtn) && t.gjord) return;    // bytt redan medan fingret hölls
         if (btn === prevBtn) changePicture(-1);
         else if (btn === nextBtn) changePicture(1);
         else if (btn === fillBtn && !t.gjord) fargaSlapp(t.start);
@@ -1435,6 +1441,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const harmatKlick = () => Date.now() - senastFinger < PIL_KLICK_MS;
 
+    // En pil som hålls (v117, ägarens val 2026-11-25): ligger fingret ensamt
+    // på skärmen i PIL_HALL_MS (0,7 s) byts bilden direkt medan fingret
+    // ligger kvar (`gjord`: släppet gör sedan inget mer, en bild per
+    // hållning). En diskret fyllning växer i pilen under tiden. Hållningen
+    // börjar bara om pilens finger är det enda fingret på hela skärmen, och
+    // avbryts av varje nytt finger var som helst (en annan knapp, samma pil,
+    // bilden, markeringslagret) och om fingret glider av (GEST_SLACK). Då
+    // gäller trycket som vanligt: byte vid släpp om det inte är smittat. Den
+    // hemliga gesten (tre fingrar) byter alltså inte bild, så länge de andra
+    // fingrarna kommer inom 0,7 s.
+    const PIL_HALL_MS = 700;
+    let pilHall = null;     // { btn, t, finger, timer } medan en pil hålls ensam
+
+    function pilHallStopp() {
+        if (!pilHall) return;
+        clearTimeout(pilHall.timer);
+        pilHall.btn.classList.remove('holding');
+        pilHall = null;
+    }
+
+    function pilHallStart(e, btn, step, t) {
+        pilHallStopp();
+        btn.style.setProperty('--hold-ms', PIL_HALL_MS + 'ms');
+        btn.classList.remove('holding');
+        void btn.offsetWidth;   // fyllningen börjar om från noll
+        btn.classList.add('holding');
+        const h = { btn, t, finger: e.changedTouches[0].identifier, timer: null };
+        h.timer = setTimeout(() => {
+            if (pilHall !== h) return;
+            pilHallStopp();
+            if (tryck.get(btn) !== t || t.smittad || markerar || !startad) return;
+            t.gjord = true;
+            changePicture(step);
+        }, PIL_HALL_MS);
+        pilHall = h;
+    }
+
+    // Varje nytt finger var som helst avbryter hållningen (fångas på hela
+    // fönstret innan knapparna, bilden och markeringslagret ser det).
+    window.addEventListener('touchstart', e => {
+        if (!pilHall) return;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier !== pilHall.finger) { pilHallStopp(); return; }
+        }
+    }, { capture: true, passive: true });
+
     [[prevBtn, -1], [nextBtn, 1]].forEach(([btn, step]) => {
         btn.addEventListener('click', () => {
             if (harmatKlick() || gestNere.size) return;
@@ -1443,7 +1495,11 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('touchstart', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            gestNer(e, btn);
+            const ny = !tryck.has(btn);
+            const t = gestNer(e, btn);
+            if (ny && !t.smittad && e.touches.length === 1 && e.changedTouches.length === 1 && !markerar) {
+                pilHallStart(e, btn, step, t);
+            }
             gestKoll();
         }, { passive: false });
     });
@@ -1676,6 +1732,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!document.hidden) return;
         stangMarkering();
         aterstallKnappar();
+        pilHallStopp();
         sparaNu();
         laddaOmOmNy();
     });

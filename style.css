@@ -84,13 +84,13 @@ body {
     height: 100%;
 }
 
-/* Panel: föregående, nästa, FÄRGLÄGG och BÖRJA OM (den sista lite
-   mindre). Liggande: en smal kolumn till höger (uppifrån och ned).
-   Stående: en rad längst ned (vänster till höger). */
+/* Panel: föregående, nästa, FÄRGLÄGG och BÖRJA OM, alla lika stora (v117;
+   BÖRJA OM var lite mindre förut). Liggande: en smal kolumn till höger
+   (uppifrån och ned). Stående: en rad längst ned (vänster till höger). */
 #button-container {
     flex: 0 0 14%;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 0.75fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
     grid-template-rows: 1fr;
     background-color: #dcecf8;
     padding: 10px;
@@ -99,7 +99,7 @@ body {
 @media (orientation: landscape) {
     #button-container {
         grid-template-columns: 1fr;
-        grid-template-rows: 1fr 1fr 1fr 0.75fr;
+        grid-template-rows: 1fr 1fr 1fr 1fr;
     }
 }
 

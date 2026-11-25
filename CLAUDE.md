@@ -14,11 +14,13 @@ färger, inga ljud, inga poäng, inga val att göra.
   bildpixlar). Bara det som målas blir målat: inget fylls i av sig självt
   (ägarens val i v49; ifyllnaden med `FYLL_ANDEL`/`startFade` finns i
   git-historiken). Det enda som händer av sig självt är keIWs.
-- Panelen har fem knappar, till höger i liggande läge (en rad nederst
-  i stående): **◀** föregående bild, **▶** nästa bild (byter när fingret
-  SLÄPPS, sedan v114), **FÄRGLÄGG** (håll 1,5 s → hela färgbilden
+- Panelen har fyra lika stora knappar (sedan v117, ägarens val
+  2026-11-25; BÖRJA OM var lite mindre förut), till höger i liggande läge
+  (en rad nederst i stående): **◀** föregående bild, **▶** nästa bild
+  (byter när fingret SLÄPPS, sedan v114; hålls pilen ensam i 0,7 s byts
+  bilden direkt, sedan v117, se nedan), **FÄRGLÄGG** (håll 1,5 s → hela färgbilden
   sveps fram från vänster medan fingret ligger kvar och keIWs poppar upp,
-  `fargaHela`; BÖRJA OM ångrar) och den lite mindre **BÖRJA OM** (håll 1 s → bilden töms direkt; sedan
+  `fargaHela`; BÖRJA OM ångrar) och **BÖRJA OM** (håll 1 s → bilden töms direkt; sedan
   står "HÅLL INNE LÄNGE FÖR ATT NOLLSTÄLLA ALLA BILDER" i 4 s, och håller
   man då i 4 s töms alla bilder, `glomAllt`; `startHold`/`holdEnd`). Ett
   för kort tryck visar "HÅLL INNE FÖR ATT …" i 5 s, som i Kludda.
@@ -32,6 +34,19 @@ färger, inga ljud, inga poäng, inga val att göra.
   tidigare visas tipset. Kommer en annan knapp efter färgläggningen är den
   gjord och den andra knappen smittad (en pil byter inte bild). Glider
   fingret av (`GEST_SLACK`) händer inget. BÖRJA OM är som förut.
+  **En pil som hålls (v117, ägarens val 2026-11-25):** ligger pilens
+  finger ensamt på HELA skärmen i `PIL_HALL_MS` (0,7 s) byts bilden
+  direkt medan fingret ligger kvar, och släppet gör sedan inget mer (`gjord`,
+  en bild per hållning, ingen upprepning). En diskret fyllning växer i
+  pilen under tiden (samma som FÄRGLÄGG:s, klassen `holding`). Hållningen
+  startar bara om inget annat finger finns på skärmen, och varje nytt
+  finger var som helst (annan knapp, samma pil, bilden, markeringslagret)
+  avbryter den (`pilHallStart`/`pilHallStopp`, en `touchstart`-lyssnare med
+  capture på fönstret), liksom ett finger som glider av (`GEST_SLACK`).
+  Avbruten hållning = trycket gäller som vanligt: byte vid släpp, om det
+  inte är smittat av en annan knapp. Ett finger på bilden smittar alltså
+  inte trycket (en hand som vilar på bilden ska inte stoppa pilarna), det
+  avbryter bara hållningen. Musen (dator) byter som förut vid klick.
 - **Bildbanken:** alla bilder står med fast löpnummer i `bilder.js`
   (`ALLA_BILDER`), men bara de vars nummer står i `AKTIVA` visas och cachas
   (sedan 2026-10-31 vill ägaren ha så många aktiva som möjligt, inte
@@ -182,7 +197,7 @@ där.
 `sw.js` har `const VERSION = 'vNN'`. Höj den varje gång filer ändras och
 pushas, annars fastnar plattan på gammal cache.
 
-## Hemlig markering (v111–v114)
+## Hemlig markering (v111–v117)
 
 Ägaren märker ut bilder som ska ses över, direkt i appen. Barnets målning
 rörs aldrig. Koden: `app.js` (blocket "Hemlig markering"), `index.html`
@@ -194,8 +209,12 @@ Samma funktion finns i Pensla N (se CLAUDE.md där).
   BÖRJA OM hålls (en hand över hela panelen ger alltså inget). Ordningen
   spelar ingen roll. Lyfts ett finger, glider det av sin knapp (`GEST_SLACK`)
   eller trycks BÖRJA OM börjar tiden om. Sedan v114 byter gesten aldrig
-  bild (inte ens kortvarigt), i vilken ordning och hur långsamt den än
-  görs och även när den avbryts (se "Knapptrycken" ovan). Inget färgläggs,
+  bild (inte ens kortvarigt), i vilken ordning den än görs och även när
+  den avbryts (se "Knapptrycken" ovan). Undantag sedan v117: börjar man
+  med en pil och håller den ensam i 0,7 s innan nästa finger kommer, byts
+  bilden en gång (pilhållningen). Kommer nästa finger inom 0,7 s (som när
+  man sätter ner tre fingrar), eller börjar man med FÄRGLÄGG, byts ingen
+  bild hur långsamt resten av gesten än görs. Inget färgläggs,
   utom om FÄRGLÄGG trycks först och hålls ensam i 1,5 s (v115, ägarens
   val; i v114 färglades inget alls). (v111–v113 bytte den första pilen
   bild direkt och den andra gick tillbaka, `foreBild`; det är borttaget.)
@@ -287,6 +306,11 @@ Samma funktion finns i Pensla N (se CLAUDE.md där).
   pil efter att färgläggningen startat (byter inte) och samma med mus
   (`--grupp tre regler`). v115: 677 kontroller i 69 fall; v116 (gesten 3 s,
   med gränsfallen 2,7 s och 2,8–3,2 s): 690 kontroller i 71 fall.
+  v117: gruppen `pilhall` (pil som hålls ensam 0,7 s, avbruten av knapp,
+  samma pil, finger på bilden före och under, glid av, efter bytet, och
+  gesten med tre fingrar inom 0,5 s); de långsamma "tre"-fallen som börjar
+  med en pil väntar ett byte till grannbilden, de öppnande långsamma tar
+  nästa finger efter 0,5 s.
 - I headless Chromium går `touchstart` på knapparna inte att avbryta
   (`cancelable` = false), så webbläsaren skickar också mus-händelser och ett
   klick efter ett tryck. Därför räknas inte ett klick på en pil inom
